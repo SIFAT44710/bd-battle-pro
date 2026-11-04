@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #090D16;
+  --foreground: #F3F4F6;
+  --card: #111827;
+  --card-border: #1F2937;
+  --emerald: #10B981;
+  --orange: #F97316;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #090D16;
+  color: #F3F4F6;
+  font-family: var(--font-jakarta), var(--font-hind-siliguri), system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Custom Esports Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090D16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Glassmorphism surfaces */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(31, 41, 55, 0.8);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(24, 32, 51, 0.6) 0%, rgba(17, 24, 39, 0.9) 100%);
+  border: 1px solid rgba(55, 65, 81, 0.5);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+/* Esports Hex Glow */
+.glow-emerald {
+  box-shadow: 0 0 20px -2px rgba(16, 185, 129, 0.35);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px -2px rgba(249, 115, 22, 0.35);
+}
+
+/* Hind Siliguri Bengali text helper */
+.font-bengali {
+  font-family: var(--font-hind-siliguri), system-ui, sans-serif;
 }
