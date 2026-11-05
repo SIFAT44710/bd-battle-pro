@@ -11,6 +11,7 @@ import {
   KeyRound,
   MapPin,
   ChevronRight,
+  Crown,
 } from 'lucide-react';
 
 export default function MyTournamentsPage() {
@@ -44,7 +45,7 @@ export default function MyTournamentsPage() {
         </p>
         <Link
           href="/auth/login"
-          className="inline-block px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+          className="inline-block px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-600/30"
         >
           Go to Login
         </Link>
@@ -67,8 +68,8 @@ export default function MyTournamentsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-          <Trophy className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-[#00A3FF] font-bold text-xs uppercase tracking-wider">
+          <Crown className="w-4 h-4 text-amber-400" />
           <span>Player Tournament Registry</span>
         </div>
         <h1 className="text-3xl font-black text-white mt-1">My Registered Tournaments</h1>
@@ -91,18 +92,18 @@ export default function MyTournamentsPage() {
               >
                 <div className="space-y-2 max-w-xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-black uppercase bg-emerald-500 text-slate-950">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-black uppercase bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm shadow-red-600/30">
                       Slot #{participant.slot_number}
                     </span>
                     <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-gray-800 text-white">
                       {tournament.match_type}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-gray-900 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-gray-900 text-sky-400 border border-sky-500/30 flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {tournament.map}
                     </span>
                     {isLive ? (
-                      <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-red-600 text-white animate-pulse">
+                      <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#FF2438] text-white animate-pulse">
                         LIVE NOW
                       </span>
                     ) : isCompleted ? (
@@ -125,11 +126,11 @@ export default function MyTournamentsPage() {
                     </span>
                     <span>•</span>
                     <span>
-                      Prize Pool: <strong className="text-emerald-400">{formatBDT(tournament.prize_pool)}</strong>
+                      Prize Pool: <strong className="text-[#00A3FF]">{formatBDT(tournament.prize_pool)}</strong>
                     </span>
                     <span>•</span>
                     <span>
-                      Per Kill: <strong className="text-orange-400">{formatBDT(tournament.per_kill)}</strong>
+                      Per Kill: <strong className="text-red-400">{formatBDT(tournament.per_kill)}</strong>
                     </span>
                   </div>
                 </div>
@@ -138,7 +139,7 @@ export default function MyTournamentsPage() {
                 <div className="flex items-center gap-3 self-end md:self-auto">
                   <Link
                     href={`/tournaments/${tournament.id}#room-vault`}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-red-600/30 transition-all hover:scale-105"
                   >
                     <KeyRound className="w-4 h-4" />
                     <span>View Room Vault</span>
@@ -169,9 +170,9 @@ export default function MyTournamentsPage() {
           </div>
           <Link
             href="/tournaments"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg shadow-red-600/30 transition-all"
           >
-            <Swords className="w-4 h-4" />
+            <Crown className="w-4 h-4 text-amber-300" />
             <span>Browse Upcoming Tournaments</span>
           </Link>
         </div>

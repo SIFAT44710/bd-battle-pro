@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useDemo } from '@/context/DemoContext';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import JoinModal from '@/components/tournaments/JoinModal';
@@ -17,6 +18,8 @@ import {
   Users,
   Target,
   Sparkles,
+  Crown,
+  Zap,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -27,80 +30,112 @@ export default function HomePage() {
   const liveTournaments = tournaments.filter((t) => t.status === 'live');
   const upcomingTournaments = tournaments.filter((t) => t.status === 'upcoming');
 
-  // Spotlight tournament: the one starting soonest (starts in ~10 mins!)
+  // Spotlight tournament: starts soonest
   const spotlightTournament = upcomingTournaments[0] || tournaments[0];
 
   return (
     <div className="space-y-16 pb-12">
-      {/* 1. HERO SECTION */}
-      <section className="relative pt-12 pb-20 overflow-hidden border-b border-gray-800/80">
-        {/* Glow backdrop circles */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute top-1/3 right-10 w-[400px] h-[300px] bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
+      {/* 1. HERO SECTION WITH OFFICIAL BBP LOGO */}
+      <section className="relative pt-8 pb-16 overflow-hidden border-b border-[#1E2536]">
+        {/* Glow backdrop circles based on logo colors (Red & Blue) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-600/10 blur-[140px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/4 right-5 w-[450px] h-[350px] bg-[#00A3FF]/10 blur-[130px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/3 left-5 w-[400px] h-[300px] bg-red-600/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            
+            {/* Center Logo Showcase */}
+            <div className="relative inline-block mx-auto mb-2 group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#FF2438] via-transparent to-[#00A3FF] rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-1000"></div>
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-[#090C14] border-2 border-[#1E2536] p-2 flex items-center justify-center shadow-2xl">
+                <Image
+                  src="/logo.png"
+                  alt="BD Battle Pro Official Logo"
+                  width={112}
+                  height={112}
+                  className="object-contain drop-shadow-[0_0_20px_rgba(255,36,56,0.65)] hover:scale-105 transition-transform"
+                  priority
+                />
+              </div>
+            </div>
+
             {/* Live Indicator Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-emerald-500/30 text-xs font-semibold text-gray-300 shadow-lg shadow-emerald-500/5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span className="text-emerald-400 font-bold">1 MATCH LIVE</span>
-              <span className="text-gray-500">•</span>
-              <span>{upcomingTournaments.length} Upcoming Tournaments Today</span>
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0E1320] border border-[#1E2536] text-xs font-bold text-gray-300 shadow-xl shadow-red-950/20">
+                <span className="w-2 h-2 rounded-full bg-[#FF2438] animate-ping" />
+                <span className="text-[#FF2438] font-black uppercase tracking-wider">1 MATCH LIVE</span>
+                <span className="text-gray-600">•</span>
+                <span className="text-[#00A3FF]">{upcomingTournaments.length} Upcoming Tournaments Today</span>
+              </div>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] uppercase">
               BANGLADESH&apos;S PREMIER <br />
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-[#FF2438] to-[#00A3FF] bg-clip-text text-transparent">
                 FREE FIRE ESPORTS
               </span>{' '}
-              PLATFORM
+              ARENA
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-gray-400 leading-relaxed font-medium">
-              Join competitive Free Fire squad, solo, and clash squad tournaments. Experience
-              time-gated room vaults, guaranteed slot seating, and transparent BDT (৳) prize
-              distributions with zero manual chaos.
+            <p className="text-base sm:text-lg text-gray-300 leading-relaxed font-medium max-w-2xl mx-auto">
+              Compete in high-stakes Free Fire tournaments. Powered by time-gated room vaults, guaranteed slot reservations, and instant transparent BDT (৳) prize distributions.
             </p>
 
             {/* Hero CTAs */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <Link
                 href="/tournaments"
-                className="px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm tracking-wide shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-2"
+                className="px-7 py-4 rounded-xl bg-gradient-to-r from-[#FF2438] to-[#E01B2E] hover:from-red-500 hover:to-red-600 text-white font-black text-sm tracking-wide shadow-2xl shadow-red-950/80 transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-2 border border-red-400/40"
               >
                 <Swords className="w-4 h-4" />
-                <span>Explore Tournaments</span>
+                <span>Browse Tournaments</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
               <Link
                 href="/admin"
-                className="px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-gray-200 font-bold text-sm border border-gray-700 transition-all flex items-center gap-2"
+                className="px-7 py-4 rounded-xl bg-[#0F1422] hover:bg-[#161D30] text-gray-200 font-extrabold text-sm border border-[#1E2536] hover:border-[#00A3FF]/50 transition-all flex items-center gap-2 shadow-lg"
               >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Organizer Dashboard</span>
+                <ShieldCheck className="w-4 h-4 text-[#00A3FF]" />
+                <span>Organizer Headquarters</span>
               </Link>
             </div>
 
-            {/* Fast Stats Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-gray-800/80 text-left">
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-gray-800/80">
-                <p className="text-xl sm:text-2xl font-black text-white font-mono">৳8,900+</p>
-                <p className="text-xs text-gray-400 font-medium">Prize Pools Today</p>
+            {/* Fast Stats Row with BBP Dual-Tone Accents */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-[#1E2536] text-left">
+              <div className="p-4 rounded-2xl bg-[#0B0F19] border border-[#1E2536]">
+                <p className="text-2xl sm:text-3xl font-black text-white font-mono flex items-center gap-1">
+                  <Zap className="w-5 h-5 text-[#FF2438]" />
+                  ৳8,900+
+                </p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Prize Pool Today</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-gray-800/80">
-                <p className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">15 Mins</p>
-                <p className="text-xs text-gray-400 font-medium">Room Vault Timer</p>
+
+              <div className="p-4 rounded-2xl bg-[#0B0F19] border border-[#1E2536]">
+                <p className="text-2xl sm:text-3xl font-black text-[#00A3FF] font-mono flex items-center gap-1">
+                  <KeyRound className="w-5 h-5 text-[#00A3FF]" />
+                  15 Mins
+                </p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Room Vault Unlock</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-gray-800/80">
-                <p className="text-xl sm:text-2xl font-black text-orange-400 font-mono">48 Slots</p>
-                <p className="text-xs text-gray-400 font-medium">Anti-Oversubscribe</p>
+
+              <div className="p-4 rounded-2xl bg-[#0B0F19] border border-[#1E2536]">
+                <p className="text-2xl sm:text-3xl font-black text-[#FF2438] font-mono flex items-center gap-1">
+                  <Users className="w-5 h-5 text-[#FF2438]" />
+                  48 Slots
+                </p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Anti-Oversubscribe</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-gray-800/80">
-                <p className="text-xl sm:text-2xl font-black text-teal-400 font-mono">100%</p>
-                <p className="text-xs text-gray-400 font-medium">Verified Free Fire IGN</p>
+
+              <div className="p-4 rounded-2xl bg-[#0B0F19] border border-[#1E2536]">
+                <p className="text-2xl sm:text-3xl font-black text-amber-400 font-mono flex items-center gap-1">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                  100%
+                </p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Verified Gamer IGN</p>
               </div>
             </div>
           </div>
@@ -110,18 +145,18 @@ export default function HomePage() {
       {/* 2. SPOTLIGHT TOURNAMENT (Starts in 10 minutes - Room Vault Ready!) */}
       {spotlightTournament && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-amber-950/30 border-2 border-emerald-500/40 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[100px] pointer-events-none" />
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-red-950/30 via-[#0B0E17] to-blue-950/30 border-2 border-red-500/40 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/10 blur-[110px] pointer-events-none" />
 
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
               <div className="space-y-3 max-w-xl">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-md text-xs font-black bg-emerald-500 text-slate-950 uppercase flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <span className="px-3 py-1 rounded-md text-xs font-black bg-gradient-to-r from-[#FF2438] to-red-600 text-white uppercase flex items-center gap-1.5 shadow-md shadow-red-950/60">
+                    <Crown className="w-3.5 h-3.5 text-amber-300" />
                     Spotlight Match
                   </span>
-                  <span className="px-3 py-1 rounded-md text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                    Room Vault Opens Soon
+                  <span className="px-3 py-1 rounded-md text-xs font-bold bg-[#00A3FF]/20 text-[#00A3FF] border border-[#00A3FF]/40">
+                    Vault Unlocks in 10m
                   </span>
                 </div>
 
@@ -132,21 +167,20 @@ export default function HomePage() {
                 <p className="text-sm text-gray-300">
                   Custom Free Fire {spotlightTournament.match_type} on {spotlightTournament.map}.
                   Entry fee {formatBDT(spotlightTournament.entry_fee)} with{' '}
-                  <strong className="text-emerald-400">
+                  <strong className="text-[#FF2438]">
                     {formatBDT(spotlightTournament.prize_pool)}
                   </strong>{' '}
-                  total prize pool and {formatBDT(spotlightTournament.per_kill)} per kill bonus.
+                  total prize pool and {formatBDT(spotlightTournament.per_kill)} per kill reward.
                 </p>
 
-                <div className="flex items-center gap-4 text-xs font-medium text-gray-400 pt-1">
+                <div className="flex items-center gap-4 text-xs font-bold text-gray-400 pt-1">
                   <span>
-                    Format:{' '}
-                    <strong className="text-white">{spotlightTournament.match_type}</strong>
+                    Format: <strong className="text-white">{spotlightTournament.match_type}</strong>
                   </span>
                   <span>•</span>
                   <span>
                     Slots:{' '}
-                    <strong className="text-white">
+                    <strong className="text-[#00A3FF]">
                       {spotlightTournament.current_slots}/{spotlightTournament.max_slots} Filled
                     </strong>
                   </span>
@@ -156,13 +190,13 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                 <Link
                   href={`/tournaments/${spotlightTournament.id}`}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm border border-gray-700 text-center transition-colors"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#121622] hover:bg-[#182030] text-white font-bold text-sm border border-[#1E2536] text-center transition-colors"
                 >
                   View Details & Slots
                 </Link>
                 <Link
                   href={`/tournaments/${spotlightTournament.id}#room-vault`}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm text-center shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#FF2438] to-[#00A3FF] hover:brightness-110 text-white font-black text-sm text-center shadow-lg shadow-red-950/60 transition-all flex items-center justify-center gap-2"
                 >
                   <KeyRound className="w-4 h-4" />
                   <span>Access Room Vault</span>
@@ -177,7 +211,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-[#FF2438] font-black text-xs uppercase tracking-wider">
               <Swords className="w-4 h-4" />
               <span>Competitive Schedule</span>
             </div>
@@ -188,7 +222,7 @@ export default function HomePage() {
 
           <Link
             href="/tournaments"
-            className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group"
+            className="text-xs font-black text-[#00A3FF] hover:text-blue-300 flex items-center gap-1 group"
           >
             <span>View All Tournaments ({tournaments.length})</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -210,7 +244,7 @@ export default function HomePage() {
       {liveTournaments.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+            <span className="w-3 h-3 rounded-full bg-[#FF2438] animate-ping" />
             <h2 className="text-xl sm:text-2xl font-black text-white">Live Matches In Progress</h2>
           </div>
 
@@ -226,8 +260,8 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-end justify-between">
           <div>
-            <div className="flex items-center gap-2 text-orange-400 font-bold text-xs uppercase tracking-wider">
-              <Trophy className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-[#00A3FF] font-black text-xs uppercase tracking-wider">
+              <Trophy className="w-4 h-4 text-amber-400" />
               <span>Hall of Fame</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">
@@ -236,10 +270,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-slate-900/90 border border-gray-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-800 pb-3 text-xs text-gray-400 font-bold uppercase">
+        <div className="p-6 rounded-2xl bg-[#0A0D15] border border-[#1E2536] space-y-4">
+          <div className="flex items-center justify-between border-b border-[#1E2536] pb-3 text-xs text-gray-400 font-bold uppercase">
             <span>Tournament #12: Grand Nexterra Squad Championship</span>
-            <span className="text-emerald-400">Prizes Distributed: ৳2,760</span>
+            <span className="text-[#FF2438] font-black">Prizes Distributed: ৳2,760</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -248,28 +282,31 @@ export default function HomePage() {
                 key={res.id}
                 className={`p-4 rounded-xl border flex items-center justify-between ${
                   res.rank === 1
-                    ? 'bg-amber-950/30 border-amber-500/50 shadow-md shadow-amber-950/20'
+                    ? 'bg-amber-950/20 border-amber-500/50 shadow-md shadow-amber-950/30'
                     : res.rank === 2
-                    ? 'bg-slate-800/60 border-gray-600'
-                    : 'bg-slate-900 border-gray-800'
+                    ? 'bg-[#121622] border-gray-600'
+                    : 'bg-[#0F131C] border-[#1E2536]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-9 h-9 rounded-lg font-black text-sm flex items-center justify-center ${
                       res.rank === 1
-                        ? 'bg-amber-500 text-slate-950'
+                        ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 shadow-md'
                         : res.rank === 2
-                        ? 'bg-gray-400 text-slate-950'
+                        ? 'bg-gray-300 text-slate-950'
                         : 'bg-amber-800 text-white'
                     }`}
                   >
                     #{res.rank}
                   </div>
                   <div>
-                    <p className="font-extrabold text-sm text-white">{res.ign}</p>
-                    <p className="text-xs text-orange-400 font-semibold flex items-center gap-1">
-                      <Flame className="w-3 h-3" />
+                    <p className="font-black text-sm text-white flex items-center gap-1.5">
+                      {res.ign}
+                      {res.rank === 1 && <Crown className="w-3.5 h-3.5 text-amber-400 inline" />}
+                    </p>
+                    <p className="text-xs text-[#00A3FF] font-bold flex items-center gap-1">
+                      <Flame className="w-3 h-3 text-[#FF2438]" />
                       {res.kills} Kills
                     </p>
                   </div>
@@ -277,7 +314,7 @@ export default function HomePage() {
 
                 <div className="text-right">
                   <p className="text-xs text-gray-400 font-medium">Prize Won</p>
-                  <p className="font-mono font-black text-sm text-emerald-400">
+                  <p className="font-mono font-black text-sm text-[#FF2438]">
                     {formatBDT(res.prize_amount)}
                   </p>
                 </div>
@@ -294,42 +331,38 @@ export default function HomePage() {
             Built for Bangladeshi Esports Organizers
           </h2>
           <p className="text-sm text-gray-400">
-            How BD Battle Pro eliminates traditional tournament fraud, password leaks, and payment
-            delays.
+            How BD Battle Pro eliminates traditional tournament fraud, password leaks, and payment delays.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl glass-card space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="p-6 rounded-2xl glass-card space-y-3 border-t-2 border-t-[#FF2438]">
+            <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-[#FF2438]">
               <KeyRound className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-extrabold text-white">Time-Gated Room Vault</h3>
+            <h3 className="text-base font-black text-white">Time-Gated Room Vault</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              No more sharing room passwords in open WhatsApp groups. Credentials are encrypted and
-              unlocked only 15 minutes before the match strictly for registered participants.
+              No more sharing room passwords in open WhatsApp groups. Credentials are encrypted and unlocked strictly 15 minutes before match launch only for registered participants.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl glass-card space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
+          <div className="p-6 rounded-2xl glass-card space-y-3 border-t-2 border-t-[#00A3FF]">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[#00A3FF]">
               <Users className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-extrabold text-white">Atomic Slot Allocation</h3>
+            <h3 className="text-base font-black text-white">Atomic Slot Allocation</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Every player receives a designated slot number (1 to 48) backed by PostgreSQL
-              transactions. Prevents double-booking and slot hijacking in custom rooms.
+              Every player receives a designated slot number (1 to 48) backed by PostgreSQL atomic transactions. Completely prevents double-booking and slot hijacking.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl glass-card space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
+          <div className="p-6 rounded-2xl glass-card space-y-3 border-t-2 border-t-amber-400">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Target className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-extrabold text-white">IGN-First Identity</h3>
+            <h3 className="text-base font-black text-white">IGN-First Identity</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Matches Free Fire post-game scoreboards directly using In-Game Names. Ready for
-              automated kill-tallying and instant prize ledger distribution.
+              Matches Free Fire post-game scoreboards directly using In-Game Names. Ready for automated kill-tallying and instant prize ledger distribution.
             </p>
           </div>
         </div>

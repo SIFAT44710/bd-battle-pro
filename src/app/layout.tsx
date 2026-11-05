@@ -35,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${hindSiliguri.variable} dark h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#090D16] text-[#F3F4F6] selection:bg-emerald-500 selection:text-slate-950">
+      <body className="min-h-full flex flex-col bg-[#090D16] text-[#F3F4F6] selection:bg-[#FF2438] selection:text-white">
         <DemoProvider>
           <DemoBanner />
           <Suspense fallback={<div className="h-16 bg-[#090D16]" />}>

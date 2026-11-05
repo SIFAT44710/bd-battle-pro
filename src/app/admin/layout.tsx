@@ -38,8 +38,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {adminAccount && (
-          <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/30 text-left space-y-3">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
+          <div className="p-4 rounded-2xl bg-slate-900 border border-red-500/30 text-left space-y-3">
+            <div className="flex items-center gap-2 text-sky-400 text-xs font-bold">
               <UserCheck className="w-4 h-4" />
               <span>Switch to Organizer Persona (Demo Mode)</span>
             </div>
@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </p>
             <button
               onClick={() => switchUser(adminAccount.id)}
-              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20"
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/30"
             >
               <span>Unlock Admin Panel as {adminAccount.profile.full_name}</span>
             </button>
@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-orange-500 text-slate-950">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-[#FF2438] text-white shadow-sm shadow-red-600/30">
               Organizer Panel
             </span>
             <span className="text-xs text-gray-400">BD Battle Pro Ops Console</span>
@@ -98,9 +98,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-xs font-bold text-white">{currentUser.full_name}</p>
-            <p className="text-[10px] text-emerald-400 font-mono">Role: {currentUser.role}</p>
+            <p className="text-[10px] text-sky-400 font-mono">Role: {currentUser.role}</p>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-bold text-xs">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 border border-red-500/40 flex items-center justify-center text-white font-bold text-xs shadow-md">
             {currentUser.full_name[0]}
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               href={item.href}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
                 active
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-600/30'
                   : 'bg-slate-900 text-gray-300 hover:bg-gray-800 hover:text-white border border-gray-800'
               }`}
             >

@@ -14,6 +14,7 @@ import {
   ArrowDownLeft,
   PlusCircle,
   CheckCircle2,
+  Crown,
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -32,7 +33,7 @@ export default function ProfilePage() {
         </p>
         <Link
           href="/auth/login"
-          className="inline-block px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+          className="inline-block px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-600/30"
         >
           Go to Login
         </Link>
@@ -61,8 +62,8 @@ export default function ProfilePage() {
       <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-gray-800 shadow-2xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 p-1 flex items-center justify-center font-black text-2xl text-slate-950 shadow-xl shadow-emerald-500/20">
-              {currentUser.full_name[0]}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-sky-600 p-1 flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-red-600/30">
+              <span className="drop-shadow">{currentUser.full_name[0]}</span>
             </div>
 
             <div className="space-y-1">
@@ -70,14 +71,14 @@ export default function ProfilePage() {
                 <h1 className="text-xl sm:text-2xl font-black text-white">
                   {currentUser.full_name}
                 </h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-red-950/60 text-[#FF2438] border border-red-500/30">
                   {currentUser.role}
                 </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                <span className="flex items-center gap-1 font-mono text-emerald-400 font-bold">
-                  <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="flex items-center gap-1 font-mono text-sky-400 font-bold">
+                  <Gamepad2 className="w-3.5 h-3.5 text-sky-400" />
                   IGN: {currentUser.ign}
                 </span>
                 <span>•</span>
@@ -90,17 +91,17 @@ export default function ProfilePage() {
           <div className="p-4 rounded-2xl bg-gray-950 border border-gray-800 flex items-center justify-between sm:justify-end gap-5">
             <div>
               <p className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-1">
-                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+                <Wallet className="w-3.5 h-3.5 text-sky-400" />
                 Demo Wallet Balance
               </p>
-              <p className="text-2xl font-black text-emerald-400 font-mono mt-0.5">
+              <p className="text-2xl font-black text-[#00A3FF] font-mono mt-0.5">
                 {formatBDT(currentUser.demo_balance)}
               </p>
             </div>
 
             <button
               onClick={handleDemoTopUp}
-              className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold border border-emerald-500/40 transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold border border-red-500/40 transition-colors flex items-center gap-1.5"
               title="Add ৳500 Demo Balance to test joining more matches"
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -110,8 +111,8 @@ export default function ProfilePage() {
         </div>
 
         {topUpSuccess && (
-          <div className="mt-4 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="mt-4 p-2.5 rounded-xl bg-sky-950/60 border border-sky-500/40 text-sky-300 text-xs flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
             <span>Demo wallet credited with +৳500! Updated balance is ready to use.</span>
           </div>
         )}
@@ -127,17 +128,17 @@ export default function ProfilePage() {
 
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-gray-800 space-y-1">
           <p className="text-xs text-gray-400 font-semibold uppercase">Free Fire Identity</p>
-          <p className="text-lg font-black text-emerald-400 font-mono truncate">{currentUser.ign}</p>
+          <p className="text-lg font-black text-sky-400 font-mono truncate">{currentUser.ign}</p>
           <p className="text-[11px] text-gray-400">UID: {currentUser.ff_uid}</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-slate-900/80 border border-gray-800 space-y-1">
           <p className="text-xs text-gray-400 font-semibold uppercase">Platform Security</p>
           <p className="text-lg font-black text-white flex items-center gap-1.5">
-            <Shield className="w-4 h-4 text-emerald-400" />
+            <Shield className="w-4 h-4 text-[#FF2438]" />
             Protected
           </p>
-          <p className="text-[11px] text-emerald-400 font-medium">15-Minute Room Vault Enabled</p>
+          <p className="text-[11px] text-[#00A3FF] font-medium">15-Minute Room Vault Enabled</p>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import TournamentCard from '@/components/tournaments/TournamentCard';
 import TournamentFilter from '@/components/tournaments/TournamentFilter';
 import JoinModal from '@/components/tournaments/JoinModal';
 import { Tournament, TournamentType, TournamentMap, TournamentStatus } from '@/types/tournament';
-import { Swords, PlusCircle } from 'lucide-react';
+import { Swords, PlusCircle, Crown } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TournamentsPage() {
@@ -59,20 +59,25 @@ export default function TournamentsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-            <Swords className="w-4 h-4" />
-            <span>Official Esports Lobby</span>
+          <div className="flex items-center gap-2 text-[#00A3FF] font-bold text-xs uppercase tracking-wider">
+            <Crown className="w-4 h-4 text-amber-400" />
+            <span>Official BBP Esports Lobby</span>
           </div>
-          <h1 className="text-3xl font-black text-white mt-1">Tournaments & Matches</h1>
+          <h1 className="text-3xl font-black text-white mt-1 flex items-center gap-3">
+            <span>Tournaments & Matches</span>
+            <span className="text-xs px-2.5 py-1 rounded-md bg-red-950/60 text-[#FF2438] border border-red-500/30 uppercase font-black tracking-widest">
+              Live Season
+            </span>
+          </h1>
           <p className="text-xs sm:text-sm text-gray-400 mt-1">
-            Browse, filter, and register for Garena Free Fire competitive tournaments in Bangladesh.
+            Browse, filter, and register for Garena Free Fire competitive tournaments across Bangladesh.
           </p>
         </div>
 
         {currentUser?.role === 'admin' && (
           <Link
             href="/admin/tournaments/new"
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-emerald-500/20 transition-all"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-red-600/30 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Create Tournament</span>
