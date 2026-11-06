@@ -2,28 +2,27 @@
 
 import React from 'react';
 import { useDemo } from '@/context/DemoContext';
-import { ShieldAlert, RefreshCw, UserCheck, CheckCircle2, Crown } from 'lucide-react';
+import { RefreshCw, UserCheck, CheckCircle2, Crown, Sparkles } from 'lucide-react';
 
 export default function DemoBanner() {
   const { currentUser, demoAccounts, switchUser, resetDemoData } = useDemo();
 
   return (
-    <div className="bg-gradient-to-r from-red-950/70 via-[#0A0D14] to-blue-950/70 border-b border-red-500/20 px-3 py-1.5 text-xs text-gray-300">
+    <div className="bg-[#090C15] border-b border-[#1E2536] px-3 py-1.5 text-xs text-gray-300">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        {/* Left: Mode Badge */}
+        {/* Left: Commercial Demo Indicator */}
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 bg-red-500/20 text-[#FF2438] font-black px-2.5 py-0.5 rounded-full border border-red-500/40 text-[10px] tracking-wider uppercase">
-            <ShieldAlert className="w-3 h-3 text-[#FF2438]" />
-            BBP DEMO ENGINE
+          <span className="flex items-center gap-1.5 bg-[#FF2438]/15 text-[#FF2E4D] font-black px-2.5 py-0.5 rounded-full border border-[#FF2438]/30 text-[10px] tracking-wider uppercase">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            LIVE DEMO PLATFORM
           </span>
-          <span className="hidden sm:inline text-gray-400 text-[11px]">
-            Simulated Free Fire Esports Operations. Zero real deposits required.
+          <span className="hidden sm:inline text-gray-300 text-[11px]">
+            টার্নকি এস্পোর্টস সল্যুশন • টেস্ট করার জন্য যেকোনো প্রোফাইলে সুইচ করুন:
           </span>
         </div>
 
         {/* Right: Quick Switcher */}
         <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
-          <span className="text-gray-400 text-[11px] hidden md:inline font-bold">Persona:</span>
           {demoAccounts.map((acc) => {
             const isActive = currentUser?.id === acc.id;
             const isAdmin = acc.profile.role === 'admin';
@@ -46,7 +45,7 @@ export default function DemoBanner() {
                   <UserCheck className="w-3 h-3 text-gray-400" />
                 )}
                 <span>
-                  {acc.profile.full_name.split(' ')[0]} ({acc.profile.role})
+                  {acc.profile.full_name.split(' ')[0]} {isAdmin ? '(Admin)' : '(Player)'}
                 </span>
               </button>
             );

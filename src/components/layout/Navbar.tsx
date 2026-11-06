@@ -29,9 +29,9 @@ export default function Navbar() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Tournaments', href: '/tournaments', icon: Swords },
+    { label: 'Free Fire Matches', href: '/tournaments', icon: Swords },
     { label: 'My Matches', href: '/my-tournaments', icon: Trophy },
-    { label: 'Profile', href: '/profile', icon: User },
+    { label: 'Wallet & Profile', href: '/profile', icon: User },
   ];
 
   if (currentUser?.role === 'admin') {

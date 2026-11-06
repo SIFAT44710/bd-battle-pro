@@ -12,13 +12,13 @@ export default function MobileNav() {
 
   const items = [
     { label: 'Home', href: '/', icon: Home },
-    { label: 'Tournaments', href: '/tournaments', icon: Swords },
-    { label: 'My Matches', href: '/my-tournaments', icon: Trophy },
-    { label: 'Profile', href: '/profile', icon: User },
+    { label: 'Matches', href: '/tournaments', icon: Swords },
+    { label: 'My Rooms', href: '/my-tournaments', icon: Trophy },
+    { label: 'Wallet', href: '/profile', icon: User },
   ];
 
   if (currentUser?.role === 'admin') {
-    items.push({ label: 'Admin Hub', href: '/admin', icon: Shield });
+    items.push({ label: 'Admin', href: '/admin', icon: Shield });
   }
 
   return (
