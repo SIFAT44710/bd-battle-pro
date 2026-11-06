@@ -30,7 +30,7 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Free Fire Matches', href: '/tournaments', icon: Swords },
-    { label: 'My Matches', href: '/my-tournaments', icon: Trophy },
+    { label: 'Ludu Matches', href: '/tournaments', icon: Trophy },
     { label: 'Wallet & Profile', href: '/profile', icon: User },
   ];
 

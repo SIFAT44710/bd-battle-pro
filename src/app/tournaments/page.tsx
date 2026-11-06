@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useDemo } from '@/context/DemoContext';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import TournamentFilter from '@/components/tournaments/TournamentFilter';
@@ -9,16 +10,25 @@ import { Tournament, TournamentType, TournamentMap, TournamentStatus } from '@/t
 import { Swords, PlusCircle, Crown } from 'lucide-react';
 import Link from 'next/link';
 
-export default function TournamentsPage() {
+function TournamentsContent() {
+  const searchParams = useSearchParams();
+  const initialType = (searchParams.get('type') as TournamentType) || 'All';
+  const initialFee = searchParams.get('fee');
+
   const { tournaments, currentUser } = useDemo();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<TournamentType | 'All'>('All');
+  const [selectedType, setSelectedType] = useState<TournamentType | 'All'>(initialType);
   const [selectedMap, setSelectedMap] = useState<TournamentMap | 'All'>('All');
   const [selectedStatus, setSelectedStatus] = useState<TournamentStatus | 'All'>('All');
   const [activeJoinTournament, setActiveJoinTournament] = useState<Tournament | null>(null);
 
   const filteredTournaments = useMemo(() => {
     return tournaments.filter((t) => {
+      // Free fee filter
+      if (initialFee === 'free' && t.entry_fee !== 0) {
+        return false;
+      }
+
       // Search
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
@@ -45,7 +55,7 @@ export default function TournamentsPage() {
 
       return true;
     });
-  }, [tournaments, searchQuery, selectedType, selectedMap, selectedStatus]);
+  }, [tournaments, searchQuery, selectedType, selectedMap, selectedStatus, initialFee]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -117,8 +127,8 @@ export default function TournamentsPage() {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center rounded-2xl bg-slate-900/50 border border-gray-800 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto text-gray-400">
+          <div className="p-12 text-center rounded-2xl bg-[#0C101A] border border-[#1E2536] space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#121624] flex items-center justify-center mx-auto text-gray-400">
               <Swords className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-white">No tournaments matched your filters</h3>
@@ -127,7 +137,7 @@ export default function TournamentsPage() {
             </p>
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-lg border border-gray-700 transition-colors"
+              className="px-4 py-2 bg-[#151D2F] hover:bg-[#1E2A44] text-gray-200 text-xs font-bold rounded-lg border border-[#1E2536] transition-colors"
             >
               Reset Filters
             </button>
@@ -143,5 +153,13 @@ export default function TournamentsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function TournamentsPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-12 text-center text-gray-400">Loading tournaments...</div>}>
+      <TournamentsContent />
+    </Suspense>
   );
 }

@@ -63,6 +63,31 @@ export const INITIAL_DEMO_ACCOUNTS: DemoAccount[] = [
 
 export const INITIAL_TOURNAMENTS: Tournament[] = [
   {
+    id: 'tourney-00',
+    title: 'Free Fire Daily Free Entry Practice Cup — Bermuda',
+    game: 'Free Fire',
+    match_type: 'Solo',
+    map: 'Bermuda',
+    entry_fee: 0,
+    prize_pool: 500,
+    per_kill: 5,
+    prize_distribution: {
+      first: 250,
+      second: 150,
+      third: 100,
+      per_kill: 5,
+    },
+    max_slots: 48,
+    current_slots: 36,
+    status: 'upcoming',
+    match_time: in3Hours,
+    room_id: 'FREE-CUP-101',
+    room_password: 'freeplay2026',
+    rules: '1. 100% Free Entry tournament.\n2. Mobile devices only.\n3. Win real BDT prizes without paying any entry fee.',
+    banner_url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=80',
+    created_at: yesterday,
+  },
+  {
     id: 'tourney-01',
     title: 'Free Fire Squad Rush — Bermuda Season 4',
     game: 'Free Fire',
