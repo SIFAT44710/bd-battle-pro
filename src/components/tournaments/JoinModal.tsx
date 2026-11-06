@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Tournament } from '@/types/tournament';
 import { useDemo } from '@/context/DemoContext';
-import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import {
   X,
   Swords,
@@ -141,12 +142,12 @@ export default function JoinModal({ tournament, onClose }: JoinModalProps) {
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Deducted Entry Fee:</span>
-                <span className="font-bold text-white">{formatBDT(entryFee)}</span>
+                <span className="font-bold text-white"><BDT amount={entryFee} /></span>
               </div>
               <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1E2536]">
                 <span className="text-gray-400">New Demo Balance:</span>
                 <span className="font-bold text-[#00A3FF] font-mono">
-                  {formatBDT(successData.newBalance)}
+                  <BDT amount={successData.newBalance} />
                 </span>
               </div>
             </div>
@@ -244,13 +245,13 @@ export default function JoinModal({ tournament, onClose }: JoinModalProps) {
                   <Wallet className="w-3.5 h-3.5 text-[#00A3FF]" />
                   Current Demo Balance:
                 </span>
-                <span className="font-bold text-white font-mono">{formatBDT(currentBalance)}</span>
+                <span className="font-bold text-white font-mono"><BDT amount={currentBalance} /></span>
               </div>
 
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Tournament Entry Fee:</span>
                 <span className="font-bold text-[#FF2438] font-mono">
-                  - {formatBDT(entryFee)}
+                  - <BDT amount={entryFee} />
                 </span>
               </div>
 
@@ -261,7 +262,7 @@ export default function JoinModal({ tournament, onClose }: JoinModalProps) {
                     hasSufficientBalance ? 'text-[#00A3FF]' : 'text-red-400'
                   }`}
                 >
-                  {formatBDT(Math.max(0, balanceAfter))}
+                  <BDT amount={Math.max(0, balanceAfter)} />
                 </span>
               </div>
 
@@ -291,7 +292,15 @@ export default function JoinModal({ tournament, onClose }: JoinModalProps) {
                 }`}
               >
                 <Trophy className="w-4 h-4" />
-                <span>{loading ? 'Registering...' : `Pay ${formatBDT(entryFee)} & Join`}</span>
+                <span>
+                  {loading ? (
+                    'Registering...'
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      Pay <BDT amount={entryFee} /> & Join
+                    </span>
+                  )}
+                </span>
               </button>
             </div>
           </form>

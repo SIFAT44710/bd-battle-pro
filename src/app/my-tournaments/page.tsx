@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useDemo } from '@/context/DemoContext';
-import { formatBDT, formatMatchTime, getMatchCountdown, CountdownState } from '@/lib/utils';
+import { formatMatchTime, getMatchCountdown, CountdownState } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import {
   Trophy,
   Swords,
@@ -126,11 +127,11 @@ export default function MyTournamentsPage() {
                     </span>
                     <span>•</span>
                     <span>
-                      Prize Pool: <strong className="text-[#00A3FF]">{formatBDT(tournament.prize_pool)}</strong>
+                      Prize Pool: <strong className="text-[#00A3FF]"><BDT amount={tournament.prize_pool} /></strong>
                     </span>
                     <span>•</span>
                     <span>
-                      Per Kill: <strong className="text-red-400">{formatBDT(tournament.per_kill)}</strong>
+                      Per Kill: <strong className="text-red-400">{tournament.per_kill > 0 ? <BDT amount={tournament.per_kill} /> : '—'}</strong>
                     </span>
                   </div>
                 </div>

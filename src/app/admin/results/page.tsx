@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useDemo } from '@/context/DemoContext';
 import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import { Trophy, CheckCircle2, Award } from 'lucide-react';
 
 export default function AdminResultsPage() {
@@ -279,7 +280,7 @@ export default function AdminResultsPage() {
               </div>
 
               <div className="text-right">
-                <p className="font-mono font-black text-emerald-400">{formatBDT(r.prize_amount)}</p>
+                <p className="font-mono font-black text-emerald-400"><BDT amount={r.prize_amount} /></p>
                 <p className="text-[9px] text-gray-400">{formatMatchTime(r.published_at)}</p>
               </div>
             </div>

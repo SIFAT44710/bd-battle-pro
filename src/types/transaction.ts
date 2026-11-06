@@ -1,4 +1,4 @@
-export type TransactionType = 'entry_fee' | 'demo_deposit' | 'prize_payout' | 'demo_refund';
+export type TransactionType = 'entry_fee' | 'demo_deposit' | 'prize_payout' | 'demo_refund' | 'withdrawal';
 
 export interface DemoTransaction {
   id: string;

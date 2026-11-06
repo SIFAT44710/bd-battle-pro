@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useDemo } from '@/context/DemoContext';
-import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import {
   PlusCircle,
   Trash2,
@@ -115,11 +116,11 @@ export default function AdminTournamentsPage() {
                     </span>
                     <span>•</span>
                     <span>
-                      Entry: <strong className="text-white">{formatBDT(t.entry_fee)}</strong>
+                      Entry: <strong className="text-white"><BDT amount={t.entry_fee} /></strong>
                     </span>
                     <span>•</span>
                     <span>
-                      Prize: <strong className="text-emerald-400">{formatBDT(t.prize_pool)}</strong>
+                      Prize: <strong className="text-emerald-400"><BDT amount={t.prize_pool} /></strong>
                     </span>
                   </div>
                 </div>

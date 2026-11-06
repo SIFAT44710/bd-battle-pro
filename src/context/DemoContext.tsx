@@ -40,6 +40,8 @@ interface DemoContextType {
   resetDemoData: () => void;
   isRegistered: (tournamentId: string) => boolean;
   getUserSlot: (tournamentId: string) => number | null;
+  addBalance: (amount: number, description?: string, type?: DemoTransaction['type']) => void;
+  withdrawBalance: (amount: number, recipientNumber: string, method: string) => { success: boolean; message: string };
 }
 
 const DemoContext = createContext<DemoContextType | undefined>(undefined);
@@ -156,6 +158,62 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setCurrentUser(null);
+  };
+
+  const addBalance = (
+    amount: number,
+    description?: string,
+    type: DemoTransaction['type'] = 'demo_deposit'
+  ) => {
+    if (!currentUser) return;
+    const newBalance = (currentUser.demo_balance || 0) + amount;
+    setCurrentUser((prev) => (prev ? { ...prev, demo_balance: newBalance } : null));
+
+    const newTx: DemoTransaction = {
+      id: `tx_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      user_id: currentUser.id,
+      type,
+      amount,
+      balance_after: newBalance,
+      description: description || `Demo Wallet Top-up (+৳${amount})`,
+      status: 'completed',
+      created_at: new Date().toISOString(),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+  };
+
+  const withdrawBalance = (
+    amount: number,
+    recipientNumber: string,
+    method: string
+  ): { success: boolean; message: string } => {
+    if (!currentUser) {
+      return { success: false, message: 'Please login first.' };
+    }
+    if (amount < 50) {
+      return { success: false, message: 'Minimum withdrawal amount is ৳50.' };
+    }
+    if (currentUser.demo_balance < amount) {
+      return { success: false, message: 'Insufficient balance in your wallet.' };
+    }
+    const newBalance = currentUser.demo_balance - amount;
+    setCurrentUser((prev) => (prev ? { ...prev, demo_balance: newBalance } : null));
+
+    const newTx: DemoTransaction = {
+      id: `tx_wth_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      user_id: currentUser.id,
+      type: 'withdrawal',
+      amount,
+      balance_after: newBalance,
+      description: `Withdrawal to ${method} (${recipientNumber})`,
+      status: 'completed',
+      created_at: new Date().toISOString(),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+    return {
+      success: true,
+      message: `Successfully processed withdrawal of ৳${amount} to ${method} (${recipientNumber}).`,
+    };
   };
 
   const isRegistered = (tournamentId: string): boolean => {
@@ -443,6 +501,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         resetDemoData,
         isRegistered,
         getUserSlot,
+        addBalance,
+        withdrawBalance,
       }}
     >
       {children}

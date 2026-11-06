@@ -6,8 +6,10 @@ import Image from 'next/image';
 import { useDemo } from '@/context/DemoContext';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import JoinModal from '@/components/tournaments/JoinModal';
+import EarningsCalculator from '@/components/home/EarningsCalculator';
+import { BDT } from '@/components/common/BDT';
 import { Tournament } from '@/types/tournament';
-import { formatBDT } from '@/lib/utils';
+import { formatMatchTime } from '@/lib/utils';
 import {
   Swords,
   Trophy,
@@ -109,7 +111,7 @@ export default function HomePage() {
               <div className="p-4 rounded-2xl bg-[#0B0F19] border border-[#1E2536]">
                 <p className="text-2xl sm:text-3xl font-black text-white font-mono flex items-center gap-1">
                   <Zap className="w-5 h-5 text-[#FF2438]" />
-                  ৳8,900+
+                  <BDT amount={8900} suffix="+" />
                 </p>
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Prize Pool Today</p>
               </div>
@@ -166,11 +168,11 @@ export default function HomePage() {
 
                 <p className="text-sm text-gray-300">
                   Custom Free Fire {spotlightTournament.match_type} on {spotlightTournament.map}.
-                  Entry fee {formatBDT(spotlightTournament.entry_fee)} with{' '}
+                  Entry fee <BDT amount={spotlightTournament.entry_fee} /> with{' '}
                   <strong className="text-[#FF2438]">
-                    {formatBDT(spotlightTournament.prize_pool)}
+                    <BDT amount={spotlightTournament.prize_pool} />
                   </strong>{' '}
-                  total prize pool and {formatBDT(spotlightTournament.per_kill)} per kill reward.
+                  total prize pool and <BDT amount={spotlightTournament.per_kill} /> per kill reward.
                 </p>
 
                 <div className="flex items-center gap-4 text-xs font-bold text-gray-400 pt-1">
@@ -256,7 +258,12 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 5. RECENT RESULTS & HALL OF FAME */}
+      {/* 5. INTERACTIVE KILL & BOOYAH EARNINGS CALCULATOR */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <EarningsCalculator />
+      </div>
+
+      {/* 6. RECENT RESULTS & HALL OF FAME */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-end justify-between">
           <div>
@@ -273,7 +280,9 @@ export default function HomePage() {
         <div className="p-6 rounded-2xl bg-[#0A0D15] border border-[#1E2536] space-y-4">
           <div className="flex items-center justify-between border-b border-[#1E2536] pb-3 text-xs text-gray-400 font-bold uppercase">
             <span>Tournament #12: Grand Nexterra Squad Championship</span>
-            <span className="text-[#FF2438] font-black">Prizes Distributed: ৳2,760</span>
+            <span className="text-[#FF2438] font-black flex items-center gap-1">
+              Prizes Distributed: <BDT amount={2760} />
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -315,7 +324,7 @@ export default function HomePage() {
                 <div className="text-right">
                   <p className="text-xs text-gray-400 font-medium">Prize Won</p>
                   <p className="font-mono font-black text-sm text-[#FF2438]">
-                    {formatBDT(res.prize_amount)}
+                    <BDT amount={res.prize_amount} />
                   </p>
                 </div>
               </div>

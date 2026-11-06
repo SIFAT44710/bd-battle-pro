@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useDemo } from '@/context/DemoContext';
+import { BDT } from '@/components/common/BDT';
 import { Flame, Gamepad2, Crown } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -51,7 +52,7 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-black text-white">Create Player Profile</h1>
           <p className="text-xs text-gray-400 mt-1">
             Join <span className="text-bbp-gradient">BD BATTLE PRO</span> & claim{' '}
-            <strong className="text-sky-400 font-mono">৳500 Demo Balance</strong> immediately.
+            <strong className="text-sky-400 font-mono"><BDT amount={500} /> Demo Balance</strong> immediately.
           </p>
         </div>
       </div>
@@ -131,7 +132,7 @@ export default function RegisterPage() {
           className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-red-600/30 transition-all flex items-center justify-center gap-2"
         >
           <Flame className="w-4 h-4 text-amber-300" />
-          <span>Register & Claim ৳500 Demo</span>
+          <span className="flex items-center gap-1">Register & Claim <BDT amount={500} /> Demo</span>
         </button>
 
         <p className="text-center text-xs text-gray-400 pt-2">

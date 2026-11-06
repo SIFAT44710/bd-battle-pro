@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useDemo } from '@/context/DemoContext';
-import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import { ArrowDownLeft, ArrowUpRight, ShieldCheck, Filter } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
 
@@ -43,14 +44,14 @@ export default function AdminTransactionsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl bg-slate-900 border border-gray-800 space-y-1">
           <p className="text-[11px] text-gray-400 font-bold uppercase">Total Entry Fees Collected</p>
-          <p className="text-2xl font-black text-white font-mono">{formatBDT(totalEntryFees)}</p>
+          <p className="text-2xl font-black text-white font-mono"><BDT amount={totalEntryFees} /></p>
           <p className="text-[10px] text-gray-400">From tournament join fees</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-900 border border-gray-800 space-y-1">
           <p className="text-[11px] text-gray-400 font-bold uppercase">Total Prize Payouts</p>
           <p className="text-2xl font-black text-emerald-400 font-mono">
-            {formatBDT(totalPrizesPaid)}
+            <BDT amount={totalPrizesPaid} />
           </p>
           <p className="text-[10px] text-gray-400">Credited to winner wallets</p>
         </div>
@@ -143,7 +144,7 @@ export default function AdminTransactionsPage() {
                         isCredit ? 'text-emerald-400' : 'text-red-400'
                       }`}
                     >
-                      {isCredit ? '+' : '-'} {formatBDT(tx.amount)}
+                      {isCredit ? '+' : '-'} <BDT amount={tx.amount} />
                     </td>
                     <td className="py-3 px-3">
                       <span className="text-gray-400 text-[10px] uppercase font-bold">

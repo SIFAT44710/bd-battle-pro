@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useDemo } from '@/context/DemoContext';
-import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import {
   Users,
   Swords,
@@ -80,7 +81,7 @@ export default function AdminOverviewPage() {
             Settled Prizes
           </p>
           <p className="text-2xl font-black text-emerald-400 font-mono">
-            {formatBDT(totalPrizeDistributed)}
+            <BDT amount={totalPrizeDistributed} />
           </p>
           <p className="text-[10px] text-gray-400">Demo payouts logged</p>
         </div>

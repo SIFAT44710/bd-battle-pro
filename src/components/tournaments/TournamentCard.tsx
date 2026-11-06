@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Tournament } from '@/types/tournament';
 import { formatBDT, formatMatchTime } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
 import { useDemo } from '@/context/DemoContext';
 import { useCountdown } from '@/hooks/useCountdown';
 import {
@@ -120,25 +121,25 @@ export default function TournamentCard({ tournament, onJoinClick }: TournamentCa
         <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-[#07090F] border border-[#1E2536] text-center">
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Prize Pool</p>
-            <p className="text-sm sm:text-base font-black text-[#FF2438] flex items-center justify-center gap-1">
+            <div className="text-sm sm:text-base font-black text-[#FF2438] flex items-center justify-center gap-1">
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              {formatBDT(tournament.prize_pool)}
-            </p>
+              <BDT amount={tournament.prize_pool} />
+            </div>
           </div>
 
           <div className="border-x border-[#1E2536]">
             <p className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Entry Fee</p>
-            <p className="text-sm sm:text-base font-black text-white">
-              {tournament.entry_fee === 0 ? 'FREE' : formatBDT(tournament.entry_fee)}
-            </p>
+            <div className="text-sm sm:text-base font-black text-white">
+              {tournament.entry_fee === 0 ? 'FREE' : <BDT amount={tournament.entry_fee} />}
+            </div>
           </div>
 
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-black tracking-wider">Per Kill</p>
-            <p className="text-sm sm:text-base font-black text-[#00A3FF] flex items-center justify-center gap-0.5">
+            <div className="text-sm sm:text-base font-black text-[#00A3FF] flex items-center justify-center gap-0.5">
               <Flame className="w-3.5 h-3.5 text-[#FF2438]" />
-              {tournament.per_kill > 0 ? formatBDT(tournament.per_kill) : '—'}
-            </p>
+              {tournament.per_kill > 0 ? <BDT amount={tournament.per_kill} /> : '—'}
+            </div>
           </div>
         </div>
 
@@ -169,45 +170,60 @@ export default function TournamentCard({ tournament, onJoinClick }: TournamentCa
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="pt-2 flex items-center gap-2">
-          <Link
-            href={`/tournaments/${tournament.id}`}
-            className="flex-1 py-2.5 px-3 rounded-xl bg-[#121622] hover:bg-[#182030] text-gray-200 font-bold text-xs sm:text-sm text-center border border-[#1E2536] transition-colors flex items-center justify-center gap-1.5"
-          >
-            <span>Details & Rules</span>
-            <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-          </Link>
-
-          {joined ? (
+        {/* Action Buttons based on match status */}
+        <div className="pt-2">
+          {isLive ? (
             <Link
               href={`/tournaments/${tournament.id}#room-vault`}
-              className="py-2.5 px-4 rounded-xl bg-[#00A3FF]/20 hover:bg-[#00A3FF]/30 text-[#00A3FF] font-black text-xs sm:text-sm border border-[#00A3FF]/40 transition-colors flex items-center gap-1.5 shadow-sm"
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF2438] via-rose-600 to-[#00A3FF] hover:brightness-110 text-white font-black text-xs sm:text-sm text-center shadow-lg shadow-red-950/60 transition-all flex items-center justify-center gap-2 group/btn"
             >
-              <KeyRound className="w-4 h-4 text-[#00A3FF]" />
-              <span>Room Vault</span>
+              <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+              <span>Watch Live / Room Vault</span>
+              <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </Link>
           ) : isCompleted ? (
             <Link
               href={`/tournaments/${tournament.id}`}
-              className="py-2.5 px-4 rounded-xl bg-[#121622] text-gray-400 font-bold text-xs sm:text-sm border border-[#1E2536]"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#121622] hover:bg-[#182030] text-[#00A3FF] hover:text-white font-black text-xs sm:text-sm text-center border border-[#1E2536] hover:border-[#00A3FF]/40 transition-all flex items-center justify-center gap-2 group/btn"
             >
-              Results
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span>View Final Standings & Payouts</span>
+              <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </Link>
-          ) : isFull ? (
-            <button
-              disabled
-              className="py-2.5 px-4 rounded-xl bg-[#121622]/50 text-gray-500 font-bold text-xs sm:text-sm border border-[#1E2536] cursor-not-allowed"
-            >
-              Full
-            </button>
           ) : (
-            <button
-              onClick={() => onJoinClick && onJoinClick(tournament)}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF2438] to-[#E01B2E] hover:from-red-500 hover:to-red-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-red-950/60 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5"
-            >
-              <span>Join Now</span>
-            </button>
+            <div className="flex items-center gap-2 w-full">
+              <Link
+                href={`/tournaments/${tournament.id}`}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-[#121622] hover:bg-[#182030] text-gray-200 font-bold text-xs sm:text-sm text-center border border-[#1E2536] transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>Details & Rules</span>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+              </Link>
+
+              {joined ? (
+                <Link
+                  href={`/tournaments/${tournament.id}#room-vault`}
+                  className="py-2.5 px-4 rounded-xl bg-[#00A3FF]/20 hover:bg-[#00A3FF]/30 text-[#00A3FF] font-black text-xs sm:text-sm border border-[#00A3FF]/40 transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <KeyRound className="w-4 h-4 text-[#00A3FF]" />
+                  <span>Room Vault</span>
+                </Link>
+              ) : isFull ? (
+                <button
+                  disabled
+                  className="py-2.5 px-4 rounded-xl bg-[#121622]/50 text-gray-500 font-bold text-xs sm:text-sm border border-[#1E2536] cursor-not-allowed"
+                >
+                  Full
+                </button>
+              ) : (
+                <button
+                  onClick={() => onJoinClick && onJoinClick(tournament)}
+                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF2438] to-[#E01B2E] hover:from-red-500 hover:to-red-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-red-950/60 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Join Now</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useDemo } from '@/context/DemoContext';
 import { formatBDT } from '@/lib/utils';
+import { BDT } from '@/components/common/BDT';
+import SifrPayModal from '@/components/wallet/SifrPayModal';
 import {
   Swords,
   Trophy,
@@ -24,6 +26,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { currentUser, logout } = useDemo();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const navLinks = [
     { label: 'Tournaments', href: '/tournaments', icon: Swords },
@@ -97,19 +100,20 @@ export default function Navbar() {
           {currentUser ? (
             <>
               {/* Demo Wallet Balance Pill with Red-Blue Theme */}
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0F131C] border border-[#1E2536] text-gray-200 hover:border-[#00A3FF]/50 transition-all group"
-                title="Your Demo BDT Wallet Balance"
+              <button
+                type="button"
+                onClick={() => setWalletModalOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0F131C] border border-[#1E2536] text-gray-200 hover:border-[#00A3FF]/50 transition-all group cursor-pointer"
+                title="Click to Open SifrPay Deposit & Withdraw Modal"
               >
                 <Wallet className="w-4 h-4 text-[#00A3FF] group-hover:scale-110 transition-transform" />
                 <span className="font-black text-sm tracking-tight text-white">
-                  {formatBDT(currentUser.demo_balance)}
+                  <BDT amount={currentUser.demo_balance} />
                 </span>
                 <span className="text-[9px] bg-red-500/20 text-[#FF2438] font-black px-1.5 py-0.5 rounded uppercase border border-red-500/30">
                   Demo
                 </span>
-              </Link>
+              </button>
 
               {/* User IGN Pill */}
               <div className="flex items-center gap-2 pl-2 border-l border-[#1E2536]">
@@ -244,6 +248,13 @@ export default function Navbar() {
           )}
         </div>
       )}
+
+      {/* SifrPay Deposit & Withdraw Modal accessible from Navbar */}
+      <SifrPayModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        initialMode="deposit"
+      />
     </header>
   );
 }

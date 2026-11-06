@@ -26,6 +26,15 @@ body {
   background-attachment: fixed;
 }
 
+/* Bengali Currency (৳) Universal Unicode Glyph Fallback */
+.bdt-glyph {
+  font-family: var(--font-hind-siliguri), 'Hind Siliguri', 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", var(--font-hind-siliguri), monospace;
+}
+
 /* Custom BBP Esports Scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
