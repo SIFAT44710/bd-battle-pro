@@ -8,6 +8,7 @@ import { useDemo } from '@/context/DemoContext';
 import { formatBDT } from '@/lib/utils';
 import { BDT } from '@/components/common/BDT';
 import SifrPayModal from '@/components/wallet/SifrPayModal';
+import UserDrawer from '@/components/layout/UserDrawer';
 import {
   Swords,
   Trophy,
@@ -27,6 +28,8 @@ export default function Navbar() {
   const { currentUser, logout } = useDemo();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [userDrawerOpen, setUserDrawerOpen] = useState(false);
+  const [sifrPayMode, setSifrPayMode] = useState<'deposit' | 'withdraw'>('deposit');
 
   const navLinks = [
     { label: 'Free Fire Matches', href: '/tournaments', icon: Swords },
@@ -116,18 +119,20 @@ export default function Navbar() {
                 </span>
               </button>
 
-              {/* User IGN Pill */}
+              {/* User Panel Pill (RRR Esports Slide-Over Trigger) */}
               <div className="flex items-center gap-2 pl-2 border-l border-[#1E2536]">
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 hover:opacity-85 transition-opacity"
+                <button
+                  type="button"
+                  onClick={() => setUserDrawerOpen(true)}
+                  className="flex items-center gap-2 hover:opacity-85 transition-opacity cursor-pointer group"
+                  title="Open User Panel (RRR Esports Style)"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-blue-600 p-[1px] flex items-center justify-center font-black text-xs text-white">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-blue-600 p-[1px] flex items-center justify-center font-black text-xs text-white group-hover:scale-105 transition-transform">
                     <span className="w-full h-full bg-[#0F131C] rounded-[7px] flex items-center justify-center font-extrabold text-xs text-gray-200">
                       {currentUser.full_name[0]}
                     </span>
                   </div>
-                  <div className="text-left">
+                  <div className="text-left hidden lg:block">
                     <p className="text-xs font-black text-gray-100 leading-tight flex items-center gap-1.5">
                       {currentUser.ign}
                       {currentUser.role === 'admin' && (
@@ -138,7 +143,7 @@ export default function Navbar() {
                     </p>
                     <p className="text-[10px] text-gray-400 font-mono">UID: {currentUser.ff_uid}</p>
                   </div>
-                </Link>
+                </button>
 
                 <button
                   onClick={logout}
@@ -250,11 +255,25 @@ export default function Navbar() {
         </div>
       )}
 
+      {/* RRR Esports Style Slide-Over User Panel Drawer */}
+      <UserDrawer
+        isOpen={userDrawerOpen}
+        onClose={() => setUserDrawerOpen(false)}
+        onOpenDeposit={() => {
+          setSifrPayMode('deposit');
+          setWalletModalOpen(true);
+        }}
+        onOpenWithdraw={() => {
+          setSifrPayMode('withdraw');
+          setWalletModalOpen(true);
+        }}
+      />
+
       {/* SifrPay Deposit & Withdraw Modal accessible from Navbar */}
       <SifrPayModal
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
-        initialMode="deposit"
+        initialMode={sifrPayMode}
       />
     </header>
   );

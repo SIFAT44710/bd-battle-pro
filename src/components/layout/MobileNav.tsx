@@ -14,7 +14,7 @@ export default function MobileNav() {
     { label: 'Home', href: '/', icon: Home },
     { label: 'Matches', href: '/tournaments', icon: Swords },
     { label: 'My Rooms', href: '/my-tournaments', icon: Trophy },
-    { label: 'Wallet', href: '/profile', icon: User },
+    { label: 'Account', href: '/profile', icon: User },
   ];
 
   if (currentUser?.role === 'admin') {
