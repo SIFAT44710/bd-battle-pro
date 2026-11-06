@@ -31,6 +31,7 @@ export default function Navbar() {
   const navLinks = [
     { label: 'Free Fire Matches', href: '/tournaments', icon: Swords },
     { label: 'Ludu Matches', href: '/tournaments', icon: Trophy },
+    { label: 'Buy App (৳৩৫,০০০)', href: '/pricing', icon: Crown },
     { label: 'Wallet & Profile', href: '/profile', icon: User },
   ];
 

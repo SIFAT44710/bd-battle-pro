@@ -430,21 +430,29 @@ export default function HomePage() {
 
           <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0 w-full md:w-auto">
             <Link
-              href="/admin"
-              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-[#00A3FF] hover:bg-blue-600 text-white font-black text-xs shadow-lg transition-colors flex items-center justify-center gap-2"
+              href="/pricing"
+              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF2438] to-[#E01B2E] hover:from-red-500 hover:to-red-600 text-white font-black text-xs shadow-lg shadow-red-950/60 transition-all flex items-center justify-center gap-1.5"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>এডমিন প্যানেল দেখুন</span>
+              <Crown className="w-3.5 h-3.5 text-amber-300" />
+              <span>প্যাকেজ ও প্রাইসিং (৳৩৫,০০০)</span>
+            </Link>
+
+            <Link
+              href="/admin"
+              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-[#121624] hover:bg-[#182032] text-gray-200 font-extrabold text-xs border border-[#1E2536] hover:border-[#00A3FF]/50 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00A3FF]" />
+              <span>এডমিন ডেমো</span>
             </Link>
 
             <a
               href="https://wa.me/8801700000000?text=Hello%20Team%20Sifr,%20I%20want%20to%20buy%20an%20esports%20tournament%20website%20like%20BD%20Battle%20Pro."
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-slate-950 font-black text-xs shadow-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-slate-950 font-black text-xs shadow-lg transition-colors flex items-center justify-center gap-1.5"
             >
-              <MessageCircle className="w-4 h-4 fill-slate-950" />
-              <span>অর্ডার করুন (WhatsApp)</span>
+              <MessageCircle className="w-3.5 h-3.5 fill-slate-950" />
+              <span>WhatsApp অর্ডার</span>
             </a>
           </div>
         </div>
