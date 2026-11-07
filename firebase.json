@@ -1,6 +1,11 @@
 {
   "hosting": {
     "public": ".",
+    "rewrites": [
+      { "source": "/", "destination": "/player/dashboard.html" },
+      { "source": "/admin", "destination": "/admin/index.html" },
+      { "source": "/sbs", "destination": "/sbs/index.html" }
+    ],
     "ignore": [
       "firebase.json",
       ".firebaserc",
