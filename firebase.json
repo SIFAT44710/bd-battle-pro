@@ -3,8 +3,7 @@
     "public": ".",
     "rewrites": [
       { "source": "/", "destination": "/player/dashboard.html" },
-      { "source": "/admin", "destination": "/admin/index.html" },
-      { "source": "/sbs", "destination": "/sbs/index.html" }
+      { "source": "/admin", "destination": "/admin/index.html" }
     ],
     "ignore": [
       "firebase.json",
@@ -13,5 +12,8 @@
       "ARENA X ____Saas/**",
       "*.md"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

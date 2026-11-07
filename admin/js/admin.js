@@ -1,345 +1,561 @@
-import { supabase } from '../../lib/supabaseClient.js';
-import { resolveTenant, getTenantId } from '../../lib/tenantResolver.js';
+// ==================================================
+// ARENA X - Admin Panel Real-Time Firestore Logic
+// ==================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { 
+  getFirestore, 
+  doc, 
+  onSnapshot, 
+  updateDoc, 
+  setDoc,
+  getDoc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-let tenant = null;
-let currentUser = null;
+const firebaseConfig = {
+  apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
+  authDomain: "ff-squad-arena-bd.firebaseapp.com",
+  projectId: "ff-squad-arena-bd",
+  storageBucket: "ff-squad-arena-bd.firebasestorage.app",
+  messagingSenderId: "604500327184",
+  appId: "1:604500327184:web:2eae6bfddea7ed2ae74395"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const TOURNAMENT_DOC_ID = "ff-daily-squad";
+
+// Default State
+let tournamentData = {
+  title: "Free Fire Daily Squad Championship",
+  status: "upcoming",
+  entryFee: 100,
+  prizePool: 1000,
+  matchCount: 3,
+  matches: [
+    { matchNumber: 1, map: "Bermuda", time: "08:00 PM", roomId: "893411", roomPass: "7788", status: "upcoming" },
+    { matchNumber: 2, map: "Purgatory", time: "08:45 PM", roomId: "", roomPass: "", status: "upcoming" },
+    { matchNumber: 3, map: "Kalahari", time: "09:30 PM", roomId: "", roomPass: "", status: "upcoming" },
+    { matchNumber: 4, map: "Bermuda", time: "10:15 PM", roomId: "", roomPass: "", status: "upcoming" },
+    { matchNumber: 5, map: "Purgatory", time: "11:00 PM", roomId: "", roomPass: "", status: "upcoming" },
+    { matchNumber: 6, map: "Alpine", time: "11:45 PM", roomId: "", roomPass: "", status: "upcoming" }
+  ],
+  slots: Array.from({ length: 12 }, (_, i) => ({
+    slotNumber: i + 1,
+    booked: i === 0 || i === 1,
+    squadName: i === 0 ? "DARK VORTEX" : (i === 1 ? "71 ESPL" : ""),
+    leaderIgn: i === 0 ? "Vortex_Boss" : (i === 1 ? "71_Tiger" : ""),
+    player2: i === 0 ? "Vortex_Fire" : (i === 1 ? "71_Sifat" : ""),
+    player3: i === 0 ? "Vortex_Sniper" : (i === 1 ? "71_Shooter" : ""),
+    player4: i === 0 ? "Vortex_Ghost" : (i === 1 ? "71_Storm" : ""),
+    contact: i === 0 ? "01711000001" : (i === 1 ? "01791357521" : "")
+  })),
+  standings: [
+    { rank: 1, squadName: "DARK VORTEX", matches: 1, kills: 8, pts: 20 },
+    { rank: 2, squadName: "71 ESPL", matches: 1, kills: 5, pts: 14 }
+  ],
+  results: {}
+};
+
+// UI Helpers
 const $ = (id) => document.getElementById(id);
-const fmt = (n) => `৳${Number(n||0).toFixed(2)}`;
 
-// --- SECTION NAV ---
-function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
-    const t = $(id); if (t) { t.classList.add('active'); t.style.display = 'block'; }
-    document.querySelectorAll('#adminSidebar .nav-link').forEach(l => l.classList.toggle('active', l.dataset.section === id));
-    const title = $('adminPageTitle');
-    if (title) title.textContent = id.replace('-section','').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-    const offcanvas = bootstrap.Offcanvas.getInstance($('adminSidebar'));
-    if (offcanvas) offcanvas.hide();
+function showToast(msg) {
+  const toastEl = $('adminToast');
+  const msgEl = $('adminToastMessage');
+  if (msgEl) msgEl.textContent = msg;
+  if (toastEl) {
+    const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+    toast.show();
+  }
 }
 
-// --- AUTH ---
-async function handleAdminLogin(e) {
-    e.preventDefault();
-    const email = $('adminEmail')?.value?.trim();
-    const pass = $('adminPassword')?.value;
-    const st = $('adminLoginStatus');
-    if (!email||!pass) { if(st) st.innerHTML='<div class="alert alert-warning">Fill all fields</div>'; return; }
-    try {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
-    } catch(err) { if(st) st.innerHTML=`<div class="alert alert-danger">${err.message}</div>`; }
+// FFWS Placement Point Table (Official)
+const FFWS_RANK_POINTS = {
+  1: 12,
+  2: 9,
+  3: 8,
+  4: 7,
+  5: 6,
+  6: 5,
+  7: 4,
+  8: 3,
+  9: 2,
+  10: 1,
+  11: 0,
+  12: 0
+};
+
+// Tab Switching
+function switchTab(tabId) {
+  document.querySelectorAll('.admin-tab').forEach(sec => sec.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-pills .nav-pill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.target === tabId);
+  });
+  const target = $(tabId);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
-async function handleAdminSetup(e) {
-    e.preventDefault();
-    const email = $('setupEmail')?.value?.trim();
-    const pass = $('setupPassword')?.value;
-    const st = $('adminSetupStatus');
-    if (!email||!pass||pass.length<6) { if(st) st.innerHTML='<div class="alert alert-warning">Valid email & 6+ char password required</div>'; return; }
-    try {
-        const tid = getTenantId();
-        const { error } = await supabase.auth.signUp({ email, password: pass, options: { data: { tenant_id: tid, role: 'admin' } } });
-        if (error) throw error;
-        if(st) st.innerHTML='<div class="alert alert-success">Admin created! Please login.</div>';
-        setTimeout(() => { $('admin-setup-section').style.display='none'; $('admin-login-section').style.display='block'; }, 1500);
-    } catch(err) { if(st) st.innerHTML=`<div class="alert alert-danger">${err.message}</div>`; }
-}
+// Render Matches & Room ID Config Form (1-6 Matches)
+function renderMatchConfigForm() {
+  const select = $('seriesMatchCountSelect');
+  const count = Number(select?.value || tournamentData.matchCount || 3);
+  const container = $('matchesContainer');
+  if (!container) return;
 
-function showAuth() {
-    $('auth-container').style.display='block'; $('admin-main-area').style.display='none';
-    $('admin-login-section').style.display='block'; $('admin-setup-section').style.display='none';
-    const loader=$('adminLoader'); if(loader) loader.style.display='none';
-}
-function showMain() {
-    $('auth-container').style.display='none'; $('admin-main-area').style.display='block';
-    const loader=$('adminLoader'); if(loader) loader.style.display='none';
-    if(currentUser) { const el=$('adminUserEmailShort'); if(el) el.textContent=currentUser.auth.email; }
-    showSection('dashboard-section');
-    loadDashboard(); loadUsers(); loadTournaments(); loadGames(); loadWithdrawals(); loadDeposits();
-}
+  const maps = ["Bermuda", "Purgatory", "Kalahari", "Alpine", "Nexterra"];
+  const matches = tournamentData.matches || [];
 
-// --- DASHBOARD ---
-async function loadDashboard() {
-    if(!tenant) return;
-    const tid = tenant.id;
-    try {
-        const [{count:uc},{count:at},{count:pw},{count:cw},{count:rw},{count:gc},{count:ft},{count:tp}] = await Promise.all([
-            supabase.from('users').select('*',{count:'exact',head:true}).eq('tenant_id',tid),
-            supabase.from('tournaments').select('*',{count:'exact',head:true}).eq('tenant_id',tid).in('status',['upcoming','active']),
-            supabase.from('transactions').select('*',{count:'exact',head:true}).eq('tenant_id',tid).eq('type','withdrawal').eq('status','pending'),
-            supabase.from('transactions').select('*',{count:'exact',head:true}).eq('tenant_id',tid).eq('type','withdrawal').eq('status','completed'),
-            supabase.from('transactions').select('*',{count:'exact',head:true}).eq('tenant_id',tid).eq('type','withdrawal').eq('status','rejected'),
-            supabase.from('games').select('*',{count:'exact',head:true}).eq('tenant_id',tid),
-            supabase.from('tournaments').select('*',{count:'exact',head:true}).eq('tenant_id',tid).eq('status','completed'),
-            supabase.from('promotions').select('*',{count:'exact',head:true}).eq('tenant_id',tid),
-        ]);
-        const s=(id,v)=>{const e=$(id);if(e)e.textContent=v||0;};
-        s('statTotalUsers',uc);s('statActiveTournaments',at);s('statPendingWithdrawals',pw);
-        s('statCompletedWithdrawals',cw);s('statRejectedWithdrawals',rw);s('statTotalGames',gc);
-        s('statFinishedTournaments',ft);s('statTotalPromotions',tp);
-        const badge=$('pendingWithdrawalCountBadge');
-        if(badge&&pw>0){badge.textContent=pw;badge.style.display='inline';}
-    } catch(err) { console.error('Dashboard error:',err); }
-}
-
-// --- USERS ---
-async function loadUsers() {
-    if(!tenant) return;
-    const tbody=$('usersTableBody'); if(!tbody) return;
-    try {
-        const {data:users,error}=await supabase.from('users').select('*, wallets(main_balance,winning_cash,bonus_cash)').eq('tenant_id',tenant.id).order('created_at',{ascending:false});
-        if(error) throw error;
-        if(!users||!users.length){tbody.innerHTML='<tr><td colspan="6" class="text-center p-3">No users found.</td></tr>';return;}
-        tbody.innerHTML=users.map(u=>{
-            const w=u.wallets?.[0]||{}; const bal=Number(w.main_balance||0)+Number(w.winning_cash||0)+Number(w.bonus_cash||0);
-            const statusBadge=u.status==='blocked'?'<span class="badge bg-danger">Blocked</span>':'<span class="badge bg-success">Active</span>';
-            return `<tr><td><small class="text-muted">${(u.user_app_id||u.id).substring(0,8)}</small></td>
-            <td>${u.username||'N/A'}</td><td>${u.email||'N/A'}</td><td>${fmt(bal)}</td><td>${statusBadge}</td>
-            <td><button class="btn btn-sm btn-outline-info view-user-btn" data-uid="${u.id}"><i class="bi bi-eye"></i></button></td></tr>`;
-        }).join('');
-    } catch(err){console.error('Users error:',err);}
-}
-
-// --- TOURNAMENTS ---
-async function loadTournaments() {
-    if(!tenant) return;
-    const tbody=$('tournamentsTableBody'); if(!tbody) return;
-    try {
-        const {data,error}=await supabase.from('tournaments').select('*').eq('tenant_id',tenant.id).order('created_at',{ascending:false});
-        if(error) throw error;
-        if(!data||!data.length){tbody.innerHTML='<tr><td colspan="8" class="text-center p-3">No tournaments.</td></tr>';return;}
-        tbody.innerHTML=data.map(t=>{
-            const statusClass=t.status==='active'?'bg-success':t.status==='upcoming'?'bg-info':t.status==='completed'?'bg-secondary':'bg-dark';
-            return `<tr><td>${t.title}</td><td>${t.game_name||'N/A'}</td><td>${fmt(t.entry_fee)}</td><td>${fmt(t.prize_pool)}</td>
-            <td>${t.start_time?new Date(t.start_time).toLocaleString():'N/A'}</td>
-            <td><span class="badge ${statusClass}">${t.status||t.match_type}</span></td>
-            <td>${t.filled_slots||0}/${t.max_slots||0}</td>
-            <td><button class="btn btn-sm btn-outline-warning edit-tournament-btn" data-tid="${t.id}"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-outline-info view-players-btn" data-tid="${t.id}" data-tname="${t.title}"><i class="bi bi-people"></i></button>
-            <button class="btn btn-sm btn-outline-danger delete-tournament-btn" data-tid="${t.id}"><i class="bi bi-trash"></i></button></td></tr>`;
-        }).join('');
-    } catch(err){console.error('Tournaments error:',err);}
-}
-
-async function saveTournament() {
-    const tid=tenant?.id; if(!tid) return;
-    const editId=$('tournamentEditId')?.value;
-    const obj={tenant_id:tid, title:$('tournamentName')?.value, game_name:$('tournamentGame')?.value,
-        match_type:$('tournamentStatus')?.value, entry_fee:Number($('tournamentEntryFee')?.value||0),
-        prize_pool:Number($('tournamentPrizePool')?.value||0), per_kill:Number($('tournamentPerKill')?.value||0),
-        max_slots:Number($('tournamentMaxPlayers')?.value||48),
-        start_time:$('tournamentStartTime')?.value||null,
-        room_id:$('tournamentRoomId')?.value||null, room_password:$('tournamentRoomPassword')?.value||null,
-        show_id_pass:$('tournamentShowIdPass')?.checked||false,
-        description:$('tournamentDescription')?.value||'',
-        status: ['Solo','Duo','Squad'].includes($('tournamentStatus')?.value)?'upcoming':$('tournamentStatus')?.value?.toLowerCase()
+  let html = '';
+  for (let i = 1; i <= count; i++) {
+    const existing = matches.find(m => m.matchNumber === i) || {
+      matchNumber: i,
+      map: maps[(i - 1) % maps.length],
+      time: `0${7 + i}:00 PM`,
+      roomId: '',
+      roomPass: '1234',
+      status: 'upcoming'
     };
-    const st=$('addTournamentStatus');
-    try {
-        if(editId){await supabase.from('tournaments').update(obj).eq('id',editId);}
-        else{await supabase.from('tournaments').insert([obj]);}
-        if(st) st.innerHTML='<div class="alert alert-success">Saved!</div>';
-        bootstrap.Modal.getInstance($('addTournamentModal'))?.hide();
-        loadTournaments(); loadDashboard();
-    } catch(err){if(st) st.innerHTML=`<div class="alert alert-danger">${err.message}</div>`;}
-}
 
-// --- GAMES ---
-async function loadGames() {
-    if(!tenant) return;
-    const tbody=$('gamesTableBody'); if(!tbody) return;
-    try {
-        const {data,error}=await supabase.from('games').select('*').eq('tenant_id',tenant.id);
-        if(error) throw error;
-        if(!data||!data.length){tbody.innerHTML='<tr><td colspan="4" class="text-center p-3">No games.</td></tr>';return;}
-        tbody.innerHTML=data.map(g=>`<tr><td><img src="${g.image_url||''}" style="width:50px;height:50px;object-fit:cover;border-radius:5px;"></td>
-        <td>${g.name}</td><td><small>${g.id.substring(0,8)}</small></td>
-        <td><button class="btn btn-sm btn-outline-warning edit-game-btn" data-gid="${g.id}"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger delete-game-btn" data-gid="${g.id}"><i class="bi bi-trash"></i></button></td></tr>`).join('');
-        // Populate tournament game dropdown
-        const sel=$('tournamentGame');
-        if(sel){sel.innerHTML=data.map(g=>`<option value="${g.name}">${g.name}</option>`).join('');}
-    } catch(err){console.error('Games error:',err);}
-}
+    html += `
+      <div class="match-config-card" data-match-number="${i}">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="fw-bold text-white fs-6">
+            <i class="bi bi-crosshair text-warning me-1"></i> Match ${i} Configuration
+          </div>
+          <span class="badge bg-secondary">Match #${i}</span>
+        </div>
 
-async function saveGame() {
-    const editId=$('gameEditId')?.value;
-    const obj={tenant_id:tenant.id, name:$('gameName')?.value, image_url:$('gameImageUrl')?.value};
-    try {
-        if(editId){await supabase.from('games').update(obj).eq('id',editId);}
-        else{await supabase.from('games').insert([obj]);}
-        bootstrap.Modal.getInstance($('gameModal'))?.hide();
-        loadGames(); loadDashboard();
-    } catch(err){const st=$('gameStatus');if(st) st.innerHTML=`<div class="alert alert-danger">${err.message}</div>`;}
-}
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label small text-secondary">Map</label>
+            <select class="form-select form-select-sm match-map-input">
+              ${maps.map(mp => `<option value="${mp}" ${existing.map === mp ? 'selected' : ''}>${mp}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-secondary">Match Time</label>
+            <input type="text" class="form-control form-select-sm match-time-input" value="${existing.time || ''}" placeholder="08:00 PM">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-secondary">Room ID</label>
+            <input type="text" class="form-control form-select-sm match-roomid-input" value="${existing.roomId || ''}" placeholder="e.g. 892341">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-secondary">Password</label>
+            <input type="text" class="form-control form-select-sm match-roompass-input" value="${existing.roomPass || ''}" placeholder="e.g. 1234">
+          </div>
+        </div>
 
-// --- WITHDRAWALS ---
-async function loadWithdrawals() {
-    if(!tenant) return;
-    for(const status of ['pending','completed','rejected']){
-        const tbody=$(`${status}WithdrawalsTableBody`); if(!tbody) continue;
-        try {
-            const {data}=await supabase.from('transactions').select('*, users(username,email)')
-                .eq('tenant_id',tenant.id).eq('type','withdrawal').eq('status',status).order('created_at',{ascending:false});
-            if(!data||!data.length){tbody.innerHTML=`<tr><td colspan="6" class="text-center p-3">No ${status} withdrawals.</td></tr>`;continue;}
-            tbody.innerHTML=data.map(w=>{
-                const user=w.users?.username||w.users?.email||'Unknown';
-                const date=new Date(w.created_at).toLocaleString();
-                const notes=w.notes||'';
-                if(status==='pending'){
-                    return `<tr><td>${date}</td><td>${user}</td><td>${fmt(w.amount)}</td><td>${notes}</td>
-                    <td><button class="btn btn-sm btn-success approve-withdrawal-btn" data-wid="${w.id}" data-wuser="${user}" data-wamt="${w.amount}" data-wmethod="${notes}">Approve</button>
-                    <button class="btn btn-sm btn-danger reject-withdrawal-btn" data-wid="${w.id}" data-wuser="${user}" data-wamt="${w.amount}" data-wmethod="${notes}">Reject</button></td></tr>`;
-                }
-                return `<tr><td>${date}</td><td>${w.updated_at?new Date(w.updated_at).toLocaleString():'N/A'}</td><td>${user}</td><td>${fmt(w.amount)}</td><td>${notes}</td><td>${w.admin_note||w.reject_reason||''}</td></tr>`;
-            }).join('');
-        } catch(err){console.error(`Withdrawals ${status} error:`,err);}
+        <div class="row g-2 mt-1">
+          <div class="col-md-4">
+            <label class="form-label small text-secondary">Status</label>
+            <select class="form-select form-select-sm match-status-input">
+              <option value="upcoming" ${existing.status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
+              <option value="live" ${existing.status === 'live' ? 'selected' : ''}>Live</option>
+              <option value="completed" ${existing.status === 'completed' ? 'selected' : ''}>Completed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  // Update Match Selector in Tab 3 (Results)
+  const resSelect = $('resultMatchSelector');
+  if (resSelect) {
+    resSelect.innerHTML = '';
+    for (let i = 1; i <= count; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `Match ${i}`;
+      resSelect.appendChild(opt);
     }
+  }
 }
 
-// --- DEPOSITS ---
-async function loadDeposits() {
-    if(!tenant) return;
-    for(const status of ['pending','completed','rejected']){
-        const tbody=$(`${status}DepositsTableBody`); if(!tbody) continue;
-        try {
-            const {data}=await supabase.from('transactions').select('*, users(username,email)')
-                .eq('tenant_id',tenant.id).eq('type','deposit').eq('status',status).order('created_at',{ascending:false});
-            if(!data||!data.length){tbody.innerHTML=`<tr><td colspan="5" class="text-center p-3">No ${status} deposits.</td></tr>`;continue;}
-            tbody.innerHTML=data.map(d=>{
-                const user=d.users?.username||d.users?.email||'Unknown';
-                const date=new Date(d.created_at).toLocaleString();
-                if(status==='pending'){
-                    return `<tr><td>${date}</td><td>${user}</td><td>${fmt(d.amount)}</td><td>${d.trx_id||'N/A'}</td>
-                    <td><button class="btn btn-sm btn-success approve-deposit-btn" data-did="${d.id}" data-duid="${d.user_id}" data-damt="${d.amount}">Approve</button>
-                    <button class="btn btn-sm btn-danger reject-deposit-btn" data-did="${d.id}">Reject</button></td></tr>`;
-                }
-                return `<tr><td>${date}</td><td>${user}</td><td>${fmt(d.amount)}</td><td>${d.trx_id||'N/A'}</td><td>${d.admin_note||d.reject_reason||''}</td></tr>`;
-            }).join('');
-        } catch(err){console.error(`Deposits ${status} error:`,err);}
+// Save Matches & Room IDs to Firestore
+async function handleSaveMatches(e) {
+  e.preventDefault();
+  const count = Number($('seriesMatchCountSelect').value);
+  const cards = document.querySelectorAll('#matchesContainer .match-config-card');
+  const updatedMatches = [];
+
+  cards.forEach(card => {
+    const num = Number(card.dataset.matchNumber);
+    const map = card.querySelector('.match-map-input').value;
+    const time = card.querySelector('.match-time-input').value.trim();
+    const roomId = card.querySelector('.match-roomid-input').value.trim();
+    const roomPass = card.querySelector('.match-roompass-input').value.trim();
+    const status = card.querySelector('.match-status-input').value;
+
+    updatedMatches.push({
+      matchNumber: num,
+      map,
+      time,
+      roomId,
+      roomPass,
+      status
+    });
+  });
+
+  const btn = $('saveMatchesBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    await updateDoc(docRef, {
+      matchCount: count,
+      matches: updatedMatches
+    });
+    showToast("Match series & Room credentials updated!");
+  } catch (err) {
+    console.error("Save matches error:", err);
+    alert("Failed to save matches: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save-fill"></i> Save Match & Room Details';
+  }
+}
+
+// Render Slots Manager Tab
+function renderSlotsManager() {
+  const tbody = $('adminSlotsTableBody');
+  if (!tbody) return;
+
+  const slots = tournamentData.slots || [];
+  const bookedCount = slots.filter(s => s.booked).length;
+  $('adminBookedCountBadge').textContent = `${bookedCount} / 12 Booked`;
+
+  tbody.innerHTML = slots.map(slot => {
+    if (slot.booked) {
+      return `
+        <tr>
+          <td><span class="badge bg-success">Slot ${slot.slotNumber}</span></td>
+          <td class="fw-bold text-white">${slot.squadName || 'N/A'}</td>
+          <td class="text-warning">${slot.leaderIgn || 'N/A'}</td>
+          <td class="small text-secondary">
+            ${[slot.player2, slot.player3, slot.player4].filter(Boolean).join(', ') || 'None'}
+          </td>
+          <td><small class="text-secondary">${slot.contact || 'N/A'}</small></td>
+          <td>
+            <button class="btn btn-sm btn-outline-info edit-slot-btn me-1" data-slot="${slot.slotNumber}">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger clear-inline-btn" data-slot="${slot.slotNumber}" title="Vacate Slot">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    } else {
+      return `
+        <tr class="opacity-75">
+          <td><span class="badge bg-secondary">Slot ${slot.slotNumber}</span></td>
+          <td class="text-secondary fst-italic">Available</td>
+          <td class="text-secondary">-</td>
+          <td class="text-secondary">-</td>
+          <td class="text-secondary">-</td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning edit-slot-btn" data-slot="${slot.slotNumber}">
+              <i class="bi bi-plus-lg"></i> Assign
+            </button>
+          </td>
+        </tr>
+      `;
     }
-    // Badge
-    const {count}=await supabase.from('transactions').select('*',{count:'exact',head:true}).eq('tenant_id',tenant.id).eq('type','deposit').eq('status','pending');
-    const badge=$('pendingDepositCountBadge');
-    if(badge&&count>0){badge.textContent=count;badge.style.display='inline';}
+  }).join('');
+
+  // Wire buttons
+  tbody.querySelectorAll('.edit-slot-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditSlotModal(Number(btn.dataset.slot)));
+  });
+
+  tbody.querySelectorAll('.clear-inline-btn').forEach(btn => {
+    btn.addEventListener('click', () => clearSlot(Number(btn.dataset.slot)));
+  });
 }
 
-async function approveDeposit(txId, userId, amount) {
-    try {
-        const {error}=await supabase.rpc('approve_deposit',{p_transaction_id:txId,p_tenant_id:tenant.id,p_user_id:userId,p_amount:Number(amount)});
-        if(error) throw error;
-        alert('Deposit approved!'); loadDeposits(); loadDashboard();
-    } catch(err){alert('Error: '+err.message);}
+// Open Edit Slot Modal
+function openEditSlotModal(slotNum) {
+  const slot = (tournamentData.slots || []).find(s => s.slotNumber === slotNum);
+  if (!slot) return;
+
+  $('editSlotNumberHidden').value = slotNum;
+  $('editSquadModalTitle').textContent = `Manage Slot #${slotNum}`;
+  $('editSquadNameInput').value = slot.squadName || '';
+  $('editLeaderIgnInput').value = slot.leaderIgn || '';
+  $('editPlayer2Input').value = slot.player2 || '';
+  $('editPlayer3Input').value = slot.player3 || '';
+  $('editPlayer4Input').value = slot.player4 || '';
+  $('editContactInput').value = slot.contact || '';
+
+  const modal = new bootstrap.Modal($('editSquadModal'));
+  modal.show();
 }
 
-// --- SETTINGS ---
-async function loadSettings() {
-    if(!tenant) return;
-    try {
-        const {data}=await supabase.from('tenant_settings').select('*').eq('tenant_id',tenant.id).single();
-        if(!data) return;
-        const s=(id,v)=>{const e=$(id);if(e)e.value=v||'';};
-        s('settingAppName',data.app_name);s('settingLogoUrl',data.logo_url);s('settingMinWithdraw',data.min_withdraw);
-        s('settingReferralBonus',data.referral_bonus);s('settingSupportContact',data.support_contact);
-        s('settingPaymentGatewayUrl',data.payment_gateway_url);
-        s('settingTeleGroup',data.telegram_group);s('settingTeleID',data.telegram_id);s('settingFbPage',data.facebook_page);
-        s('settingPolicyPrivacy',data.policy_privacy);s('settingPolicyTerms',data.policy_terms);
-        s('settingPolicyRefund',data.policy_refund);s('settingPolicyFairPlay',data.policy_fair_play);
-    } catch(err){console.error('Settings error:',err);}
+// Save Edited Slot to Firestore
+async function handleSaveEditedSlot(e) {
+  e.preventDefault();
+  const slotNum = Number($('editSlotNumberHidden').value);
+  const squadName = $('editSquadNameInput').value.trim();
+  const leaderIgn = $('editLeaderIgnInput').value.trim();
+  const player2 = $('editPlayer2Input').value.trim();
+  const player3 = $('editPlayer3Input').value.trim();
+  const player4 = $('editPlayer4Input').value.trim();
+  const contact = $('editContactInput').value.trim();
+
+  const currentSlots = [...(tournamentData.slots || [])];
+  const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
+  if (idx === -1) return;
+
+  currentSlots[idx] = {
+    slotNumber: slotNum,
+    booked: true,
+    squadName,
+    leaderIgn,
+    player2,
+    player3,
+    player4,
+    contact
+  };
+
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    await updateDoc(docRef, { slots: currentSlots });
+    showToast(`Slot ${slotNum} saved!`);
+    bootstrap.Modal.getInstance($('editSquadModal')).hide();
+  } catch (err) {
+    alert("Error updating slot: " + err.message);
+  }
 }
 
-async function saveSettings(e) {
-    e.preventDefault();
-    const st=$('settingsStatus');
-    const obj={
-        tenant_id:tenant.id, app_name:$('settingAppName')?.value, logo_url:$('settingLogoUrl')?.value,
-        min_withdraw:Number($('settingMinWithdraw')?.value||50), referral_bonus:Number($('settingReferralBonus')?.value||0),
-        support_contact:$('settingSupportContact')?.value, payment_gateway_url:$('settingPaymentGatewayUrl')?.value,
-        telegram_group:$('settingTeleGroup')?.value, telegram_id:$('settingTeleID')?.value, facebook_page:$('settingFbPage')?.value,
-        policy_privacy:$('settingPolicyPrivacy')?.value, policy_terms:$('settingPolicyTerms')?.value,
-        policy_refund:$('settingPolicyRefund')?.value, policy_fair_play:$('settingPolicyFairPlay')?.value,
+// Clear / Vacate a Slot
+async function clearSlot(slotNum) {
+  if (!confirm(`Are you sure you want to clear and vacate Slot #${slotNum}?`)) return;
+
+  const currentSlots = [...(tournamentData.slots || [])];
+  const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
+  if (idx === -1) return;
+
+  currentSlots[idx] = {
+    slotNumber: slotNum,
+    booked: false,
+    squadName: "",
+    leaderIgn: "",
+    player2: "",
+    player3: "",
+    player4: "",
+    contact: ""
+  };
+
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    await updateDoc(docRef, { slots: currentSlots });
+    showToast(`Slot #${slotNum} is now vacant.`);
+    const modalEl = $('editSquadModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+  } catch (err) {
+    alert("Error clearing slot: " + err.message);
+  }
+}
+
+// Render Results Entry Tab
+function renderResultsEntry() {
+  const tbody = $('adminResultsTableBody');
+  if (!tbody) return;
+
+  const matchNum = $('resultMatchSelector')?.value || "1";
+  const bookedSlots = (tournamentData.slots || []).filter(s => s.booked);
+
+  if (!bookedSlots.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">No squads booked yet. Book slots first!</td></tr>`;
+    return;
+  }
+
+  const existingResults = (tournamentData.results && tournamentData.results[`match${matchNum}`]) || [];
+
+  tbody.innerHTML = bookedSlots.map((slot, idx) => {
+    const res = existingResults.find(r => r.slotNumber === slot.slotNumber) || {};
+    const rank = res.rank || (idx + 1);
+    const kills = res.kills !== undefined ? res.kills : 0;
+    const rankPts = FFWS_RANK_POINTS[rank] || 0;
+    const totalPts = rankPts + kills;
+
+    return `
+      <tr class="result-row" data-slot="${slot.slotNumber}" data-squad="${slot.squadName}">
+        <td><span class="badge bg-warning text-dark">#${slot.slotNumber}</span></td>
+        <td class="fw-bold text-white">${slot.squadName}</td>
+        <td>
+          <select class="form-select form-select-sm result-rank-select">
+            ${Array.from({ length: 12 }, (_, i) => i + 1).map(r => `
+              <option value="${r}" ${r === rank ? 'selected' : ''}>Rank ${r} (${FFWS_RANK_POINTS[r]} pts)</option>
+            `).join('')}
+          </select>
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm result-kills-input" min="0" value="${kills}">
+        </td>
+        <td class="fw-bold text-warning result-pts-preview">${totalPts}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Wire live calculation of pts preview
+  tbody.querySelectorAll('.result-row').forEach(row => {
+    const rankSelect = row.querySelector('.result-rank-select');
+    const killsInput = row.querySelector('.result-kills-input');
+    const ptsPreview = row.querySelector('.result-pts-preview');
+
+    const updatePreview = () => {
+      const r = Number(rankSelect.value);
+      const k = Number(killsInput.value) || 0;
+      ptsPreview.textContent = (FFWS_RANK_POINTS[r] || 0) + k;
     };
-    try {
-        const {error}=await supabase.from('tenant_settings').upsert(obj,{onConflict:'tenant_id'});
-        if(error) throw error;
-        if(st) st.innerHTML='<div class="alert alert-success">Settings saved!</div>';
-    } catch(err){if(st) st.innerHTML=`<div class="alert alert-danger">${err.message}</div>`;}
+
+    rankSelect.addEventListener('change', updatePreview);
+    killsInput.addEventListener('input', updatePreview);
+  });
 }
 
-// --- INIT ---
-document.addEventListener('DOMContentLoaded', async () => {
-    // Sidebar nav
-    document.querySelectorAll('#adminSidebar .nav-link[data-section]').forEach(l => {
-        l.addEventListener('click', (e) => { e.preventDefault(); showSection(l.dataset.section); });
-    });
-    // Auth forms
-    $('adminLoginForm')?.addEventListener('submit', handleAdminLogin);
-    $('adminSetupForm')?.addEventListener('submit', handleAdminSetup);
-    $('adminLogoutBtnHeader')?.addEventListener('click', async()=>{ await supabase.auth.signOut(); showAuth(); });
-    // Save buttons
-    $('saveTournamentBtn')?.addEventListener('click', saveTournament);
-    $('saveGameBtn')?.addEventListener('click', saveGame);
-    $('appSettingsForm')?.addEventListener('submit', saveSettings);
-    // Delegated events
-    document.addEventListener('click', async(e) => {
-        const viewUser=e.target.closest('.view-user-btn');
-        if(viewUser){/* TODO: open user modal with details */}
-        const delTournament=e.target.closest('.delete-tournament-btn');
-        if(delTournament){if(confirm('Delete this tournament?')){await supabase.from('tournaments').delete().eq('id',delTournament.dataset.tid);loadTournaments();loadDashboard();}}
-        const delGame=e.target.closest('.delete-game-btn');
-        if(delGame){if(confirm('Delete this game?')){await supabase.from('games').delete().eq('id',delGame.dataset.gid);loadGames();loadDashboard();}}
-        const approveDep=e.target.closest('.approve-deposit-btn');
-        if(approveDep){approveDeposit(approveDep.dataset.did,approveDep.dataset.duid,approveDep.dataset.damt);}
-        const rejectDep=e.target.closest('.reject-deposit-btn');
-        if(rejectDep){if(confirm('Reject this deposit?')){await supabase.from('transactions').update({status:'rejected'}).eq('id',rejectDep.dataset.did);loadDeposits();}}
-        const approveW=e.target.closest('.approve-withdrawal-btn');
-        if(approveW){if(confirm('Approve this withdrawal?')){await supabase.from('transactions').update({status:'completed'}).eq('id',approveW.dataset.wid);loadWithdrawals();loadDashboard();}}
-        const rejectW=e.target.closest('.reject-withdrawal-btn');
-        if(rejectW){if(confirm('Reject this withdrawal?')){await supabase.from('transactions').update({status:'rejected'}).eq('id',rejectW.dataset.wid);loadWithdrawals();loadDashboard();}}
-        const viewPlayers=e.target.closest('.view-players-btn');
-        if(viewPlayers){loadRegisteredPlayers(viewPlayers.dataset.tid,viewPlayers.dataset.tname);}
-    });
-    // User search
-    $('userSearchInput')?.addEventListener('input', async(e)=>{
-        const q=e.target.value.trim().toLowerCase();
-        if(!q){loadUsers();return;}
-        const {data}=await supabase.from('users').select('*, wallets(main_balance,winning_cash,bonus_cash)')
-            .eq('tenant_id',tenant.id).or(`username.ilike.%${q}%,email.ilike.%${q}%`);
-        const tbody=$('usersTableBody');if(!tbody||!data)return;
-        tbody.innerHTML=data.map(u=>{const w=u.wallets?.[0]||{};const bal=Number(w.main_balance||0)+Number(w.winning_cash||0)+Number(w.bonus_cash||0);
-            return `<tr><td><small>${(u.user_app_id||u.id).substring(0,8)}</small></td><td>${u.username||'N/A'}</td><td>${u.email||'N/A'}</td><td>${fmt(bal)}</td><td><span class="badge bg-success">Active</span></td><td><button class="btn btn-sm btn-outline-info view-user-btn" data-uid="${u.id}"><i class="bi bi-eye"></i></button></td></tr>`;
-        }).join('');
-    });
+// Save Match Results and Calculate Standings
+async function handleSaveResults(e) {
+  e.preventDefault();
+  const matchNum = $('resultMatchSelector').value;
+  const rows = document.querySelectorAll('#adminResultsTableBody .result-row');
 
-    // Resolve tenant
-    tenant = await resolveTenant();
-    if(!tenant){showAuth();return;}
+  const matchResults = [];
+  rows.forEach(row => {
+    const slotNumber = Number(row.dataset.slot);
+    const squadName = row.dataset.squad;
+    const rank = Number(row.querySelector('.result-rank-select').value);
+    const kills = Number(row.querySelector('.result-kills-input').value) || 0;
+    const pts = (FFWS_RANK_POINTS[rank] || 0) + kills;
 
-    // Auth listener
-    supabase.auth.onAuthStateChange(async(event, session)=>{
-        if(session?.user){
-            const {data}=await supabase.from('users').select('*').eq('id',session.user.id).single();
-            if(!data||data.role!=='admin'){alert('Not authorized as admin.');await supabase.auth.signOut();showAuth();return;}
-            currentUser={auth:session.user,db:data};
-            showMain(); loadSettings();
-        } else { currentUser=null; showAuth(); }
+    matchResults.push({ slotNumber, squadName, rank, kills, pts });
+  });
+
+  const updatedResults = { ...(tournamentData.results || {}) };
+  updatedResults[`match${matchNum}`] = matchResults;
+
+  // Calculate Overall Standings Across All Matches
+  const squadAgg = {};
+  Object.values(updatedResults).forEach(matchList => {
+    if (Array.isArray(matchList)) {
+      matchList.forEach(entry => {
+        if (!squadAgg[entry.squadName]) {
+          squadAgg[entry.squadName] = { squadName: entry.squadName, matches: 0, kills: 0, pts: 0 };
+        }
+        squadAgg[entry.squadName].matches += 1;
+        squadAgg[entry.squadName].kills += entry.kills;
+        squadAgg[entry.squadName].pts += entry.pts;
+      });
+    }
+  });
+
+  const overallStandings = Object.values(squadAgg)
+    .sort((a, b) => b.pts - a.pts || b.kills - a.kills)
+    .map((item, idx) => ({ ...item, rank: idx + 1 }));
+
+  const btn = $('saveResultsBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Publishing...';
+
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    await updateDoc(docRef, {
+      results: updatedResults,
+      standings: overallStandings
     });
+    showToast(`Match ${matchNum} results published live!`);
+  } catch (err) {
+    console.error("Save results error:", err);
+    alert("Failed to publish results: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-broadcast"></i> Publish Standings Live';
+  }
+}
+
+// Tournament Settings Update
+async function handleUpdateSettings(e) {
+  e.preventDefault();
+  const title = $('settingsTitleInput').value.trim();
+  const entryFee = Number($('settingsEntryFeeInput').value);
+  const prizePool = Number($('settingsPrizePoolInput').value);
+  const status = $('settingsStatusSelect').value;
+
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    await updateDoc(docRef, { title, entryFee, prizePool, status });
+    showToast("Tournament settings updated!");
+  } catch (err) {
+    alert("Failed to update settings: " + err.message);
+  }
+}
+
+// Setup Event Listeners
+function setupEvents() {
+  // Navigation Pills
+  document.querySelectorAll('.admin-nav-pills .nav-pill-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.target));
+  });
+
+  // Series match count change
+  $('seriesMatchCountSelect')?.addEventListener('change', renderMatchConfigForm);
+
+  // Forms
+  $('matchSeriesForm')?.addEventListener('submit', handleSaveMatches);
+  $('editSquadForm')?.addEventListener('submit', handleSaveEditedSlot);
+  $('clearSlotBtn')?.addEventListener('click', () => {
+    const slotNum = Number($('editSlotNumberHidden').value);
+    clearSlot(slotNum);
+  });
+  $('resultMatchSelector')?.addEventListener('change', renderResultsEntry);
+  $('matchResultsForm')?.addEventListener('submit', handleSaveResults);
+  $('tournamentSettingsForm')?.addEventListener('submit', handleUpdateSettings);
+}
+
+// Real-Time Firestore Sync
+function initRealtimeSync() {
+  const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+  onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      tournamentData = { ...tournamentData, ...snap.data() };
+      console.log("Admin Panel: Sync received", tournamentData);
+
+      // Sync form values
+      if ($('seriesMatchCountSelect')) {
+        $('seriesMatchCountSelect').value = tournamentData.matchCount || 3;
+      }
+      if ($('settingsTitleInput')) $('settingsTitleInput').value = tournamentData.title || '';
+      if ($('settingsEntryFeeInput')) $('settingsEntryFeeInput').value = tournamentData.entryFee || 100;
+      if ($('settingsPrizePoolInput')) $('settingsPrizePoolInput').value = tournamentData.prizePool || 1000;
+      if ($('settingsStatusSelect')) $('settingsStatusSelect').value = tournamentData.status || 'upcoming';
+
+      renderMatchConfigForm();
+      renderSlotsManager();
+      renderResultsEntry();
+    } else {
+      // First time initialization in DB
+      setDoc(docRef, tournamentData);
+      renderMatchConfigForm();
+      renderSlotsManager();
+      renderResultsEntry();
+    }
+  }, (err) => {
+    console.error("Admin onSnapshot error:", err);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupEvents();
+  initRealtimeSync();
 });
-
-async function loadRegisteredPlayers(tournamentId,tournamentName){
-    const tbody=$('registeredPlayersTableBody');
-    const titleEl=$('registeredPlayersTournamentName');
-    if(titleEl) titleEl.textContent=tournamentName||'';
-    if(tbody) tbody.innerHTML='<tr><td colspan="5" class="text-center p-3">Loading...</td></tr>';
-    new bootstrap.Modal($('registeredPlayersModal')).show();
-    try{
-        const {data}=await supabase.from('tournament_participants').select('*, users(username,email,user_app_id)')
-            .eq('tournament_id',tournamentId).order('joined_at',{ascending:true});
-        if(!data||!data.length){tbody.innerHTML='<tr><td colspan="5" class="text-center p-3">No players registered.</td></tr>';return;}
-        tbody.innerHTML=data.map((p,i)=>{
-            const u=p.users||{};const team=p.team_data?JSON.parse(p.team_data):null;
-            const ign=team?.players?.[0]||'N/A';
-            return `<tr><td>${i+1}</td><td>${ign}</td><td>${u.email||'N/A'}</td><td><small>${(u.user_app_id||p.user_id).substring(0,8)}</small></td><td>${new Date(p.joined_at).toLocaleString()}</td></tr>`;
-        }).join('');
-    }catch(err){console.error(err);if(tbody)tbody.innerHTML='<tr><td colspan="5" class="text-center text-danger p-3">Error loading players.</td></tr>';}
-}
