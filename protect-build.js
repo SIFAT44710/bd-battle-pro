@@ -3,75 +3,28 @@ const path = require('path');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 const { minify } = require('html-minifier-terser');
 
-// ========================================================
-// ADVANCED ANTI-REVERSE ENGINEERING & ATTACK BACKLASH TRAP
-// ========================================================
-const ATTACK_BACKLASH_GUARD = `
+// Clean, safe desktop inspection protection that NEVER interferes with mobile browsers
+const SAFE_CLIENT_GUARD = `
 <script>
 (function() {
   'use strict';
-
-  // 1. DOMAIN INTEGRITY LOCK (Self-destructs if cloned/run offline on attacker machine)
-  var allowedHosts = ['ff-squad-arena-bd.web.app', 'ff-squad-arena-bd.firebaseapp.com', 'localhost', '127.0.0.1'];
-  var currentHost = window.location.hostname;
-  if (currentHost && allowedHosts.indexOf(currentHost) === -1) {
-    while (true) {
-      window.location.href = 'https://ff-squad-arena-bd.web.app';
-      window.history.pushState(0, 0, Math.random().toString());
-    }
-  }
-
-  // 2. DISABLE RIGHT CLICK & INSPECTION HOTKEYS
-  document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, false);
-  document.addEventListener('keydown', function(e) {
-    if (e.keyCode === 123 ||
-       (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
-       (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83)) ||
-       (e.metaKey && e.altKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67))) {
+  // Desktop-only right click prevention
+  document.addEventListener('contextmenu', function(e) {
+    if (window.innerWidth > 768) {
       e.preventDefault();
-      triggerBacklash();
       return false;
     }
   }, false);
 
-  // 3. NEUTRALIZE CONSOLE
-  try {
-    var noop = function() {};
-    var methods = ['log', 'debug', 'info', 'warn', 'error', 'dir', 'table', 'trace', 'profile'];
-    for (var i = 0; i < methods.length; i++) { console[methods[i]] = noop; }
-  } catch(e) {}
-
-  // 4. ATTACKER BACKLASH TRAP (Freezes & Crashes Inspector / Tab if DevTools is opened)
-  function triggerBacklash() {
-    try {
-      document.body.innerHTML = '<div style="background:#050811;color:#EF4444;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;padding:24px;">' +
-        '<h1 style="font-size:2rem;margin-bottom:12px;">⛔ ATTACK INTERCEPTED</h1>' +
-        '<p style="color:#94A3B8;max-width:480px;font-size:1rem;">Tampering, code inspection and reverse engineering are strictly forbidden. Session neutralized.</p>' +
-        '</div>';
-    } catch(e) {}
-
-    setInterval(function() {
-      (function() { Function('debugger')(); })();
-    }, 50);
-  }
-
-  // 5. DEVTOOLS ACTIVE DETECTION
-  var threshold = 160;
-  setInterval(function() {
-    if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
-      triggerBacklash();
+  // Disable DevTools hotkeys on desktop
+  document.addEventListener('keydown', function(e) {
+    if (e.keyCode === 123 ||
+       (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+       (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83))) {
+      e.preventDefault();
+      return false;
     }
-    var t0 = Date.now();
-    (function() { Function('debugger')(); })();
-    var t1 = Date.now();
-    if (t1 - t0 > 100) {
-      triggerBacklash();
-    }
-  }, 1000);
-
-  // 6. ANTI-SELECTION & ANTI-DRAG
-  document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
-  document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+  }, false);
 })();
 </script>
 `;
@@ -79,9 +32,9 @@ const ATTACK_BACKLASH_GUARD = `
 async function processHtmlFile(sourcePath) {
   let content = fs.readFileSync(sourcePath, 'utf8');
 
-  // Inject the attack backlash guard into <head>
+  // Inject the safe guard into <head>
   if (content.includes('</head>')) {
-    content = content.replace('</head>', ATTACK_BACKLASH_GUARD + '\n</head>');
+    content = content.replace('</head>', SAFE_CLIENT_GUARD + '\n</head>');
   }
 
   // Regex to extract and obfuscate all inline script tags
@@ -100,22 +53,22 @@ async function processHtmlFile(sourcePath) {
 
   for (const m of matches) {
     try {
+      const isModule = m.attributes.includes('module');
       const obfuscated = JavaScriptObfuscator.obfuscate(m.code, {
         compact: true,
         controlFlowFlattening: true,
-        controlFlowFlatteningThreshold: 1.0, // 100% control flow flattened
-        deadCodeInjection: true,
-        deadCodeInjectionThreshold: 0.5,
-        debugProtection: true,
-        debugProtectionInterval: 1000,
-        disableConsoleOutput: true,
+        controlFlowFlatteningThreshold: 0.75,
+        deadCodeInjection: false,
+        debugProtection: false, // Safe for mobile devices
+        disableConsoleOutput: false,
         identifierNamesGenerator: 'hexadecimal',
         numbersToExpressions: true,
         renameGlobals: false,
-        selfDefending: true, // Auto-crashes if formatted/beautified
+        selfDefending: false, // Safe for mobile webviews & browsers
+        sourceType: isModule ? 'module' : 'script',
         stringArray: true,
         stringArrayEncoding: ['base64'],
-        stringArrayThreshold: 1.0, // 100% strings encrypted
+        stringArrayThreshold: 0.8,
         transformObjectKeys: true,
         target: 'browser'
       }).getObfuscatedCode();
@@ -140,7 +93,7 @@ async function processHtmlFile(sourcePath) {
 }
 
 async function run() {
-  console.log("🛡️ INITIATING MILITARY-GRADE ANTI-REVERSE ENGINEERING PIPELINE...");
+  console.log("🛡️ INITIATING PRODUCTION BUILD & SAFE OBFUSCATION PIPELINE...");
 
   const baseDir = __dirname;
   const srcDir = path.join(baseDir, 'src_backup');
@@ -162,7 +115,7 @@ async function run() {
   fs.writeFileSync(path.join(baseDir, 'admin.html'), protectedAdmin, 'utf8');
   fs.writeFileSync(path.join(baseDir, 'admin', 'index.html'), protectedAdmin, 'utf8');
 
-  console.log("🔒 ALL ASSETS ARMORED WITH ANTI-TAMPER, ATTACKER BACKLASH TRAP & DOMAIN LOCK!");
+  console.log("🔒 ALL ASSETS ARMORED & 100% OPTIMIZED FOR MOBILE PHONES AND DESKTOP!");
 }
 
 run().catch(console.error);
