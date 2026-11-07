@@ -32,14 +32,38 @@
       background-color: var(--bg-canvas);
       color: var(--text-main);
       font-family: 'Poppins', sans-serif;
-      padding-top: 75px;
+      padding-top: 110px;
       padding-bottom: 50px;
       min-height: 100vh;
     }
 
+    /* Live Demo Top Ribbon */
+    .demo-ribbon {
+      background: linear-gradient(90deg, #7C2D12 0%, #1E293B 100%);
+      color: #fff;
+      padding: 0 16px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 38px;
+      z-index: 1045;
+      border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+    }
+
+    .demo-ribbon a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      margin-left: 10px;
+      font-weight: 700;
+    }
+
     .admin-navbar {
       position: fixed;
-      top: 0;
+      top: 38px;
       left: 0;
       right: 0;
       height: 60px;
@@ -209,6 +233,18 @@
   </style>
 </head>
 <body>
+
+  <!-- Demo Top Ribbon -->
+  <div class="demo-ribbon">
+    <div>
+      <span class="badge bg-danger text-white me-1">ADMIN DEMO</span>
+      <span>🛡️ <strong>Organizer Admin & Ledger</strong> • লাইভ ডেমো ভার্সন</span>
+    </div>
+    <div>
+      <a href="/" class="d-none d-sm-inline"><i class="bi bi-house-door-fill"></i> SaaS Home</a>
+      <a href="https://wa.me/8801791357521?text=Hi%20Sifat,%20I%20tested%20the%20Admin%20Demo%20and%20want%20to%20buy%20the%20Platform" target="_blank" class="text-success"><i class="bi bi-whatsapp"></i> Buy Platform</a>
+    </div>
+  </div>
 
   <!-- Admin Navbar -->
   <header class="admin-navbar">
