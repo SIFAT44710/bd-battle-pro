@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARENA X — Match Admin Panel</title>
+  <title>ARENA X — Match Admin & Financial Ledger</title>
 
   <!-- Google Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +22,7 @@
       --accent-gold: #FACC15;
       --gold-gradient: linear-gradient(135deg, #FACC15 0%, #FBBF24 100%);
       --accent-green: #10B981;
+      --accent-blue: #3B82F6;
       --accent-red: #EF4444;
     }
 
@@ -32,7 +33,7 @@
       color: var(--text-main);
       font-family: 'Poppins', sans-serif;
       padding-top: 75px;
-      padding-bottom: 40px;
+      padding-bottom: 50px;
       min-height: 100vh;
     }
 
@@ -71,7 +72,7 @@
     }
 
     .container-custom {
-      max-width: 680px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 0 16px;
     }
@@ -80,9 +81,49 @@
       background: var(--card-surface);
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      padding: 24px;
+      padding: 22px;
+      margin-bottom: 22px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     }
+
+    /* Ledger Summary Grid */
+    .ledger-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 576px) {
+      .ledger-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .ledger-stat-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    .ledger-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .ledger-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+
+    .ledger-val.inflow { color: var(--accent-green); }
+    .ledger-val.outflow { color: var(--accent-red); }
+    .ledger-val.net { color: var(--accent-gold); }
 
     .form-control, .form-select {
       background: #0F172A;
@@ -102,7 +143,7 @@
       color: #0F172A;
       font-weight: 700;
       border: none;
-      padding: 10px 20px;
+      padding: 11px 20px;
       border-radius: 8px;
       display: inline-flex;
       align-items: center;
@@ -117,11 +158,53 @@
     .btn-gold:hover { filter: brightness(1.1); color: #0F172A; }
 
     .room-highlight-box {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       border: 1px dashed var(--accent-gold);
       border-radius: 10px;
       padding: 16px;
-      margin: 20px 0;
+      margin: 18px 0;
+    }
+
+    .match-tab-btn {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .match-tab-btn.active {
+      background: var(--accent-gold);
+      color: #0F172A;
+      border-color: var(--accent-gold);
+    }
+
+    .teams-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .teams-table th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .teams-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
     }
   </style>
 </head>
@@ -131,7 +214,7 @@
   <header class="admin-navbar">
     <div class="brand-title">
       <i class="bi bi-shield-lock-fill text-warning"></i> ARENA X
-      <span class="brand-tag">ADMIN</span>
+      <span class="brand-tag">ADMIN & LEDGER</span>
     </div>
     <div>
       <a href="/" target="_blank" class="btn btn-sm btn-outline-warning">
@@ -143,28 +226,100 @@
   <!-- Main Container -->
   <main class="container-custom">
 
+    <!-- Card 1: Match Accounts & Overview Ledger (কী আসলো, কী গেল) -->
+    <div class="admin-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold text-white mb-0">
+          <i class="bi bi-cash-stack text-warning me-1"></i> Match Financial Ledger & Overview
+        </h2>
+        <span class="badge bg-success" id="ledgerStatusBadge">LIVE CALCULATOR</span>
+      </div>
+      <p class="small text-secondary mb-3">সব ম্যাচের টোটাল হিসাব: কতগুলো ম্যাচ, দল থেকে কী কালেকশন আসলো এবং প্রাইজ বাবদ কী গেল।</p>
+
+      <div class="ledger-grid">
+        <div class="ledger-stat-box">
+          <div class="ledger-label">Total Matches</div>
+          <div class="ledger-val text-white" id="statMatchCount">3 Matches</div>
+        </div>
+        <div class="ledger-stat-box">
+          <div class="ledger-label">Joined Squads</div>
+          <div class="ledger-val text-info" id="statSquadCount">3 / 36</div>
+        </div>
+        <div class="ledger-stat-box">
+          <div class="ledger-label">Collection (আসলো)</div>
+          <div class="ledger-val inflow" id="statInflow">+৳300</div>
+        </div>
+        <div class="ledger-stat-box">
+          <div class="ledger-label">Prize Payout (গেল)</div>
+          <div class="ledger-val outflow" id="statOutflow">-৳3,000</div>
+        </div>
+      </div>
+
+      <div class="p-2 bg-dark rounded border border-secondary border-opacity-50 d-flex justify-content-between align-items-center px-3 mb-3">
+        <span class="small text-secondary fw-bold">Estimated Match Balance (লাভ / ব্যালেন্স):</span>
+        <span class="fw-bold fs-6" id="statNetBalance">৳0</span>
+      </div>
+
+      <!-- Joined Squads Table -->
+      <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+        <span class="small fw-bold text-white">
+          <i class="bi bi-people-fill text-warning me-1"></i> রেজিস্ট্রেশনকৃত স্কোয়াডের তালিকা:
+        </span>
+        <span class="small text-secondary" id="teamsCountText">0 Teams</span>
+      </div>
+
+      <div class="table-responsive rounded border border-secondary border-opacity-50">
+        <table class="teams-table">
+          <thead>
+            <tr>
+              <th>MATCH</th>
+              <th>SLOT</th>
+              <th>SQUAD NAME</th>
+              <th>PLAYERS</th>
+              <th>WHATSAPP</th>
+              <th>FEE</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="joinedTeamsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 2: Match Setup & Room Control (Multi-Match) -->
     <div class="admin-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h5 fw-bold text-white mb-0">
           <i class="bi bi-controller text-warning me-1"></i> Match Setup & Room Control
         </h2>
-        <span class="badge bg-warning text-dark fw-bold">REAL-TIME SYNC</span>
+        <span class="badge bg-warning text-dark fw-bold">FIREBASE REAL-TIME</span>
       </div>
-      <p class="small text-secondary mb-4">Update match schedule, maps, and release Room ID & Password live to all players.</p>
+      <p class="small text-secondary mb-3">ম্যাচ সিলেক্ট করে শিডিউল, ম্যাপ এবং কাস্টম রুম আইডি ও পাসওয়ার্ড আপডেট করুন।</p>
+
+      <!-- Match Tabs Selector -->
+      <div class="d-flex flex-wrap gap-2 mb-4" id="matchTabsContainer">
+        <!-- Rendered by JS -->
+      </div>
 
       <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)">
         
         <div class="mb-3">
           <label class="form-label small text-secondary">Match Title</label>
-          <input type="text" class="form-control" id="admTitle" value="Free Fire Daily Squad Championship" required>
+          <input type="text" class="form-control" id="admTitle" required>
         </div>
 
         <div class="row g-3 mb-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label small text-secondary">Schedule Time</label>
-            <input type="text" class="form-control" id="admTime" value="08:30 PM" placeholder="e.g. 08:30 PM" required>
+            <input type="text" class="form-control" id="admTime" placeholder="e.g. 08:30 PM" required>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label small text-secondary">Map</label>
+            <input type="text" class="form-control" id="admMap" placeholder="e.g. Bermuda" required>
+          </div>
+          <div class="col-md-4">
             <label class="form-label small text-secondary">Match Status</label>
             <select class="form-select" id="admStatus">
               <option value="upcoming">Upcoming</option>
@@ -175,47 +330,35 @@
         </div>
 
         <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label class="form-label small text-secondary">Total Matches (Series)</label>
-            <select class="form-select" id="admMatchCount">
-              <option value="1">1 Match</option>
-              <option value="2">2 Matches</option>
-              <option value="3" selected>3 Matches</option>
-              <option value="4">4 Matches</option>
-              <option value="5">5 Matches</option>
-              <option value="6">6 Matches</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small text-secondary">Maps to Play</label>
-            <input type="text" class="form-control" id="admMaps" value="Bermuda, Purgatory, Kalahari" placeholder="e.g. Bermuda, Purgatory" required>
-          </div>
-        </div>
-
-        <div class="row g-3 mb-3">
           <div class="col-6">
             <label class="form-label small text-secondary">Entry Fee (BDT ৳)</label>
-            <input type="number" class="form-control" id="admEntryFee" value="100" required>
+            <input type="number" class="form-control" id="admEntryFee" required>
           </div>
           <div class="col-6">
             <label class="form-label small text-secondary">Prize Pool (BDT ৳)</label>
-            <input type="number" class="form-control" id="admPrizePool" value="1000" required>
+            <input type="number" class="form-control" id="admPrizePool" required>
           </div>
         </div>
 
         <!-- Custom Room ID & Password -->
         <div class="room-highlight-box">
-          <div class="fw-bold text-warning small mb-2">
-            <i class="bi bi-key-fill me-1"></i> Custom Room Credentials (Instantly shows on user page)
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="fw-bold text-warning small">
+              <i class="bi bi-key-fill me-1"></i> Custom Room Credentials
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="admShowIdPass">
+              <label class="form-check-label small text-white" for="admShowIdPass">Publish to Players</label>
+            </div>
           </div>
           <div class="row g-3">
             <div class="col-6">
               <label class="form-label small text-secondary">Room ID</label>
-              <input type="text" class="form-control" id="admRoomId" placeholder="e.g. 893411">
+              <input type="text" class="form-control font-monospace" id="admRoomId" placeholder="e.g. 893411">
             </div>
             <div class="col-6">
               <label class="form-label small text-secondary">Room Password</label>
-              <input type="text" class="form-control" id="admRoomPass" placeholder="e.g. 7788">
+              <input type="text" class="form-control font-monospace" id="admRoomPass" placeholder="e.g. 7788">
             </div>
           </div>
         </div>
@@ -246,62 +389,332 @@
     const db = getFirestore(app);
     const TOURNAMENT_ID = "ff-daily-squad";
 
-    let state = {
-      title: "Free Fire Daily Squad Championship",
-      status: "upcoming",
-      time: "08:30 PM",
-      matchCount: 3,
-      maps: "Bermuda, Purgatory, Kalahari",
-      entryFee: 100,
-      prizePool: 1000,
-      roomId: "893411",
-      roomPass: "7788"
+    let tournamentData = {
+      tournamentName: "Free Fire Daily Squad Championship",
+      matches: [
+        {
+          id: "match-1",
+          matchNumber: 1,
+          title: "Match 1: Bermuda Squad Championship",
+          map: "Bermuda",
+          time: "08:30 PM",
+          status: "upcoming",
+          entryFee: 100,
+          prizePool: 1000,
+          roomId: "893411",
+          roomPass: "7788",
+          showIdPass: true,
+          slots: Array.from({ length: 12 }, (_, i) => ({
+            slotNumber: i + 1,
+            booked: i === 0 || i === 1,
+            squadName: i === 0 ? "DARK VORTEX" : (i === 1 ? "71 ESPL" : ""),
+            player1: i === 0 ? "Vortex_Boss" : (i === 1 ? "71_Tiger" : ""),
+            player2: i === 0 ? "Vortex_Fire" : (i === 1 ? "71_Sifat" : ""),
+            player3: i === 0 ? "Vortex_Sniper" : (i === 1 ? "71_Shooter" : ""),
+            player4: i === 0 ? "Vortex_Ghost" : (i === 1 ? "71_Storm" : ""),
+            contact: i === 0 ? "01711000001" : (i === 1 ? "01791357521" : "")
+          }))
+        },
+        {
+          id: "match-2",
+          matchNumber: 2,
+          title: "Match 2: Purgatory Squad Rush",
+          map: "Purgatory",
+          time: "09:15 PM",
+          status: "upcoming",
+          entryFee: 100,
+          prizePool: 1000,
+          roomId: "893412",
+          roomPass: "9922",
+          showIdPass: true,
+          slots: Array.from({ length: 12 }, (_, i) => ({
+            slotNumber: i + 1,
+            booked: i === 0,
+            squadName: i === 0 ? "ROYAL BANGLA" : "",
+            player1: i === 0 ? "RB_Captain" : "",
+            player2: i === 0 ? "RB_Sniper" : "",
+            player3: i === 0 ? "RB_Assault" : "",
+            player4: i === 0 ? "RB_Medic" : "",
+            contact: i === 0 ? "01811223344" : ""
+          }))
+        },
+        {
+          id: "match-3",
+          matchNumber: 3,
+          title: "Match 3: Kalahari Desert Clash",
+          map: "Kalahari",
+          time: "10:00 PM",
+          status: "upcoming",
+          entryFee: 100,
+          prizePool: 1000,
+          roomId: "893413",
+          roomPass: "1144",
+          showIdPass: false,
+          slots: Array.from({ length: 12 }, (_, i) => ({
+            slotNumber: i + 1,
+            booked: false,
+            squadName: "",
+            player1: "",
+            player2: "",
+            player3: "",
+            player4: "",
+            contact: ""
+          }))
+        }
+      ]
     };
+
+    let selectedMatchId = "match-1";
 
     const $ = (id) => document.getElementById(id);
 
-    // Sync Form Values
+    function getSelectedMatch() {
+      return (tournamentData.matches || []).find(m => m.id === selectedMatchId) || tournamentData.matches[0];
+    }
+
+    // Render Match Tabs
+    function renderMatchTabs() {
+      const container = $('matchTabsContainer');
+      if (!container) return;
+
+      const matches = tournamentData.matches || [];
+      container.innerHTML = matches.map(m => `
+        <button type="button" class="match-tab-btn ${m.id === selectedMatchId ? 'active' : ''}" onclick="window.switchMatchTab('${m.id}')">
+          <i class="bi bi-controller"></i> ${m.title || `Match #${m.matchNumber}`} (${m.map || 'Map'})
+        </button>
+      `).join('') + `
+        <button type="button" class="match-tab-btn text-warning" onclick="window.addNewMatch()">
+          <i class="bi bi-plus-circle-fill"></i> + Add Match
+        </button>
+      `;
+    }
+
+    window.switchMatchTab = function(matchId) {
+      selectedMatchId = matchId;
+      renderMatchTabs();
+      syncFormValues();
+    };
+
+    window.addNewMatch = async function() {
+      const matches = tournamentData.matches || [];
+      const newNum = matches.length + 1;
+      const newMatch = {
+        id: `match-${Date.now()}`,
+        matchNumber: newNum,
+        title: `Match ${newNum}: New Squad Battle`,
+        map: newNum === 4 ? "Alpine" : (newNum === 5 ? "Nexterra" : "Bermuda"),
+        time: "10:45 PM",
+        status: "upcoming",
+        entryFee: 100,
+        prizePool: 1000,
+        roomId: "",
+        roomPass: "",
+        showIdPass: false,
+        slots: Array.from({ length: 12 }, (_, i) => ({
+          slotNumber: i + 1,
+          booked: false,
+          squadName: "",
+          player1: "",
+          player2: "",
+          player3: "",
+          player4: "",
+          contact: ""
+        }))
+      };
+
+      matches.push(newMatch);
+      selectedMatchId = newMatch.id;
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { matches });
+        renderMatchTabs();
+        syncFormValues();
+        updateLedger();
+      } catch (err) {
+        alert("Error adding match: " + err.message);
+      }
+    };
+
+    // Update Ledger (কী আসলো, কী গেল)
+    function updateLedger() {
+      const matches = tournamentData.matches || [];
+      const matchCount = matches.length;
+      
+      let totalBooked = 0;
+      let totalCapacity = matchCount * 12;
+      let totalInflow = 0;
+      let totalOutflow = 0;
+      const allBookedSquads = [];
+
+      matches.forEach(m => {
+        const slots = m.slots || [];
+        const fee = Number(m.entryFee || 100);
+        const prize = Number(m.prizePool || 1000);
+        totalOutflow += prize;
+
+        slots.forEach(s => {
+          if (s.booked) {
+            totalBooked++;
+            totalInflow += fee;
+            allBookedSquads.push({
+              matchTitle: m.title || `Match #${m.matchNumber}`,
+              matchId: m.id,
+              fee: fee,
+              ...s
+            });
+          }
+        });
+      });
+
+      const net = totalInflow - totalOutflow;
+
+      if ($('statMatchCount')) $('statMatchCount').textContent = `${matchCount} Matches`;
+      if ($('statSquadCount')) $('statSquadCount').textContent = `${totalBooked} / ${totalCapacity} Squads`;
+      if ($('statInflow')) $('statInflow').textContent = `+৳${totalInflow}`;
+      if ($('statOutflow')) $('statOutflow').textContent = `-৳${totalOutflow}`;
+
+      const netEl = $('statNetBalance');
+      if (netEl) {
+        if (net >= 0) {
+          netEl.className = 'fw-bold fs-6 text-success';
+          netEl.textContent = `+৳${net} (লাভ / Profit)`;
+        } else {
+          netEl.className = 'fw-bold fs-6 text-warning';
+          netEl.textContent = `-৳${Math.abs(net)} (প্রাইজ ঘাটতি)`;
+        }
+      }
+
+      if ($('teamsCountText')) $('teamsCountText').textContent = `${allBookedSquads.length} Teams Registered`;
+
+      // Render Table
+      const tbody = $('joinedTeamsTableBody');
+      if (tbody) {
+        if (allBookedSquads.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-3 text-secondary">এখনও কোনো স্কোয়াড বুক করেনি।</td></tr>`;
+        } else {
+          tbody.innerHTML = allBookedSquads.map(s => `
+            <tr>
+              <td class="small text-warning fw-bold">${s.matchTitle}</td>
+              <td><span class="badge bg-warning text-dark">#${s.slotNumber}</span></td>
+              <td class="fw-bold text-white">${s.squadName}</td>
+              <td class="small text-secondary">${[s.player1, s.player2, s.player3, s.player4].filter(Boolean).join(', ')}</td>
+              <td><a href="https://wa.me/${s.contact}" target="_blank" class="text-success text-decoration-none fw-bold">${s.contact || 'N/A'}</a></td>
+              <td class="text-success fw-bold">৳${s.fee}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="window.removeSquad('${s.matchId}', ${s.slotNumber})" title="Remove Squad">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    // Remove a Squad
+    window.removeSquad = async function(matchId, slotNum) {
+      if (!confirm(`Are you sure you want to remove Slot #${slotNum}?`)) return;
+
+      const matches = (tournamentData.matches || []).map(m => {
+        if (m.id === matchId) {
+          const newSlots = (m.slots || []).map(s => {
+            if (s.slotNumber === slotNum) {
+              return {
+                slotNumber: slotNum,
+                booked: false,
+                squadName: "",
+                player1: "",
+                player2: "",
+                player3: "",
+                player4: "",
+                contact: ""
+              };
+            }
+            return s;
+          });
+          return { ...m, slots: newSlots };
+        }
+        return m;
+      });
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { matches });
+        alert(`Slot #${slotNum} removed.`);
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    // Sync Form Values with Selected Match
     function syncFormValues() {
-      if ($('admTitle')) $('admTitle').value = state.title || '';
-      if ($('admTime')) $('admTime').value = state.time || '08:30 PM';
-      if ($('admStatus')) $('admStatus').value = state.status || 'upcoming';
-      if ($('admMatchCount')) $('admMatchCount').value = state.matchCount || 3;
-      if ($('admMaps')) $('admMaps').value = state.maps || 'Bermuda';
-      if ($('admEntryFee')) $('admEntryFee').value = state.entryFee || 100;
-      if ($('admPrizePool')) $('admPrizePool').value = state.prizePool || 1000;
-      if ($('admRoomId')) $('admRoomId').value = state.roomId || '';
-      if ($('admRoomPass')) $('admRoomPass').value = state.roomPass || '';
+      const match = getSelectedMatch();
+      if (!match) return;
+
+      if ($('admTitle')) $('admTitle').value = match.title || '';
+      if ($('admTime')) $('admTime').value = match.time || '08:30 PM';
+      if ($('admMap')) $('admMap').value = match.map || 'Bermuda';
+      if ($('admStatus')) $('admStatus').value = match.status || 'upcoming';
+      if ($('admEntryFee')) $('admEntryFee').value = match.entryFee || 100;
+      if ($('admPrizePool')) $('admPrizePool').value = match.prizePool || 1000;
+      if ($('admRoomId')) $('admRoomId').value = match.roomId || '';
+      if ($('admRoomPass')) $('admRoomPass').value = match.roomPass || '';
+      if ($('admShowIdPass')) $('admShowIdPass').checked = Boolean(match.showIdPass);
     }
 
     // Save Match Config
     window.handleSaveMatchConfig = async function(e) {
       e.preventDefault();
+      const match = getSelectedMatch();
+      if (!match) return;
+
       const title = $('admTitle').value.trim();
       const time = $('admTime').value.trim();
+      const map = $('admMap').value.trim();
       const status = $('admStatus').value;
-      const matchCount = Number($('admMatchCount').value);
-      const maps = $('admMaps').value.trim();
       const entryFee = Number($('admEntryFee').value);
       const prizePool = Number($('admPrizePool').value);
       const roomId = $('admRoomId').value.trim();
       const roomPass = $('admRoomPass').value.trim();
+      const showIdPass = $('admShowIdPass').checked;
 
       const btn = $('saveMatchBtn');
       btn.disabled = true;
       btn.innerHTML = 'Saving...';
 
+      const updatedMatches = (tournamentData.matches || []).map(m => {
+        if (m.id === match.id) {
+          return {
+            ...m,
+            title,
+            time,
+            map,
+            status,
+            entryFee,
+            prizePool,
+            roomId,
+            roomPass,
+            showIdPass
+          };
+        }
+        return m;
+      });
+
       try {
         const docRef = doc(db, "tournaments", TOURNAMENT_ID);
         await updateDoc(docRef, {
-          title,
-          time,
-          status,
-          matchCount,
-          maps,
-          entryFee,
-          prizePool,
-          roomId,
-          roomPass
+          matches: updatedMatches,
+          // also write top-level for backwards compatibility
+          title: updatedMatches[0].title,
+          time: updatedMatches[0].time,
+          maps: updatedMatches[0].map,
+          status: updatedMatches[0].status,
+          entryFee: updatedMatches[0].entryFee,
+          prizePool: updatedMatches[0].prizePool,
+          roomId: updatedMatches[0].roomId,
+          roomPass: updatedMatches[0].roomPass,
+          slots: updatedMatches[0].slots
         });
         alert("Match details & Room ID published live to all users!");
       } catch (err) {
@@ -320,10 +733,15 @@
         const docRef = doc(db, "tournaments", TOURNAMENT_ID);
         onSnapshot(docRef, (snap) => {
           if (snap.exists()) {
-            state = { ...state, ...snap.data() };
+            const data = snap.data();
+            if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
+              tournamentData = { ...tournamentData, ...data };
+            }
+            renderMatchTabs();
             syncFormValues();
+            updateLedger();
           } else {
-            setDoc(docRef, state);
+            setDoc(docRef, tournamentData);
           }
         }, (err) => {
           console.warn("Firestore error:", err);
@@ -333,7 +751,9 @@
       }
     }
 
+    renderMatchTabs();
     syncFormValues();
+    updateLedger();
     startSync();
   </script>
 </body>
