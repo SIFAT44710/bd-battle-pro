@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ARENA X — Match Admin & Financial Ledger</title>
 
   <!-- Tailwind CSS CDN -->
@@ -16,6 +16,13 @@
   <script>
     tailwind.config = {
       theme: {
+        screens: {
+          'xs': '420px',
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+        },
         extend: {
           colors: {
             brand: {
@@ -36,119 +43,156 @@
     }
   </script>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    * { box-sizing: border-box; }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: #F8F9FA; }
     ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
+
+    /* Bulletproof Vanilla JS Modal (Mobile Safe) */
+    .custom-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1050;
+      backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-box {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 24px 20px;
+      z-index: 1060;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+    }
   </style>
 </head>
-<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col pb-12 select-none">
+<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col pb-12 select-none overflow-x-hidden">
 
-  <!-- Top Announcement Bar (RRR Esports Style) -->
-  <div class="bg-[#FF5722] text-white px-4 py-2 text-xs md:text-sm font-medium shadow-sm">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 overflow-hidden whitespace-nowrap">
-        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 20 20">
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-3 right-3 left-3 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Announcement Bar -->
+  <div class="bg-[#FF5722] text-white px-4 py-2 text-xs md:text-sm font-medium shadow-sm w-full">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5 overflow-hidden whitespace-nowrap min-w-0">
+        <svg class="w-3.5 h-3.5 shrink-0 fill-current" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
         </svg>
         <span class="truncate">
           🔥 ARENA X ADMIN CONTROL • Live Real-time Firestore Sync Active
         </span>
       </div>
-      <a href="/player" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-xs font-bold shrink-0 transition-colors">
-        🎮 View Player Dashboard
+      <a href="/player" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
+        🎮 Player Dashboard
       </a>
     </div>
   </div>
 
   <!-- Main Navbar -->
-  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-lg sm:text-xl shadow-md shrink-0">
           X
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-extrabold text-lg sm:text-xl tracking-tight text-gray-900 font-sans">ARENA X</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase">
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-base sm:text-xl tracking-tight text-gray-900 font-sans leading-none">ARENA X</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase shrink-0 leading-none">
               ADMIN HQ
             </span>
           </div>
-          <span class="text-[10px] text-gray-500 font-medium">Match Controller & Financial Ledger</span>
+          <span class="text-[9px] sm:text-[10px] text-gray-500 font-medium hidden xs:block truncate leading-tight mt-0.5">Match Controller & Financial Ledger</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 shrink-0">
         <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
           <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
           REALTIME SYNC
         </span>
-        <a href="/player" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1.5">
-          <span>Go to Player View</span> ↗
+        <a href="/player" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1">
+          <span>Player View</span> ↗
         </a>
       </div>
     </div>
   </header>
 
   <!-- Main Content Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 w-full space-y-4 sm:space-y-6">
 
     <!-- 1. FINANCIAL LEDGER & OPERATIONS SUMMARY -->
-    <section class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+    <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-gray-900">Financial Ledger & Operations Overview</h2>
-          <p class="text-xs text-gray-500">স্বয়ংক্রিয় টুর্নামেন্ট রেভিনিউ, এন্ট্রি ফি ও প্রাইজ পুল ক্যালকুলেশন</p>
+          <h2 class="text-sm sm:text-lg font-bold text-gray-900">Financial Ledger & Operations Overview</h2>
+          <p class="text-[11px] sm:text-xs text-gray-500">স্বয়ংক্রিয় টুর্নামেন্ট রেভিনিউ, এন্ট্রি ফি ও প্রাইজ পুল ক্যালকুলেশন</p>
         </div>
         <div>
-          <span id="statNetBalance" class="inline-block px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200 font-mono">
+          <span id="statNetBalance" class="inline-block px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200 font-mono">
             +৳0 (লাভ / Profit)
           </span>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 pt-1">
         <!-- Stat 1: Matches -->
-        <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 text-center">
-          <span class="text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Active Matches</span>
-          <span id="statMatchCount" class="text-base sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">3 Matches</span>
+        <div class="bg-gray-50 rounded-xl p-2.5 sm:p-3.5 border border-gray-200 text-center">
+          <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Active Matches</span>
+          <span id="statMatchCount" class="text-sm sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">3 Matches</span>
         </div>
 
         <!-- Stat 2: Squads -->
-        <div class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 text-center">
-          <span class="text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Booked Squads</span>
-          <span id="statSquadCount" class="text-base sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">0 / 36 Squads</span>
+        <div class="bg-gray-50 rounded-xl p-2.5 sm:p-3.5 border border-gray-200 text-center">
+          <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Booked Squads</span>
+          <span id="statSquadCount" class="text-sm sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">0 / 36 Squads</span>
         </div>
 
         <!-- Stat 3: Total Inflow -->
-        <div class="bg-green-50/70 rounded-xl p-3.5 border border-green-200 text-center">
-          <span class="text-[10px] font-bold text-green-700 uppercase block tracking-wider">Total Collection</span>
-          <span id="statInflow" class="text-base sm:text-lg font-bold text-green-700 font-mono block mt-0.5">+৳0</span>
+        <div class="bg-green-50/70 rounded-xl p-2.5 sm:p-3.5 border border-green-200 text-center">
+          <span class="text-[9px] sm:text-[10px] font-bold text-green-700 uppercase block tracking-wider">Total Collection</span>
+          <span id="statInflow" class="text-sm sm:text-lg font-bold text-green-700 font-mono block mt-0.5">+৳0</span>
         </div>
 
         <!-- Stat 4: Total Outflow -->
-        <div class="bg-orange-50/70 rounded-xl p-3.5 border border-orange-200 text-center">
-          <span class="text-[10px] font-bold text-[#FF5722] uppercase block tracking-wider">Prize Outflow</span>
-          <span id="statOutflow" class="text-base sm:text-lg font-bold text-[#FF5722] font-mono block mt-0.5">-৳0</span>
+        <div class="bg-orange-50/70 rounded-xl p-2.5 sm:p-3.5 border border-orange-200 text-center">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[#FF5722] uppercase block tracking-wider">Prize Outflow</span>
+          <span id="statOutflow" class="text-sm sm:text-lg font-bold text-[#FF5722] font-mono block mt-0.5">-৳0</span>
         </div>
       </div>
     </section>
 
     <!-- 2. REGISTERED SQUADS & ROSTER TABLE -->
-    <section class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+    <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-gray-900">রেজিস্ট্রেশনকৃত স্কোয়াডের তালিকা</h2>
-          <p class="text-xs text-gray-500">সকল বুক করা স্কোয়াডের তালিকা, হোয়াটসঅ্যাপ নম্বর ও ১-ক্লিক রিমুভ ব্যবস্থা</p>
+          <h2 class="text-sm sm:text-lg font-bold text-gray-900">রেজিস্ট্রেশনকৃত স্কোয়াডের তালিকা</h2>
+          <p class="text-[11px] sm:text-xs text-gray-500">সকল বুক করা স্কোয়াডের তালিকা, হোয়াটসঅ্যাপ নম্বর ও ১-ক্লিক রিমুভ ব্যবস্থা</p>
         </div>
-        <span id="teamsCountText" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 font-mono">
+        <span id="teamsCountText" class="self-start sm:self-center px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-gray-100 text-gray-700 font-mono">
           0 Teams
         </span>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
+      <div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <table class="w-full text-left text-xs min-w-[560px]">
           <thead>
             <tr class="text-gray-400 border-b border-gray-200 pb-2">
               <th class="py-2.5 font-bold">MATCH</th>
@@ -172,40 +216,40 @@
     </section>
 
     <!-- 3. MATCH SETUP & ROOM CONTROL (MULTI-MATCH) -->
-    <section class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-6">
+    <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4 sm:space-y-6">
       <div class="border-b border-gray-100 pb-3 flex items-center justify-between">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-gray-900">Match Setup & Room Control</h2>
-          <p class="text-xs text-gray-500">ম্যাচ সিলেক্ট করে শিডিউল, ম্যাপ এবং কাস্টম রুম আইডি ও পাসওয়ার্ড আপডেট করুন।</p>
+          <h2 class="text-sm sm:text-lg font-bold text-gray-900">Match Setup & Room Control</h2>
+          <p class="text-[11px] sm:text-xs text-gray-500">ম্যাচ সিলেক্ট করে শিডিউল, ম্যাপ এবং কাস্টম রুম আইডি ও পাসওয়ার্ড আপডেট করুন।</p>
         </div>
-        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-[#FF5722]">
-          FIREBASE REAL-TIME
+        <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-orange-100 text-[#FF5722]">
+          REAL-TIME
         </span>
       </div>
 
       <!-- Match Tabs Selector -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="matchTabsContainer">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1" id="matchTabsContainer">
         <!-- Rendered by JS -->
       </div>
 
-      <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)" class="space-y-4">
+      <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)" class="space-y-3 sm:space-y-4">
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1">Match Title</label>
-          <input type="text" id="admTitle" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+          <input type="text" id="admTitle" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Schedule Time</label>
-            <input type="text" id="admTime" placeholder="e.g. 08:30 PM" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+            <input type="text" id="admTime" placeholder="e.g. 08:30 PM" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Map</label>
-            <input type="text" id="admMap" placeholder="e.g. Bermuda" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+            <input type="text" id="admMap" placeholder="e.g. Bermuda" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Match Status</label>
-            <select id="admStatus" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+            <select id="admStatus" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
               <option value="upcoming">Upcoming (রেজিস্ট্রেশন চলছে)</option>
               <option value="live">Live Now (খেলা চলছে)</option>
               <option value="completed">Completed (ম্যাচ সমাপ্ত)</option>
@@ -213,49 +257,66 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Entry Fee (BDT ৳)</label>
-            <input type="number" id="admEntryFee" min="0" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
+            <input type="number" id="admEntryFee" min="0" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Prize Pool (BDT ৳)</label>
-            <input type="number" id="admPrizePool" min="0" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
+            <input type="number" id="admPrizePool" min="0" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
           </div>
         </div>
 
-        <!-- Custom Room ID & Password Vault Box (RRR Esports Style) -->
-        <div class="bg-orange-50/70 rounded-2xl p-4 sm:p-5 border border-orange-200/80 space-y-4">
+        <!-- Custom Room ID & Password Vault Box -->
+        <div class="bg-orange-50/70 rounded-2xl p-3.5 sm:p-5 border border-orange-200/80 space-y-3 sm:space-y-4">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-6 h-6 rounded-lg bg-[#FF5722] text-white flex items-center justify-center font-bold text-xs">🔑</span>
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <span class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-[#FF5722] text-white flex items-center justify-center font-bold text-xs">🔑</span>
               <h4 class="text-xs font-bold text-gray-900 uppercase">Custom Room Credentials</h4>
             </div>
-            <label class="inline-flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="admShowIdPass" class="w-4 h-4 rounded text-[#FF5722] focus:ring-orange-400 border-gray-300">
-              <span class="text-xs font-bold text-gray-800">Publish to Players</span>
+            <label class="inline-flex items-center gap-1.5 sm:gap-2 cursor-pointer">
+              <input type="checkbox" id="admShowIdPass" class="w-3.5 h-3.5 rounded text-[#FF5722] focus:ring-orange-400 border-gray-300">
+              <span class="text-[11px] sm:text-xs font-bold text-gray-800">Publish to Players</span>
             </label>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Room ID</label>
-              <input type="text" id="admRoomId" placeholder="e.g. 893411" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
+              <label class="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Room ID</label>
+              <input type="text" id="admRoomId" placeholder="e.g. 893411" class="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Room Password</label>
-              <input type="text" id="admRoomPass" placeholder="e.g. 7788" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
+              <label class="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Room Password</label>
+              <input type="text" id="admRoomPass" placeholder="e.g. 7788" class="w-full bg-white border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
             </div>
           </div>
         </div>
 
-        <button type="submit" id="saveMatchBtn" class="w-full py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm tracking-wide shadow-sm transition-colors flex items-center justify-center gap-2">
+        <button type="submit" id="saveMatchBtn" class="w-full py-2.5 sm:py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-colors flex items-center justify-center gap-2">
           <i class="bi bi-broadcast"></i> Save & Publish Live to Players
         </button>
       </form>
     </section>
 
   </main>
+
+  <!-- ========================================== -->
+  <!-- THEMED NOTICE / CONFIRMATION MODAL         -->
+  <!-- ========================================== -->
+  <div id="noticeModalBackdrop" class="custom-modal-backdrop" onclick="window.closeNoticeModal()"></div>
+  <div id="noticeModalBox" class="custom-modal-box text-center">
+    <div id="noticeIconContainer" class="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200 text-[#FF5722] flex items-center justify-center text-2xl mb-3 shadow-sm">
+      <i class="bi bi-check-circle-fill text-[#FF5722]" id="noticeIcon"></i>
+    </div>
+    <h3 class="text-base sm:text-lg font-extrabold text-gray-900 mb-1.5" id="noticeTitle">সফল হয়েছে!</h3>
+    <p class="text-xs sm:text-sm text-gray-600 mb-5 leading-relaxed" id="noticeMessage">আপনার কাজটি সফলভাবে সম্পন্ন হয়েছে।</p>
+    <div class="flex items-center gap-2 justify-center" id="noticeActions">
+      <button type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all" onclick="window.closeNoticeModal()" id="noticeConfirmBtn">
+        ঠিক আছে
+      </button>
+    </div>
+  </div>
 
   <!-- FIREBASE FIRESTORE SYNC SCRIPT -->
   <script type="module">
@@ -371,7 +432,7 @@
         const total = (m.slots || []).length || 12;
 
         return `
-          <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          <button type="button" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
             isActive ? 'bg-[#FF5722] text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-700 hover:text-[#FF5722] hover:bg-orange-50'
           }" onclick="window.switchMatchTab('${m.id}')">
             ${m.title || `Match #${m.matchNumber || 1}`} (${booked}/${total})
@@ -432,10 +493,10 @@
       const netEl = $('statNetBalance');
       if (netEl) {
         if (net >= 0) {
-          netEl.className = 'inline-block px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200 font-mono';
+          netEl.className = 'inline-block px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200 font-mono';
           netEl.textContent = `+৳${net} (লাভ / Profit)`;
         } else {
-          netEl.className = 'inline-block px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-orange-50 text-[#FF5722] border border-orange-200 font-mono';
+          netEl.className = 'inline-block px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-orange-50 text-[#FF5722] border border-orange-200 font-mono';
           netEl.textContent = `-৳${Math.abs(net)} (প্রাইজ ঘাটতি)`;
         }
       }
@@ -452,13 +513,13 @@
             const players = [s.player1, s.player2, s.player3, s.player4].filter(Boolean).join(', ');
             return `
               <tr class="hover:bg-gray-50 transition-colors">
-                <td class="py-3 font-bold text-gray-900">${s.matchTitle}</td>
-                <td class="py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-[#FF5722] font-mono">#${s.slotNumber}</span></td>
-                <td class="py-3 font-bold text-gray-800">${s.squadName}</td>
-                <td class="py-3 text-gray-500 font-mono text-[11px]">${players || 'N/A'}</td>
-                <td class="py-3"><a href="https://wa.me/${s.contact}" target="_blank" class="text-green-700 font-bold hover:underline font-mono">${s.contact || 'N/A'}</a></td>
-                <td class="py-3 font-bold text-green-700 font-mono">৳${s.fee}</td>
-                <td class="py-3 text-center">
+                <td class="py-2.5 sm:py-3 font-bold text-gray-900">${s.matchTitle}</td>
+                <td class="py-2.5 sm:py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-[#FF5722] font-mono">#${s.slotNumber}</span></td>
+                <td class="py-2.5 sm:py-3 font-bold text-gray-800">${s.squadName}</td>
+                <td class="py-2.5 sm:py-3 text-gray-500 font-mono text-[11px]">${players || 'N/A'}</td>
+                <td class="py-2.5 sm:py-3"><a href="https://wa.me/${s.contact}" target="_blank" class="text-green-700 font-bold hover:underline font-mono">${s.contact || 'N/A'}</a></td>
+                <td class="py-2.5 sm:py-3 font-bold text-green-700 font-mono">৳${s.fee}</td>
+                <td class="py-2.5 sm:py-3 text-center">
                   <button type="button" class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs transition-colors" onclick="window.removeSquad('${s.matchId}', ${s.slotNumber})" title="Remove Squad">
                     ✕
                   </button>
@@ -470,39 +531,146 @@
       }
     }
 
-    // Remove a Squad
-    window.removeSquad = async function(matchId, slotNum) {
-      if (!confirm(`Are you sure you want to remove Slot #${slotNum}?`)) return;
+    // ==========================================
+    // THEMED NOTIFICATIONS & TOASTS (ARENA X)
+    // ==========================================
+    let noticeConfirmCallback = null;
 
-      const matches = (tournamentData.matches || []).map(m => {
-        if (m.id === matchId) {
-          const newSlots = (m.slots || []).map(s => {
-            if (s.slotNumber === slotNum) {
-              return {
-                slotNumber: slotNum,
-                booked: false,
-                squadName: "",
-                player1: "",
-                player2: "",
-                player3: "",
-                player4: "",
-                contact: ""
-              };
-            }
-            return s;
-          });
-          return { ...m, slots: newSlots };
-        }
-        return m;
+    window.showNoticeModal = function(options) {
+      const {
+        title = "নোটিশ",
+        message = "",
+        type = "success",
+        confirmText = "ঠিক আছে",
+        cancelText = null,
+        onConfirm = null
+      } = options;
+
+      $('noticeTitle').textContent = title;
+      $('noticeMessage').innerHTML = message;
+
+      const iconContainer = $('noticeIconContainer');
+      const icon = $('noticeIcon');
+
+      if (type === 'success') {
+        iconContainer.className = "w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200 text-[#FF5722] flex items-center justify-center text-2xl mb-3 shadow-sm";
+        icon.className = "bi bi-check-circle-fill text-[#FF5722]";
+      } else if (type === 'error') {
+        iconContainer.className = "w-14 h-14 mx-auto rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center text-2xl mb-3 shadow-sm";
+        icon.className = "bi bi-x-circle-fill text-red-600";
+      } else if (type === 'warning') {
+        iconContainer.className = "w-14 h-14 mx-auto rounded-2xl bg-yellow-50 border border-yellow-200 text-yellow-600 flex items-center justify-center text-2xl mb-3 shadow-sm";
+        icon.className = "bi bi-exclamation-triangle-fill text-yellow-600";
+      } else {
+        iconContainer.className = "w-14 h-14 mx-auto rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-2xl mb-3 shadow-sm";
+        icon.className = "bi bi-info-circle-fill text-blue-600";
+      }
+
+      noticeConfirmCallback = onConfirm;
+
+      const actions = $('noticeActions');
+      if (cancelText) {
+        actions.innerHTML = `
+          <button type="button" class="w-1/2 py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs sm:text-sm transition-all" onclick="window.closeNoticeModal()">
+            ${cancelText}
+          </button>
+          <button type="button" class="w-1/2 py-2.5 px-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all" onclick="window.handleNoticeConfirm()">
+            ${confirmText}
+          </button>
+        `;
+      } else {
+        actions.innerHTML = `
+          <button type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all" onclick="window.handleNoticeConfirm()">
+            ${confirmText}
+          </button>
+        `;
+      }
+
+      $('noticeModalBackdrop').style.display = 'block';
+      $('noticeModalBox').style.display = 'block';
+    };
+
+    window.closeNoticeModal = function() {
+      $('noticeModalBackdrop').style.display = 'none';
+      $('noticeModalBox').style.display = 'none';
+      noticeConfirmCallback = null;
+    };
+
+    window.handleNoticeConfirm = function() {
+      const cb = noticeConfirmCallback;
+      window.closeNoticeModal();
+      if (typeof cb === 'function') cb();
+    };
+
+    window.showToast = function(message, type = 'success') {
+      const container = $('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const isErr = type === 'error';
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white border ${isErr ? 'border-red-300' : 'border-orange-200'} shadow-lg text-xs font-semibold text-gray-900 transform transition-all duration-300 translate-y-2 opacity-0`;
+      toast.innerHTML = `
+        <span class="w-6 h-6 rounded-lg ${isErr ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-[#FF5722]'} flex items-center justify-center text-xs shrink-0 font-bold">
+          <i class="bi ${isErr ? 'bi-exclamation-triangle-fill' : 'bi-check2'}"></i>
+        </span>
+        <span class="flex-1 truncate">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
       });
 
-      try {
-        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
-        await updateDoc(docRef, { matches });
-        alert(`Slot #${slotNum} removed.`);
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    };
+
+    // Remove a Squad
+    window.removeSquad = async function(matchId, slotNum) {
+      window.showNoticeModal({
+        title: "স্লট রিমুভ নিশ্চিতকরণ",
+        message: `আপনি কি নিশ্চিত যে <strong>স্লট #${slotNum}</strong> রিমুভ করে উন্মুক্ত করতে চান?`,
+        type: "warning",
+        confirmText: "হ্যাঁ, রিমুভ করুন",
+        cancelText: "না, বাতিল",
+        onConfirm: async () => {
+          const matches = (tournamentData.matches || []).map(m => {
+            if (m.id === matchId) {
+              const newSlots = (m.slots || []).map(s => {
+                if (s.slotNumber === slotNum) {
+                  return {
+                    slotNumber: slotNum,
+                    booked: false,
+                    squadName: "",
+                    player1: "",
+                    player2: "",
+                    player3: "",
+                    player4: "",
+                    contact: ""
+                  };
+                }
+                return s;
+              });
+              return { ...m, slots: newSlots };
+            }
+            return m;
+          });
+
+          try {
+            const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+            await updateDoc(docRef, { matches });
+            window.showToast(`স্লট #${slotNum} সফলভাবে রিমুভ করা হয়েছে।`, "success");
+          } catch (err) {
+            window.showNoticeModal({
+              title: "ত্রুটি",
+              message: "স্লট রিমুভ করা যায়নি: " + err.message,
+              type: "error"
+            });
+          }
+        }
+      });
     };
 
     // Sync Form Values with Selected Match
@@ -573,10 +741,20 @@
           roomPass: updatedMatches[0].roomPass,
           slots: updatedMatches[0].slots
         });
-        alert("Match details & Room ID published live to all users!");
+        window.showNoticeModal({
+          title: "ম্যাচ সফলভাবে আপডেট হয়েছে! 🔥",
+          message: `<strong>${title}</strong>-এর সময়, ম্যাপ এবং রুম আইডি/পাসওয়ার্ড লাইভ পাবলিশ করা হয়েছে। প্লেয়াররা তাৎক্ষণিকভাবে এটি দেখতে পাবে।`,
+          type: "success",
+          confirmText: "চমৎকার!"
+        });
       } catch (err) {
         console.error("Save error:", err);
-        alert("Error: " + err.message);
+        window.showNoticeModal({
+          title: "সংরক্ষণ করা যায়নি",
+          message: "ত্রুটি: " + err.message,
+          type: "error",
+          confirmText: "ঠিক আছে"
+        });
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-broadcast"></i> Save & Publish Live to Players';
