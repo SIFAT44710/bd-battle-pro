@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ARENA X — Free Fire Squad Match</title>
+
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-canvas: #0F172A;
+      --card-surface: #1E293B;
+      --card-border: #334155;
+      --text-main: #E2E8F0;
+      --text-muted: #94A3B8;
+      --accent-gold: #FACC15;
+      --gold-gradient: linear-gradient(135deg, #FACC15 0%, #FBBF24 100%);
+      --accent-green: #10B981;
+      --accent-blue: #3B82F6;
+      --accent-red: #EF4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: 'Poppins', sans-serif;
+      padding-top: 70px;
+      padding-bottom: 40px;
+      min-height: 100vh;
+    }
+
+    /* Fixed Header */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(30, 41, 59, 0.98);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 1030;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      background: var(--gold-gradient);
+      color: #0F172A;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .header-links a {
+      color: #fff;
+      font-size: 0.85rem;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .header-links a:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .container-custom {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* Cards */
+    .match-main-card {
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .pill-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-upcoming {
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--accent-gold);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+    }
+
+    .badge-live {
+      background: rgba(239, 68, 68, 0.15);
+      color: #F87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-squad {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .match-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    .match-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .meta-box {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .meta-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .meta-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .meta-val.gold { color: var(--accent-gold); }
+
+    /* Room Credential Box */
+    .room-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px dashed var(--accent-gold);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    .copy-chip {
+      background: rgba(250, 204, 21, 0.15);
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      font-family: monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: all;
+    }
+
+    /* Slots Container */
+    .slots-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar-wrap {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--gold-gradient);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* Slot Card */
+    .slot-item {
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+
+    .slot-item.booked {
+      border-left: 4px solid var(--accent-green);
+    }
+
+    .slot-item.available {
+      border-left: 4px solid var(--text-muted);
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    .slot-num-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .slot-item.booked .slot-num-badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+    }
+
+    .slot-item.available .slot-num-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .player-tag {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #fff;
+      display: inline-block;
+      margin-top: 4px;
+      margin-right: 4px;
+    }
+
+    .player-tag.leader {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn-gold {
+      background: var(--gold-gradient);
+      color: #0F172A;
+      font-weight: 700;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-gold:hover { filter: brightness(1.1); color: #0F172A; }
+
+    /* Custom Bulletproof Modal */
+    .custom-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1050;
+      backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-box {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 480px;
+      background: #1E293B;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1060;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .form-control, .form-select {
+      background: #0F172A;
+      border: 1px solid var(--card-border);
+      color: #fff;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: #0F172A;
+      border-color: var(--accent-gold);
+      color: #fff;
+      box-shadow: 0 0 0 0.2rem rgba(250, 204, 21, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand-title">
+      <i class="bi bi-controller text-warning"></i> ARENA X
+      <span class="brand-tag">FREE FIRE</span>
+    </div>
+    <div class="header-links">
+      <a href="https://wa.me/8801791357521" target="_blank" class="text-success">
+        <i class="bi bi-whatsapp"></i> WhatsApp
+      </a>
+      <a href="/admin" class="text-warning">
+        <i class="bi bi-shield-lock-fill"></i> Admin
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container-custom">
+
+    <!-- Match Information Card -->
+    <div class="match-main-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="pill-badge badge-upcoming" id="matchStatusBadge">
+          <i class="bi bi-clock-fill"></i> UPCOMING
+        </span>
+        <span class="pill-badge badge-squad">
+          <i class="bi bi-people-fill"></i> 4v4 SQUAD BATTLE
+        </span>
+      </div>
+
+      <h1 class="match-title" id="matchTitleEl">Free Fire Daily Squad Championship</h1>
+      <p class="text-secondary small mb-2" id="matchSubEl">Match Schedule • 12 Squads</p>
+
+      <!-- Meta Grid -->
+      <div class="match-meta-grid">
+        <div class="meta-box">
+          <div class="meta-label">Schedule Time</div>
+          <div class="meta-val gold" id="matchTimeEl">08:30 PM</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Total Matches</div>
+          <div class="meta-val" id="matchCountEl">3 Matches</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Maps</div>
+          <div class="meta-val" id="matchMapsEl">Bermuda, Purgatory</div>
+        </div>
+      </div>
+
+      <div class="match-meta-grid" style="margin-top: -6px;">
+        <div class="meta-box">
+          <div class="meta-label">Entry Fee</div>
+          <div class="meta-val gold" id="entryFeeEl">৳100</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Prize Pool</div>
+          <div class="meta-val gold" id="prizePoolEl">৳1,000</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Format</div>
+          <div class="meta-val">4 Players</div>
+        </div>
+      </div>
+
+      <!-- Room Credentials Box -->
+      <div class="room-box">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-bold text-white small">
+            <i class="bi bi-key-fill text-warning me-1"></i> Custom Room Credentials
+          </span>
+          <span class="badge bg-secondary" id="roomReleaseStatus">Match 1</span>
+        </div>
+        <div id="roomCredentialsArea">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 Squad Slots Section (On the Same Page) -->
+    <div class="slots-header">
+      <div>
+        <h2 class="h6 fw-bold text-white mb-0">
+          <i class="bi bi-grid-3x3-gap-fill text-warning me-1"></i> Squad Slots (1 to 12)
+        </h2>
+        <span class="text-secondary small" id="slotProgressText">0 / 12 Slots Booked</span>
+      </div>
+      <button class="btn btn-sm btn-gold" id="quickBookBtn" onclick="window.openBookingModal()">
+        <i class="bi bi-plus-circle-fill"></i> Book Squad Slot
+      </button>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="slotProgressBar" style="width: 0%;"></div>
+    </div>
+
+    <!-- Slots List Container -->
+    <div id="slotsContainer">
+      <!-- 12 Slots dynamically rendered -->
+    </div>
+
+  </main>
+
+  <!-- BULLETPROOF CUSTOM MODAL (NO BOOTSTRAP DEPENDENCY) -->
+  <div id="bookingModalBackdrop" class="custom-modal-backdrop" onclick="window.closeBookingModal()"></div>
+  <div id="bookingModalBox" class="custom-modal-box">
+    <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary">
+      <h5 class="fw-bold text-white mb-0">
+        <i class="bi bi-shield-plus text-warning me-1"></i> Book Squad Slot
+      </h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary text-white" onclick="window.closeBookingModal()">&times;</button>
+    </div>
+
+    <form id="slotBookingForm" onsubmit="window.handleBookingSubmit(event)">
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Choose Slot</label>
+        <select class="form-select" id="formSlotNumber" required>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Squad / Team Name</label>
+        <input type="text" class="form-control" id="formSquadName" placeholder="e.g. DARK VORTEX" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Leader / Player 1 Name</label>
+        <input type="text" class="form-control" id="formPlayer1" placeholder="e.g. Vortex_Boss" required>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 2 Name</label>
+          <input type="text" class="form-control" id="formPlayer2" placeholder="Player 2 Name" required>
+        </div>
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 3 Name</label>
+          <input type="text" class="form-control" id="formPlayer3" placeholder="Player 3 Name" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Player 4 Name</label>
+        <input type="text" class="form-control" id="formPlayer4" placeholder="Player 4 Name" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">WhatsApp Number (For Room alerts)</label>
+        <input type="tel" class="form-control" id="formContact" placeholder="017XXXXXXXX" required>
+      </div>
+
+      <div id="bookingAlert" class="alert small mt-2" style="display: none;"></div>
+
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.closeBookingModal()">Cancel</button>
+        <button type="submit" class="btn btn-sm btn-gold" id="submitBookingBtn">
+          <i class="bi bi-check2-circle"></i> Confirm Slot Booking
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- FIREBASE FIRESTORE SYNC SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
+      authDomain: "ff-squad-arena-bd.firebaseapp.com",
+      projectId: "ff-squad-arena-bd",
+      storageBucket: "ff-squad-arena-bd.firebasestorage.app",
+      messagingSenderId: "604500327184",
+      appId: "1:604500327184:web:2eae6bfddea7ed2ae74395"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const TOURNAMENT_ID = "ff-daily-squad";
+
+    // In-memory state with initial defaults
+    let state = {
+      title: "Free Fire Daily Squad Championship",
+      status: "upcoming",
+      time: "08:30 PM",
+      matchCount: 3,
+      maps: "Bermuda, Purgatory, Kalahari",
+      entryFee: 100,
+      prizePool: 1000,
+      roomId: "893411",
+      roomPass: "7788",
+      slots: Array.from({ length: 12 }, (_, i) => ({
+        slotNumber: i + 1,
+        booked: i === 0 || i === 1,
+        squadName: i === 0 ? "DARK VORTEX" : (i === 1 ? "71 ESPL" : ""),
+        player1: i === 0 ? "Vortex_Boss" : (i === 1 ? "71_Tiger" : ""),
+        player2: i === 0 ? "Vortex_Fire" : (i === 1 ? "71_Sifat" : ""),
+        player3: i === 0 ? "Vortex_Sniper" : (i === 1 ? "71_Shooter" : ""),
+        player4: i === 0 ? "Vortex_Ghost" : (i === 1 ? "71_Storm" : ""),
+        contact: i === 0 ? "01711000001" : (i === 1 ? "01791357521" : "")
+      }))
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    // Modal Control
+    window.openBookingModal = function(targetSlot = null) {
+      const select = $('formSlotNumber');
+      if (!select) return;
+
+      select.innerHTML = '';
+      (state.slots || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.slotNumber;
+        opt.textContent = `Slot #${s.slotNumber} ${s.booked ? '(Booked - ' + s.squadName + ')' : '(Available)'}`;
+        opt.disabled = s.booked && s.slotNumber !== targetSlot;
+        if (targetSlot && s.slotNumber === targetSlot) {
+          opt.selected = true;
+        } else if (!targetSlot && !s.booked && !select.value) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      const alertEl = $('bookingAlert');
+      if (alertEl) alertEl.style.display = 'none';
+
+      $('bookingModalBackdrop').style.display = 'block';
+      $('bookingModalBox').style.display = 'block';
+    };
+
+    window.closeBookingModal = function() {
+      $('bookingModalBackdrop').style.display = 'none';
+      $('bookingModalBox').style.display = 'none';
+    };
+
+    window.copyCred = function(text, label) {
+      navigator.clipboard.writeText(text);
+      alert(`${label} Copied: ${text}`);
+    };
+
+    // Render Match Overview
+    function renderMatch() {
+      if ($('matchTitleEl')) $('matchTitleEl').textContent = state.title || "Free Fire Squad Championship";
+      if ($('matchTimeEl')) $('matchTimeEl').textContent = state.time || "08:30 PM";
+      if ($('matchCountEl')) $('matchCountEl').textContent = `${state.matchCount || 3} Matches`;
+      if ($('matchMapsEl')) $('matchMapsEl').textContent = state.maps || "Bermuda";
+      if ($('entryFeeEl')) $('entryFeeEl').textContent = `৳${state.entryFee || 100}`;
+      if ($('prizePoolEl')) $('prizePoolEl').textContent = `৳${state.prizePool || 1000}`;
+
+      // Status Badge
+      const badge = $('matchStatusBadge');
+      if (badge) {
+        if (state.status === 'live') {
+          badge.className = 'pill-badge badge-live';
+          badge.innerHTML = '<i class="bi bi-broadcast"></i> LIVE NOW';
+        } else {
+          badge.className = 'pill-badge badge-upcoming';
+          badge.innerHTML = '<i class="bi bi-clock-fill"></i> UPCOMING';
+        }
+      }
+
+      // Room Credentials Box
+      const roomArea = $('roomCredentialsArea');
+      if (roomArea) {
+        if (state.roomId && state.roomId.trim()) {
+          roomArea.innerHTML = `
+            <div class="row g-2 mt-1">
+              <div class="col-6">
+                <div class="small text-secondary mb-1">Room ID</div>
+                <div class="copy-chip w-100 justify-content-between" onclick="window.copyCred('${state.roomId}', 'Room ID')">
+                  <span>${state.roomId}</span>
+                  <i class="bi bi-clipboard"></i>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="small text-secondary mb-1">Password</div>
+                <div class="copy-chip w-100 justify-content-between" onclick="window.copyCred('${state.roomPass || '1234'}', 'Password')">
+                  <span>${state.roomPass || '1234'}</span>
+                  <i class="bi bi-clipboard"></i>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          roomArea.innerHTML = `
+            <div class="text-secondary small py-1">
+              <i class="bi bi-hourglass-split text-warning me-1"></i> Room ID & Password will be released here 15 mins before match start.
+            </div>
+          `;
+        }
+      }
+    }
+
+    // Render Slots (1-12)
+    function renderSlots() {
+      const slots = state.slots || [];
+      const bookedCount = slots.filter(s => s.booked).length;
+
+      if ($('slotProgressText')) $('slotProgressText').textContent = `${bookedCount} / 12 Slots Booked`;
+      if ($('slotProgressBar')) {
+        const pct = Math.round((bookedCount / 12) * 100);
+        $('slotProgressBar').style.width = `${pct}%`;
+      }
+
+      const container = $('slotsContainer');
+      if (!container) return;
+
+      container.innerHTML = slots.map(s => {
+        if (s.booked) {
+          return `
+            <div class="slot-item booked">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="slot-num-badge">${s.slotNumber}</div>
+                  <span class="fw-bold text-white fs-6">${s.squadName}</span>
+                </div>
+                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> FULL / BOOKED</span>
+              </div>
+              <div class="mt-2 ps-1">
+                <span class="player-tag leader"><i class="bi bi-star-fill me-1"></i>${s.player1 || 'Leader'}</span>
+                <span class="player-tag">${s.player2 || 'Player 2'}</span>
+                <span class="player-tag">${s.player3 || 'Player 3'}</span>
+                <span class="player-tag">${s.player4 || 'Player 4'}</span>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="slot-item available">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="slot-num-badge">${s.slotNumber}</div>
+                  <div>
+                    <div class="fw-bold text-secondary">Slot #${s.slotNumber} Available</div>
+                    <div class="small text-muted">Open for 4-player squad</div>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-gold" onclick="window.openBookingModal(${s.slotNumber})">
+                  Book Slot
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // Submit Slot Booking
+    window.handleBookingSubmit = async function(e) {
+      e.preventDefault();
+      const slotNum = Number($('formSlotNumber').value);
+      const squadName = $('formSquadName').value.trim();
+      const player1 = $('formPlayer1').value.trim();
+      const player2 = $('formPlayer2').value.trim();
+      const player3 = $('formPlayer3').value.trim();
+      const player4 = $('formPlayer4').value.trim();
+      const contact = $('formContact').value.trim();
+
+      const alertEl = $('bookingAlert');
+      const btn = $('submitBookingBtn');
+
+      if (!squadName || !player1 || !contact) {
+        if (alertEl) {
+          alertEl.className = 'alert alert-warning small mt-2';
+          alertEl.textContent = 'Please fill Squad Name, Leader Name, and WhatsApp number.';
+          alertEl.style.display = 'block';
+        }
+        return false;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = 'Booking...';
+
+      try {
+        const currentSlots = [...(state.slots || [])];
+        const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
+        if (idx === -1) throw new Error("Invalid slot.");
+
+        currentSlots[idx] = {
+          slotNumber: slotNum,
+          booked: true,
+          squadName,
+          player1,
+          player2,
+          player3,
+          player4,
+          contact
+        };
+
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { slots: currentSlots });
+
+        if (alertEl) {
+          alertEl.className = 'alert alert-success small mt-2';
+          alertEl.textContent = `Slot #${slotNum} booked successfully!`;
+          alertEl.style.display = 'block';
+        }
+
+        setTimeout(() => {
+          window.closeBookingModal();
+          $('slotBookingForm').reset();
+        }, 1000);
+
+      } catch (err) {
+        console.error("Booking error:", err);
+        if (alertEl) {
+          alertEl.className = 'alert alert-danger small mt-2';
+          alertEl.textContent = err.message || 'Error booking slot.';
+          alertEl.style.display = 'block';
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Confirm Slot Booking';
+      }
+      return false;
+    };
+
+    // Realtime Listener
+    function startSync() {
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        onSnapshot(docRef, (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            state = { ...state, ...data };
+            renderMatch();
+            renderSlots();
+          } else {
+            setDoc(docRef, state);
+          }
+        }, (err) => {
+          console.warn("Firestore error:", err);
+        });
+      } catch (e) {
+        console.warn("Firestore listener failed:", e);
+      }
+    }
+
+    // Initial render
+    renderMatch();
+    renderSlots();
+    startSync();
+  </script>
+</body>
+</html>

@@ -14,9 +14,11 @@
       }
     ],
     "rewrites": [
-      { "source": "/", "destination": "/index.html" },
+      { "source": "/player", "destination": "/player/dashboard.html" },
+      { "source": "/player/**", "destination": "/player/dashboard.html" },
       { "source": "/admin", "destination": "/admin.html" },
-      { "source": "/admin/**", "destination": "/admin.html" }
+      { "source": "/admin/**", "destination": "/admin.html" },
+      { "source": "**", "destination": "/index.html" }
     ],
     "ignore": [
       "firebase.json",
