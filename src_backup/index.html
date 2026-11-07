@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ARENA X — White-Label Free Fire Tournament SaaS Platform</title>
+
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-canvas: #0B0F19;
+      --card-surface: #131B2E;
+      --card-border: #1E293B;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent-gold: #FACC15;
+      --gold-gradient: linear-gradient(135deg, #FACC15 0%, #FBBF24 100%);
+      --accent-green: #10B981;
+      --accent-blue: #3B82F6;
+      --accent-red: #EF4444;
+      --brand-glow: rgba(250, 204, 21, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: 'Poppins', 'Hind Siliguri', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Fixed Top Navbar */
+    .saas-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1040;
+    }
+
+    .brand-logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .brand-badge {
+      background: var(--gold-gradient);
+      color: #0B0F19;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-nav-demo {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-nav-demo:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .btn-nav-wa {
+      background: #25D366;
+      color: #0B0F19;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-wa:hover {
+      filter: brightness(1.1);
+      color: #0B0F19;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding-top: 130px;
+      padding-bottom: 70px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-glow-sphere {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(250, 204, 21, 0.12) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(250, 204, 21, 0.12);
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      color: var(--accent-gold);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 1.85rem; }
+    }
+
+    .hero-title span {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 35px;
+    }
+
+    .btn-hero-primary {
+      background: var(--gold-gradient);
+      color: #0B0F19;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 13px 26px;
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-hero-primary:hover {
+      filter: brightness(1.1);
+      color: #0B0F19;
+      transform: translateY(-2px);
+    }
+
+    .btn-hero-secondary {
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 13px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-hero-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .hero-trust-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trust-item i {
+      color: var(--accent-green);
+    }
+
+    /* Live Demo Interactive Cards */
+    .demo-showcase-section {
+      padding: 30px 16px 60px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .section-head {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .section-head h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .section-head p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .demo-grid { grid-template-columns: 1fr; }
+    }
+
+    .demo-card {
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+    }
+
+    .demo-card:hover {
+      border-color: rgba(250, 204, 21, 0.5);
+      transform: translateY(-4px);
+    }
+
+    .demo-card-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .demo-card-badge.player {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .demo-card-badge.admin {
+      background: rgba(250, 204, 21, 0.2);
+      color: var(--accent-gold);
+      border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+
+    .demo-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+    }
+
+    .demo-icon-box.player {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60A5FA;
+    }
+
+    .demo-icon-box.admin {
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--accent-gold);
+    }
+
+    .demo-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .demo-features-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 24px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .demo-features-list li {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-features-list li i {
+      color: var(--accent-green);
+    }
+
+    .btn-launch-demo {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-launch-demo.player {
+      background: #2563EB;
+      color: #fff;
+    }
+    .btn-launch-demo.player:hover {
+      background: #1D4ED8;
+      color: #fff;
+    }
+
+    .btn-launch-demo.admin {
+      background: var(--gold-gradient);
+      color: #0B0F19;
+    }
+    .btn-launch-demo.admin:hover {
+      filter: brightness(1.1);
+      color: #0B0F19;
+    }
+
+    /* Core Features Grid */
+    .features-section {
+      padding: 50px 16px 60px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-box {
+      background: rgba(19, 27, 46, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .feature-box-icon {
+      font-size: 1.5rem;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+    }
+
+    .feature-box-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .feature-box-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0;
+    }
+
+    /* How It Works (3 Steps) */
+    .steps-section {
+      padding: 50px 16px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .step-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+
+    .step-number {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--accent-gold);
+      font-weight: 800;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Pricing Card */
+    .pricing-section {
+      padding: 50px 16px 70px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .pricing-card {
+      background: linear-gradient(145deg, #131B2E 0%, #0F172A 100%);
+      border: 2px solid var(--accent-gold);
+      border-radius: 18px;
+      padding: 35px 25px;
+      box-shadow: 0 12px 35px rgba(250, 204, 21, 0.2);
+    }
+
+    .pricing-badge {
+      background: var(--gold-gradient);
+      color: #0B0F19;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .pricing-amount {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .pricing-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .pricing-list {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+      margin-bottom: 30px;
+      font-size: 0.92rem;
+    }
+
+    .pricing-list li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-main);
+    }
+
+    .pricing-list li i {
+      color: var(--accent-green);
+      font-size: 1.1rem;
+    }
+
+    /* Footer */
+    .saas-footer {
+      border-top: 1px solid var(--card-border);
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      background: #0B0F19;
+    }
+
+    .saas-footer a {
+      color: var(--accent-gold);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Fixed Navbar -->
+  <header class="saas-navbar">
+    <a href="/" class="brand-logo">
+      <i class="bi bi-controller text-warning"></i> ARENA X
+      <span class="brand-badge">B2B SAAS</span>
+    </a>
+    <div class="nav-actions">
+      <a href="/player" class="btn-nav-demo">
+        <i class="bi bi-play-circle-fill text-warning"></i> Player Demo
+      </a>
+      <a href="/admin" class="btn-nav-demo d-none d-sm-inline-flex">
+        <i class="bi bi-shield-lock-fill text-warning"></i> Admin Demo
+      </a>
+      <a href="https://wa.me/8801791357521?text=Hi%20Sifat,%20I%20want%20to%20buy%20the%20Free%20Fire%20Tournament%20Platform" target="_blank" class="btn-nav-wa">
+        <i class="bi bi-whatsapp"></i> Buy Platform
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-glow-sphere"></div>
+    <div class="hero-content">
+      <div class="hero-pill">
+        <i class="bi bi-patch-check-fill"></i> 100% Turnkey White-Label Esports Platform
+      </div>
+      <h1 class="hero-title">
+        আপনার নিজের নামে ও লোগোতে চালু করুন <br>
+        <span>Free Fire টুর্নামেন্ট ও স্ক্রিমস প্ল্যাটফর্ম</span>
+      </h1>
+      <p class="hero-desc">
+        হোয়াটসঅ্যাপ গ্রুপে ম্যানুয়ালি স্লট গোনা আর রুম কোড বিলানোর দিন শেষ! ফুল অটোমেটিক ১২-স্কোয়াড বুকিং, কাস্টম রুম ভল্ট এবং লাইভ ফিন্যান্সিয়াল হিসাব—সম্পূর্ণ আপনার নিজের গুগল ও ফায়ারবেস ব্যাকএন্ডে।
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="/player" class="btn-hero-primary">
+          <i class="bi bi-controller"></i> লাইভ প্লেয়ার ডেমো চালান
+        </a>
+        <a href="/admin" class="btn-hero-secondary">
+          <i class="bi bi-speedometer2"></i> লাইভ অ্যাডমিন প্যানেল দেখুন
+        </a>
+      </div>
+
+      <div class="hero-trust-bar">
+        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> ১৫ মিনিটে লাইভ সেটআপ</div>
+        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> আপনার নিজস্ব গুগল অ্যাকাউন্ট ও ফায়ারবেস</div>
+        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> ১০০% ফুল ওনারশিপ (নো মান্থলি হাইড ফি)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Demos Showcase -->
+  <section class="demo-showcase-section">
+    <div class="section-head">
+      <h2>লাইভ ডেমো টেস্ট করুন (Live Interactive Demos)</h2>
+      <p>কিনবার আগেই সরাসরি প্লেয়ার এবং অ্যাডমিন হিসেবে পুরো প্ল্যাটফর্মটি চালিয়ে দেখুন:</p>
+    </div>
+
+    <div class="demo-grid">
+      <!-- Player Demo Card -->
+      <div class="demo-card">
+        <span class="demo-card-badge player">PLAYER SIDE</span>
+        <div>
+          <div class="demo-icon-box player">
+            <i class="bi bi-phone-fill"></i>
+          </div>
+          <h3 class="demo-title">Player Panel & Booking Demo</h3>
+          <p class="text-secondary small">
+            প্লেয়াররা কীভাবে টুর্নামেন্টের একের পর এক ম্যাচ দেখবে, স্কোয়াড দিয়ে ১২টি স্লট বুক করবে এবং কাস্টম রুম আইডি পাবে:
+          </p>
+          <ul class="demo-features-list">
+            <li><i class="bi bi-check2-circle"></i> নিচে নিচে ম্যাচ কার্ডের সুন্দর লিস্ট</li>
+            <li><i class="bi bi-check2-circle"></i> ১ ক্লিকে রুম আইডি ও পাসওয়ার্ড কপি বাটন</li>
+            <li><i class="bi bi-check2-circle"></i> ১২টি স্কোয়াড স্লট বুকিং (স্কোয়াড + ৪ জন প্লেয়ার + WhatsApp)</li>
+            <li><i class="bi bi-check2-circle"></i> ফেসবুক-গ্রেড ডার্ক মোড মোবাইল ডিজাইন</li>
+          </ul>
+        </div>
+        <a href="/player" class="btn-launch-demo player">
+          <i class="bi bi-box-arrow-up-right"></i> প্লেয়ার ডেমো ওপেন করুন →
+        </a>
+      </div>
+
+      <!-- Admin Demo Card -->
+      <div class="demo-card">
+        <span class="demo-card-badge admin">ADMIN SIDE</span>
+        <div>
+          <div class="demo-icon-box admin">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h3 class="demo-title">Organizer Admin & Ledger Demo</h3>
+          <p class="text-secondary small">
+            টুর্নামেন্ট ওনার ও অ্যাডমিনদের জন্য সম্পূর্ণ কন্ট্রোল প্যানেল এবং নিখুঁত হিসাব নিকাশ:
+          </p>
+          <ul class="demo-features-list">
+            <li><i class="bi bi-check2-circle"></i> লাইভ ফিন্যান্সিয়াল লেজার (কী আসলো, কী গেল, নিট লাভ)</li>
+            <li><i class="bi bi-check2-circle"></i> আনলিমিটেড ম্যাচ তৈরি ও শিডিউল আপডেট</li>
+            <li><i class="bi bi-check2-circle"></i> কাস্টম রুম আইডি ও পাসওয়ার্ড রিলিজ কন্ট্রোল</li>
+            <li><i class="bi bi-check2-circle"></i> রেজিস্ট্রেশনকৃত স্কোয়াডের তালিকা ও ১-ক্লিক রিমুভ</li>
+          </ul>
+        </div>
+        <a href="/admin" class="btn-launch-demo admin">
+          <i class="bi bi-box-arrow-up-right"></i> অ্যাডমিন ডেমো ওপেন করুন →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Section -->
+  <section class="features-section">
+    <div class="section-head">
+      <h2>কেন এই সফটওয়্যারটি গিল্ড ও আয়োজকদের সেরা পছন্দ?</h2>
+      <p>বাংলাদেশের ফ্রি ফায়ার কমিউনিটির প্রতিটি ছোট-বড় সমস্যা মাথায় রেখে তৈরি:</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-people-fill"></i></div>
+        <h4 class="feature-box-title">১২ স্কোয়াড স্লট ইঞ্জিন</h4>
+        <p class="feature-box-desc">প্রতিটি স্লটে স্কোয়াডের নাম, ৪ জন প্লেয়ারের ইন-গেম নাম (IGN) ও ক্যাপ্টেনের হোয়াটসঅ্যাপ নাম্বার অটো সেভ হয়।</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-key-fill"></i></div>
+        <h4 class="feature-box-title">কাস্টম রুম ভল্ট</h4>
+        <p class="feature-box-desc">গ্রুপে পাসওয়ার্ড লিক হওয়ার ভয় নেই! ম্যাচ শুরুর নির্দিষ্ট সময় আগে রুম আইডি ও পাসওয়ার্ড অটো-রিলিজ হয় এবং সহজে কপি করা যায়।</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-cash-coin"></i></div>
+        <h4 class="feature-box-title">হিসাবের খাতা (Financial Ledger)</h4>
+        <p class="feature-box-desc">দলগুলো থেকে মোট কত এন্ট্রি ফি আসলো, প্রাইজ বাবদ কত গেল এবং আপনার নিট লাভ কত তা লাইভ ক্যালকুলেট হয়।</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-google"></i></div>
+        <h4 class="feature-box-title">আপনার নিজস্ব ফায়ারবেস</h4>
+        <p class="feature-box-desc">আমরা আপনার নিজের গুগল অ্যাকাউন্টে ফায়ারবেস ডেটাবেজ সেটআপ করে দিব। ফলে সব ডেটা ও নিয়ন্ত্রণ ১০০% আপনার নিজের।</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+        <h4 class="feature-box-title">ইনস্ট্যান্ট রিয়েল-টাইম সিঙ্ক</h4>
+        <p class="feature-box-desc">কোনো প্লেয়ার স্লট বুক করা মাত্রই অন্য সবার স্ক্রিনে রিলোড ছাড়াই ইনস্ট্যান্ট স্লট বুকড দেখায়। কোনো ডুপ্লিকেট বুকিং সম্ভব নয়।</p>
+      </div>
+
+      <div class="feature-box">
+        <div class="feature-box-icon"><i class="bi bi-brush-fill"></i></div>
+        <h4 class="feature-box-title">হোয়াইট-লেবেল ব্র্যান্ডিং</h4>
+        <p class="feature-box-desc">আপনার টুর্নামেন্টের নাম, নিজস্ব লোগো, বিকাশ/নগদ পেমেন্ট নাম্বার এবং রুলস দিয়ে সম্পূর্ণ কাস্টমাইজ করে হস্তান্তর করা হবে।</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="steps-section">
+    <div class="section-head">
+      <h2>৩টি সহজ ধাপে কীভাবে প্ল্যাটফর্মটি আপনার নামে পাবেন?</h2>
+      <p>অর্ডার করা থেকে ডেলিভারি পর্যন্ত সম্পূর্ণ প্রসেস একদম ক্লিয়ার:</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">১</div>
+      <div>
+        <h5 class="fw-bold text-white mb-1">ডেমো টেস্ট করে সিদ্ধান্ত নিন</h5>
+        <p class="text-secondary small mb-0">
+          উপরে দেওয়া প্লেয়ার ডেমো ও অ্যাডমিন প্যানেল নিজে চালিয়ে যাচাই করুন যে সিস্টেমটি আপনার মনের মতো কি না।
+        </p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">২</div>
+      <div>
+        <h5 class="fw-bold text-white mb-1">আপনার ব্র্যান্ড নেম, লোগো ও গুগল অ্যাকাউন্ট দিন</h5>
+        <p class="text-secondary small mb-0">
+          WhatsApp-এ আমাদের আপনার টুর্নামেন্টের নাম, লোগো এবং একটি ফ্রেশ গুগল জিমেইল অ্যাড্রেস পাঠান।
+        </p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-number">৩</div>
+      <div>
+        <h5 class="fw-bold text-white mb-1">১৫ মিনিটে সম্পূর্ণ লাইভ ডেলিভারি</h5>
+        <p class="text-secondary small mb-0">
+          আমরা আপনার ফায়ারবেসে ডেটাবেজ সেটআপ করে আপনার ব্র্যান্ডেড লাইভ লিংক ও অ্যাডমিন অ্যাক্সেস বুঝিয়ে দেব।
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing-section">
+    <div class="pricing-card">
+      <div class="pricing-badge">🔥 COMPLETE TURNKEY PACKAGE</div>
+      <h3 class="fw-bold text-white mb-1">ফুল সেটআপ ও ওনারশিপ</h3>
+      <div class="pricing-amount">৳৩,৫০০ <span class="fs-6 text-secondary fw-normal">/ এককালীন (Lifetime)</span></div>
+      <p class="pricing-desc">কোনো মাসিক হিডেন চার্জ নেই। একবার নিলেই লাইফটাইম আপনার!</p>
+
+      <ul class="pricing-list">
+        <li><i class="bi bi-check-circle-fill"></i> কমপ্লিট প্লেয়ার প্যানেল (ম্যাচ ফিড + ১২ স্লট বুকিং)</li>
+        <li><i class="bi bi-check-circle-fill"></i> ফুল অ্যাডমিন ড্যাশবোর্ড + ফিন্যান্সিয়াল লেজার</li>
+        <li><i class="bi bi-check-circle-fill"></i> আপনার নিজস্ব ব্র্যান্ড নেম ও লোগো ইন্টিগ্রেশন</li>
+        <li><i class="bi bi-check-circle-fill"></i> আপনার গুগল অ্যাকাউন্টে ডেডিকেটেড ফায়ারবেস সেটআপ</li>
+        <li><i class="bi bi-check-circle-fill"></i> ফ্রি লাইফটাইম হোস্টিং ও SSL সিকিউরিটি</li>
+        <li><i class="bi bi-check-circle-fill"></i> সিফাত বিন শাহজাহান-এর ফুল টেকনিক্যাল সাপোর্ট</li>
+      </ul>
+
+      <a href="https://wa.me/8801791357521?text=Hi%20Sifat,%20I%20want%20to%20order%20the%20Free%20Fire%20Tournament%20Platform%20for%203500%20BDT" target="_blank" class="btn-hero-primary w-100 justify-content-center">
+        <i class="bi bi-whatsapp"></i> এখনই WhatsApp-এ অর্ডার করুন
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="saas-footer">
+    <div class="container">
+      <div class="mb-2">
+        <strong>ARENA X Esports SaaS</strong> • Crafted with precision by <strong>Sifat Bin Shahjahan</strong>
+      </div>
+      <div>
+        Direct WhatsApp Support: <a href="https://wa.me/8801791357521" target="_blank">+8801791357521</a> | Bangladesh
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

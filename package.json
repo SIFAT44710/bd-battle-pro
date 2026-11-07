@@ -1,0 +1,24 @@
+{
+  "name": "bd-battle-pro",
+  "version": "1.0.0",
+  "description": "> **Author & Lead Architect:** Sifat Bin Shahjahan   > **Architecture:** Pure HTML5 + CSS3 + Vanilla JavaScript + Firebase & LocalStorage   > **Tournament Format:** 12 Squads / 48 Players (Full Custom Room Capacity)   > **Point System:** Official FFWS Points System (#1=12, #2=9, #3=8 ... + 1 pt/kill)   > **Status:** Ultra-Lightweight, Production Ready, Zero Node.js Bloat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SIFAT44710/bd-battle-pro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SIFAT44710/bd-battle-pro/issues"
+  },
+  "homepage": "https://github.com/SIFAT44710/bd-battle-pro#readme",
+  "dependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "javascript-obfuscator": "^5.10.0"
+  }
+}

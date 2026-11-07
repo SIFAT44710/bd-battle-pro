@@ -25,7 +25,11 @@
       ".firebaserc",
       "**/.*",
       "ARENA X ____Saas/**",
-      "*.md"
+      "*.md",
+      "node_modules/**",
+      "package*.json",
+      "protect-build.js",
+      "src_backup/**"
     ]
   },
   "firestore": {
