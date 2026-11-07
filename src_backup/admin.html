@@ -180,6 +180,75 @@
     </section>
 
     <!-- ========================================== -->
+    <!-- ========================================== -->
+    <!-- PAYMENT GATEWAY & ACCOUNTS SETUP CARD      -->
+    <!-- ========================================== -->
+    <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 via-orange-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+            ৳
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-gray-900">Payment Gateway Numbers (বিকাশ, নগদ ও রকেট নম্বর সেটিংস)</h2>
+            <p class="text-[11px] sm:text-xs text-gray-500">প্লেয়াররা স্লট বুকিংয়ের সময় এই নম্বরে Send Money করে পেমেন্ট ভেরিফাই করবে।</p>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 self-start sm:self-auto flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          REALTIME SYNC
+        </span>
+      </div>
+
+      <form id="adminPaymentSettingsForm" onsubmit="window.handleSavePaymentSettings(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          
+          <!-- bKash -->
+          <div class="bg-pink-50/60 border border-pink-200 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#E2136E] flex items-center gap-1.5">
+                <i class="bi bi-phone-fill"></i> বিকাশ (bKash)
+              </span>
+              <span class="text-[10px] font-semibold bg-pink-100 text-[#E2136E] px-2 py-0.5 rounded">Send Money</span>
+            </div>
+            <input type="tel" id="admBkashNumber" placeholder="e.g. 01791357521" class="w-full bg-white border border-pink-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-[#E2136E]" required>
+          </div>
+
+          <!-- Nagad -->
+          <div class="bg-orange-50/60 border border-orange-200 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#F6921E] flex items-center gap-1.5">
+                <i class="bi bi-wallet2"></i> নগদ (Nagad)
+              </span>
+              <span class="text-[10px] font-semibold bg-orange-100 text-[#F6921E] px-2 py-0.5 rounded">Send Money</span>
+            </div>
+            <input type="tel" id="admNagadNumber" placeholder="e.g. 01791357521" class="w-full bg-white border border-orange-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-[#F6921E]" required>
+          </div>
+
+          <!-- Rocket -->
+          <div class="bg-purple-50/60 border border-purple-200 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-700 flex items-center gap-1.5">
+                <i class="bi bi-send-fill"></i> রকেট (Rocket)
+              </span>
+              <span class="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Send Money</span>
+            </div>
+            <input type="tel" id="admRocketNumber" placeholder="e.g. 01791357521" class="w-full bg-white border border-purple-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-purple-600" required>
+          </div>
+
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+          <p class="text-[11px] text-gray-500">
+            💡 নম্বর সেভ করলে প্লেয়ার প্যানেলে বুকিং পেজে সাথে সাথে নতুন বিকাশ, নগদ ও রকেট নম্বর আপডেট হয়ে যাবে।
+          </p>
+          <button type="submit" id="savePaymentSettingsBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#E64A19] hover:from-[#E64A19] hover:to-[#D84315] text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+            <i class="bi bi-check2-circle"></i> Save Payment Numbers (নম্বর সংরক্ষণ করুন)
+          </button>
+        </div>
+      </form>
+    </section>
+
     <!-- VIEW 1: MATCHES LIST (STACKED FEED)        -->
     <!-- ========================================== -->
     <section id="adminMatchesListView" class="space-y-4 sm:space-y-6">
@@ -477,6 +546,11 @@
 
     let tournamentData = {
       tournamentName: "Free Fire Daily Squad Championship",
+      paymentSettings: {
+        bkashNumber: "01791357521",
+        nagadNumber: "01791357521",
+        rocketNumber: "01791357521"
+      },
       matches: [
         {
           id: "match-1",
@@ -577,7 +651,8 @@
       const detailEl = $('adminMatchDetailView');
       if (detailEl) detailEl.style.display = 'none';
       if (listEl) listEl.style.display = 'block';
-      window.renderAdminMatchesList();
+      populatePaymentInputs();
+    window.renderAdminMatchesList();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -1153,6 +1228,55 @@
     };
 
     // Remove a Squad from slot
+    // Save Payment Settings
+    window.handleSavePaymentSettings = async function(e) {
+      e.preventDefault();
+      const bkashNumber = $('admBkashNumber').value.trim();
+      const nagadNumber = $('admNagadNumber').value.trim();
+      const rocketNumber = $('admRocketNumber').value.trim();
+
+      const btn = $('savePaymentSettingsBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
+
+      const paymentSettings = {
+        bkashNumber,
+        nagadNumber,
+        rocketNumber,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { paymentSettings });
+        tournamentData.paymentSettings = paymentSettings;
+
+        window.showNoticeModal({
+          title: "পেমেন্ট নম্বর সেভ হয়েছে! ৳",
+          message: `বিকাশ (<strong>${bkashNumber}</strong>), নগদ (<strong>${nagadNumber}</strong>), এবং রকেট (<strong>${rocketNumber}</strong>) সফলভাবে আপডেট হয়েছে। প্লেয়াররা এখন এই নম্বরে পেমেন্ট করতে পারবে।`,
+          type: "success"
+        });
+      } catch (err) {
+        console.error("Payment settings save error:", err);
+        window.showNoticeModal({
+          title: "ত্রুটি",
+          message: "পেমেন্ট নম্বর সেভ করা যায়নি: " + err.message,
+          type: "error"
+        });
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Save Payment Numbers (নম্বর সংরক্ষণ করুন)';
+      }
+      return false;
+    };
+
+    function populatePaymentInputs() {
+      const ps = tournamentData.paymentSettings || { bkashNumber: "01791357521", nagadNumber: "01791357521", rocketNumber: "01791357521" };
+      if ($('admBkashNumber') && !$('admBkashNumber').value) $('admBkashNumber').value = ps.bkashNumber || "";
+      if ($('admNagadNumber') && !$('admNagadNumber').value) $('admNagadNumber').value = ps.nagadNumber || "";
+      if ($('admRocketNumber') && !$('admRocketNumber').value) $('admRocketNumber').value = ps.rocketNumber || "";
+    }
+
     window.removeSquad = async function(matchId, slotNum) {
       window.showNoticeModal({
         title: "স্লট রিমুভ নিশ্চিতকরণ",
@@ -1287,6 +1411,12 @@
             const data = snap.data();
             if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
               tournamentData = { ...tournamentData, ...data };
+            if (data.paymentSettings) {
+              tournamentData.paymentSettings = data.paymentSettings;
+              if ($('admBkashNumber')) $('admBkashNumber').value = data.paymentSettings.bkashNumber || "";
+              if ($('admNagadNumber')) $('admNagadNumber').value = data.paymentSettings.nagadNumber || "";
+              if ($('admRocketNumber')) $('admRocketNumber').value = data.paymentSettings.rocketNumber || "";
+            }
             }
             updateLedger();
             if ($('adminMatchDetailView').style.display === 'block') {
