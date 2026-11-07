@@ -44,7 +44,7 @@
       left: 0;
       right: 0;
       height: 60px;
-      background: rgba(30, 41, 59, 0.95);
+      background: rgba(30, 41, 59, 0.98);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--card-border);
       display: flex;
@@ -195,6 +195,7 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
+      user-select: all;
     }
 
     /* Slots Container */
@@ -289,30 +290,44 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-gold:hover { filter: brightness(1.1); color: #0F172A; }
 
-    /* Modal Form */
-    .modal-content {
+    /* Custom Bulletproof Modal */
+    .custom-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1050;
+      backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-box {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 480px;
       background: #1E293B;
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      color: var(--text-main);
+      padding: 20px;
+      z-index: 1060;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    .modal-header, .modal-footer {
-      border-color: var(--card-border);
-    }
-
-    .form-control {
+    .form-control, .form-select {
       background: #0F172A;
       border: 1px solid var(--card-border);
       color: #fff;
     }
 
-    .form-control:focus {
+    .form-control:focus, .form-select:focus {
       background: #0F172A;
       border-color: var(--accent-gold);
       color: #fff;
@@ -332,7 +347,7 @@
       <a href="https://wa.me/8801791357521" target="_blank" class="text-success">
         <i class="bi bi-whatsapp"></i> WhatsApp
       </a>
-      <a href="/admin" target="_blank" class="text-warning">
+      <a href="/admin" class="text-warning">
         <i class="bi bi-shield-lock-fill"></i> Admin
       </a>
     </div>
@@ -367,7 +382,7 @@
         </div>
         <div class="meta-box">
           <div class="meta-label">Maps</div>
-          <div class="meta-val" id="matchMapsEl">Bermuda</div>
+          <div class="meta-val" id="matchMapsEl">Bermuda, Purgatory</div>
         </div>
       </div>
 
@@ -381,7 +396,7 @@
           <div class="meta-val gold" id="prizePoolEl">৳1,000</div>
         </div>
         <div class="meta-box">
-          <div class="meta-label">Squad Format</div>
+          <div class="meta-label">Format</div>
           <div class="meta-val">4 Players</div>
         </div>
       </div>
@@ -395,9 +410,7 @@
           <span class="badge bg-secondary" id="roomReleaseStatus">Match 1</span>
         </div>
         <div id="roomCredentialsArea">
-          <div class="text-secondary small py-1">
-            <i class="bi bi-hourglass-split text-warning me-1"></i> Room ID & Password will be released here 15 mins before match start.
-          </div>
+          <!-- Populated by JS -->
         </div>
       </div>
     </div>
@@ -410,7 +423,7 @@
         </h2>
         <span class="text-secondary small" id="slotProgressText">0 / 12 Slots Booked</span>
       </div>
-      <button class="btn btn-sm btn-gold" id="quickBookBtn">
+      <button class="btn btn-sm btn-gold" id="quickBookBtn" onclick="window.openBookingModal()">
         <i class="bi bi-plus-circle-fill"></i> Book Squad Slot
       </button>
     </div>
@@ -426,78 +439,65 @@
 
   </main>
 
-  <!-- MODAL: BOOK SQUAD SLOT -->
-  <div class="modal fade" id="bookSlotModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold text-white">
-            <i class="bi bi-shield-plus text-warning me-1"></i> Book Squad Slot
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <!-- BULLETPROOF CUSTOM MODAL (NO BOOTSTRAP DEPENDENCY) -->
+  <div id="bookingModalBackdrop" class="custom-modal-backdrop" onclick="window.closeBookingModal()"></div>
+  <div id="bookingModalBox" class="custom-modal-box">
+    <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary">
+      <h5 class="fw-bold text-white mb-0">
+        <i class="bi bi-shield-plus text-warning me-1"></i> Book Squad Slot
+      </h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary text-white" onclick="window.closeBookingModal()">&times;</button>
+    </div>
+
+    <form id="slotBookingForm" onsubmit="window.handleBookingSubmit(event)">
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Choose Slot</label>
+        <select class="form-select" id="formSlotNumber" required>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Squad / Team Name</label>
+        <input type="text" class="form-control" id="formSquadName" placeholder="e.g. DARK VORTEX" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Leader / Player 1 Name</label>
+        <input type="text" class="form-control" id="formPlayer1" placeholder="e.g. Vortex_Boss" required>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 2 Name</label>
+          <input type="text" class="form-control" id="formPlayer2" placeholder="Player 2 Name" required>
         </div>
-        <div class="modal-body">
-          <form id="slotBookingForm">
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Choose Slot</label>
-              <select class="form-select form-control" id="formSlotNumber" required>
-                <!-- Populated by JS -->
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Squad / Team Name</label>
-              <input type="text" class="form-control" id="formSquadName" placeholder="e.g. DARK VORTEX" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Leader / Player 1 Name</label>
-              <input type="text" class="form-control" id="formPlayer1" placeholder="e.g. Vortex_Boss" required>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label small text-secondary">Player 2 Name</label>
-                <input type="text" class="form-control" id="formPlayer2" placeholder="Player 2 Name" required>
-              </div>
-              <div class="col-6">
-                <label class="form-label small text-secondary">Player 3 Name</label>
-                <input type="text" class="form-control" id="formPlayer3" placeholder="Player 3 Name" required>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Player 4 Name</label>
-              <input type="text" class="form-control" id="formPlayer4" placeholder="Player 4 Name" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">WhatsApp Number (For Room alerts)</label>
-              <input type="tel" class="form-control" id="formContact" placeholder="017XXXXXXXX" required>
-            </div>
-
-            <div id="bookingAlert" class="alert small mt-2" style="display: none;"></div>
-
-            <button type="submit" class="btn-gold w-100 justify-content-center py-2 mt-2" id="submitBookingBtn">
-              <i class="bi bi-check2-circle"></i> Confirm Slot Booking
-            </button>
-          </form>
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 3 Name</label>
+          <input type="text" class="form-control" id="formPlayer3" placeholder="Player 3 Name" required>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Toast Alert -->
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1060">
-    <div id="userToast" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body fw-bold" id="userToastMessage">Slot booked successfully!</div>
-        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Player 4 Name</label>
+        <input type="text" class="form-control" id="formPlayer4" placeholder="Player 4 Name" required>
       </div>
-    </div>
-  </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">WhatsApp Number (For Room alerts)</label>
+        <input type="tel" class="form-control" id="formContact" placeholder="017XXXXXXXX" required>
+      </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <div id="bookingAlert" class="alert small mt-2" style="display: none;"></div>
+
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="window.closeBookingModal()">Cancel</button>
+        <button type="submit" class="btn btn-sm btn-gold" id="submitBookingBtn">
+          <i class="bi bi-check2-circle"></i> Confirm Slot Booking
+        </button>
+      </div>
+    </form>
+  </div>
 
   <!-- FIREBASE FIRESTORE SYNC SCRIPT -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
@@ -537,14 +537,41 @@
 
     const $ = (id) => document.getElementById(id);
 
-    function showToast(msg) {
-      const toastEl = $('userToast');
-      const msgEl = $('userToastMessage');
-      if (msgEl) msgEl.textContent = msg;
-      if (toastEl && window.bootstrap) {
-        new bootstrap.Toast(toastEl, { delay: 2500 }).show();
-      }
-    }
+    // Modal Control
+    window.openBookingModal = function(targetSlot = null) {
+      const select = $('formSlotNumber');
+      if (!select) return;
+
+      select.innerHTML = '';
+      (state.slots || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.slotNumber;
+        opt.textContent = `Slot #${s.slotNumber} ${s.booked ? '(Booked - ' + s.squadName + ')' : '(Available)'}`;
+        opt.disabled = s.booked && s.slotNumber !== targetSlot;
+        if (targetSlot && s.slotNumber === targetSlot) {
+          opt.selected = true;
+        } else if (!targetSlot && !s.booked && !select.value) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      const alertEl = $('bookingAlert');
+      if (alertEl) alertEl.style.display = 'none';
+
+      $('bookingModalBackdrop').style.display = 'block';
+      $('bookingModalBox').style.display = 'block';
+    };
+
+    window.closeBookingModal = function() {
+      $('bookingModalBackdrop').style.display = 'none';
+      $('bookingModalBox').style.display = 'none';
+    };
+
+    window.copyCred = function(text, label) {
+      navigator.clipboard.writeText(text);
+      alert(`${label} Copied: ${text}`);
+    };
 
     // Render Match Overview
     function renderMatch() {
@@ -575,14 +602,14 @@
             <div class="row g-2 mt-1">
               <div class="col-6">
                 <div class="small text-secondary mb-1">Room ID</div>
-                <div class="copy-chip w-100 justify-content-between" onclick="navigator.clipboard.writeText('${state.roomId}'); alert('Room ID copied: ${state.roomId}')">
+                <div class="copy-chip w-100 justify-content-between" onclick="window.copyCred('${state.roomId}', 'Room ID')">
                   <span>${state.roomId}</span>
                   <i class="bi bi-clipboard"></i>
                 </div>
               </div>
               <div class="col-6">
                 <div class="small text-secondary mb-1">Password</div>
-                <div class="copy-chip w-100 justify-content-between" onclick="navigator.clipboard.writeText('${state.roomPass || '1234'}'); alert('Password copied!')">
+                <div class="copy-chip w-100 justify-content-between" onclick="window.copyCred('${state.roomPass || '1234'}', 'Password')">
                   <span>${state.roomPass || '1234'}</span>
                   <i class="bi bi-clipboard"></i>
                 </div>
@@ -643,7 +670,7 @@
                     <div class="small text-muted">Open for 4-player squad</div>
                   </div>
                 </div>
-                <button class="btn btn-sm btn-gold book-btn" data-slot="${s.slotNumber}">
+                <button class="btn btn-sm btn-gold" onclick="window.openBookingModal(${s.slotNumber})">
                   Book Slot
                 </button>
               </div>
@@ -651,42 +678,10 @@
           `;
         }
       }).join('');
-
-      // Wire buttons
-      container.querySelectorAll('.book-btn').forEach(btn => {
-        btn.addEventListener('click', () => openBookingModal(Number(btn.dataset.slot)));
-      });
-    }
-
-    // Open Booking Modal
-    function openBookingModal(targetSlot = null) {
-      const select = $('formSlotNumber');
-      if (!select) return;
-
-      select.innerHTML = '';
-      (state.slots || []).forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.slotNumber;
-        opt.textContent = `Slot #${s.slotNumber} ${s.booked ? '(Booked - ' + s.squadName + ')' : '(Available)'}`;
-        opt.disabled = s.booked && s.slotNumber !== targetSlot;
-        if (targetSlot && s.slotNumber === targetSlot) {
-          opt.selected = true;
-        } else if (!targetSlot && !s.booked && !select.value) {
-          opt.selected = true;
-        }
-        select.appendChild(opt);
-      });
-
-      const alertEl = $('bookingAlert');
-      if (alertEl) alertEl.style.display = 'none';
-
-      if (window.bootstrap) {
-        new bootstrap.Modal($('bookSlotModal')).show();
-      }
     }
 
     // Submit Slot Booking
-    async function handleBookingSubmit(e) {
+    window.handleBookingSubmit = async function(e) {
       e.preventDefault();
       const slotNum = Number($('formSlotNumber').value);
       const squadName = $('formSquadName').value.trim();
@@ -705,11 +700,11 @@
           alertEl.textContent = 'Please fill Squad Name, Leader Name, and WhatsApp number.';
           alertEl.style.display = 'block';
         }
-        return;
+        return false;
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
+      btn.innerHTML = 'Booking...';
 
       try {
         const currentSlots = [...(state.slots || [])];
@@ -736,11 +731,8 @@
           alertEl.style.display = 'block';
         }
 
-        showToast(`Slot #${slotNum} Booked!`);
         setTimeout(() => {
-          if (window.bootstrap) {
-            bootstrap.Modal.getInstance($('bookSlotModal'))?.hide();
-          }
+          window.closeBookingModal();
           $('slotBookingForm').reset();
         }, 1000);
 
@@ -755,7 +747,8 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-check2-circle"></i> Confirm Slot Booking';
       }
-    }
+      return false;
+    };
 
     // Realtime Listener
     function startSync() {
@@ -767,6 +760,8 @@
             state = { ...state, ...data };
             renderMatch();
             renderSlots();
+          } else {
+            setDoc(docRef, state);
           }
         }, (err) => {
           console.warn("Firestore error:", err);
@@ -775,10 +770,6 @@
         console.warn("Firestore listener failed:", e);
       }
     }
-
-    // Init
-    $('quickBookBtn')?.addEventListener('click', () => openBookingModal());
-    $('slotBookingForm')?.addEventListener('submit', handleBookingSubmit);
 
     // Initial render
     renderMatch();

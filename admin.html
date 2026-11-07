@@ -108,6 +108,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
     }
 
     .btn-gold:hover { filter: brightness(1.1); color: #0F172A; }
@@ -142,12 +143,29 @@
       color: var(--accent-green);
     }
 
-    /* Modal */
-    .modal-content {
+    /* Modal Backdrop & Box */
+    .custom-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1050;
+      backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-box {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 480px;
       background: #1E293B;
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      color: var(--text-main);
+      padding: 20px;
+      z-index: 1060;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
   </style>
 </head>
@@ -175,7 +193,7 @@
         <i class="bi bi-controller text-warning me-1"></i> Match Setup & Room Credentials
       </h2>
 
-      <form id="matchConfigForm">
+      <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)">
         <div class="row g-3 mb-3">
           <div class="col-md-6">
             <label class="form-label small text-secondary">Match Title</label>
@@ -264,69 +282,56 @@
 
   </main>
 
-  <!-- MODAL: EDIT SQUAD SLOT -->
-  <div class="modal fade" id="editSlotModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold text-white" id="editSlotModalTitle">Edit Slot</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form id="editSlotForm">
-            <input type="hidden" id="editSlotNum">
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Squad Name</label>
-              <input type="text" class="form-control" id="editSquadName" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Leader / Player 1</label>
-              <input type="text" class="form-control" id="editPlayer1" required>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label small text-secondary">Player 2</label>
-                <input type="text" class="form-control" id="editPlayer2">
-              </div>
-              <div class="col-6">
-                <label class="form-label small text-secondary">Player 3</label>
-                <input type="text" class="form-control" id="editPlayer3">
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">Player 4</label>
-              <input type="text" class="form-control" id="editPlayer4">
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-secondary">WhatsApp Number</label>
-              <input type="tel" class="form-control" id="editContact">
-            </div>
+  <!-- BULLETPROOF EDIT MODAL -->
+  <div id="editSlotBackdrop" class="custom-modal-backdrop" onclick="window.closeEditModal()"></div>
+  <div id="editSlotBox" class="custom-modal-box">
+    <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary">
+      <h5 class="fw-bold text-white mb-0" id="editSlotModalTitle">Edit Slot</h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary text-white" onclick="window.closeEditModal()">&times;</button>
+    </div>
 
-            <div class="d-flex justify-content-between mt-3">
-              <button type="button" class="btn btn-outline-danger" id="vacateSlotBtn">
-                <i class="bi bi-trash3"></i> Clear / Vacate Slot
-              </button>
-              <button type="submit" class="btn-gold">
-                <i class="bi bi-save"></i> Save Squad Details
-              </button>
-            </div>
-          </form>
+    <form id="editSlotForm" onsubmit="window.handleSaveSlot(event)">
+      <input type="hidden" id="editSlotNum">
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Squad Name</label>
+        <input type="text" class="form-control" id="editSquadName" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Leader / Player 1</label>
+        <input type="text" class="form-control" id="editPlayer1" required>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 2</label>
+          <input type="text" class="form-control" id="editPlayer2">
+        </div>
+        <div class="col-6">
+          <label class="form-label small text-secondary">Player 3</label>
+          <input type="text" class="form-control" id="editPlayer3">
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Toast Alert -->
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1060">
-    <div id="admToast" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body fw-bold" id="admToastMsg">Updated!</div>
-        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">Player 4</label>
+        <input type="text" class="form-control" id="editPlayer4">
       </div>
-    </div>
-  </div>
+      <div class="mb-3">
+        <label class="form-label small text-secondary">WhatsApp Number</label>
+        <input type="tel" class="form-control" id="editContact">
+      </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <div class="d-flex justify-content-between mt-3">
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="window.clearCurrentSlot()">
+          <i class="bi bi-trash3"></i> Clear Slot
+        </button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeEditModal()">Cancel</button>
+          <button type="submit" class="btn-gold btn-sm">
+            <i class="bi bi-save"></i> Save Squad
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 
   <!-- FIREBASE FIRESTORE SYNC SCRIPT -->
   <script type="module">
@@ -370,16 +375,30 @@
 
     const $ = (id) => document.getElementById(id);
 
-    function showToast(msg) {
-      const toastEl = $('admToast');
-      const msgEl = $('admToastMsg');
-      if (msgEl) msgEl.textContent = msg;
-      if (toastEl && window.bootstrap) {
-        new bootstrap.Toast(toastEl, { delay: 2500 }).show();
-      }
-    }
+    // Modal Control
+    window.openEditSlotModal = function(slotNum) {
+      const slot = (state.slots || []).find(s => s.slotNumber === slotNum);
+      if (!slot) return;
 
-    // Populate Match Form Values
+      $('editSlotNum').value = slotNum;
+      $('editSlotModalTitle').textContent = `Manage Slot #${slotNum}`;
+      $('editSquadName').value = slot.squadName || '';
+      $('editPlayer1').value = slot.player1 || '';
+      $('editPlayer2').value = slot.player2 || '';
+      $('editPlayer3').value = slot.player3 || '';
+      $('editPlayer4').value = slot.player4 || '';
+      $('editContact').value = slot.contact || '';
+
+      $('editSlotBackdrop').style.display = 'block';
+      $('editSlotBox').style.display = 'block';
+    };
+
+    window.closeEditModal = function() {
+      $('editSlotBackdrop').style.display = 'none';
+      $('editSlotBox').style.display = 'none';
+    };
+
+    // Sync Form Values
     function syncFormValues() {
       if ($('admTitle')) $('admTitle').value = state.title || '';
       if ($('admTime')) $('admTime').value = state.time || '08:30 PM';
@@ -416,10 +435,10 @@
                 </div>
               </div>
               <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-warning edit-btn" data-slot="${s.slotNumber}">
+                <button class="btn btn-sm btn-outline-warning" onclick="window.openEditSlotModal(${s.slotNumber})">
                   <i class="bi bi-pencil-square"></i> Edit
                 </button>
-                <button class="btn btn-sm btn-outline-danger clear-btn" data-slot="${s.slotNumber}" title="Make Available">
+                <button class="btn btn-sm btn-outline-danger" onclick="window.clearSlot(${s.slotNumber})" title="Make Available">
                   <i class="bi bi-trash3"></i>
                 </button>
               </div>
@@ -436,7 +455,7 @@
                 </div>
               </div>
               <div>
-                <button class="btn btn-sm btn-outline-warning edit-btn" data-slot="${s.slotNumber}">
+                <button class="btn btn-sm btn-outline-warning" onclick="window.openEditSlotModal(${s.slotNumber})">
                   <i class="bi bi-plus-lg"></i> Assign Squad
                 </button>
               </div>
@@ -444,37 +463,10 @@
           `;
         }
       }).join('');
-
-      container.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => openEditSlotModal(Number(btn.dataset.slot)));
-      });
-
-      container.querySelectorAll('.clear-btn').forEach(btn => {
-        btn.addEventListener('click', () => clearSlot(Number(btn.dataset.slot)));
-      });
-    }
-
-    // Open Edit Slot Modal
-    function openEditSlotModal(slotNum) {
-      const slot = (state.slots || []).find(s => s.slotNumber === slotNum);
-      if (!slot) return;
-
-      $('editSlotNum').value = slotNum;
-      $('editSlotModalTitle').textContent = `Manage Slot #${slotNum}`;
-      $('editSquadName').value = slot.squadName || '';
-      $('editPlayer1').value = slot.player1 || '';
-      $('editPlayer2').value = slot.player2 || '';
-      $('editPlayer3').value = slot.player3 || '';
-      $('editPlayer4').value = slot.player4 || '';
-      $('editContact').value = slot.contact || '';
-
-      if (window.bootstrap) {
-        new bootstrap.Modal($('editSlotModal')).show();
-      }
     }
 
     // Save Edited Slot
-    async function handleSaveSlot(e) {
+    window.handleSaveSlot = async function(e) {
       e.preventDefault();
       const slotNum = Number($('editSlotNum').value);
       const squadName = $('editSquadName').value.trim();
@@ -486,7 +478,7 @@
 
       const currentSlots = [...(state.slots || [])];
       const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
-      if (idx === -1) return;
+      if (idx === -1) return false;
 
       currentSlots[idx] = {
         slotNumber: slotNum,
@@ -502,17 +494,16 @@
       try {
         const docRef = doc(db, "tournaments", TOURNAMENT_ID);
         await updateDoc(docRef, { slots: currentSlots });
-        showToast(`Slot #${slotNum} saved!`);
-        if (window.bootstrap) {
-          bootstrap.Modal.getInstance($('editSlotModal'))?.hide();
-        }
+        alert(`Slot #${slotNum} saved successfully!`);
+        window.closeEditModal();
       } catch (err) {
         alert("Error saving slot: " + err.message);
       }
-    }
+      return false;
+    };
 
-    // Vacate Slot
-    async function clearSlot(slotNum) {
+    // Clear Slot
+    window.clearSlot = async function(slotNum) {
       if (!confirm(`Clear and make Slot #${slotNum} available?`)) return;
 
       const currentSlots = [...(state.slots || [])];
@@ -533,17 +524,20 @@
       try {
         const docRef = doc(db, "tournaments", TOURNAMENT_ID);
         await updateDoc(docRef, { slots: currentSlots });
-        showToast(`Slot #${slotNum} is now available.`);
-        if (window.bootstrap) {
-          bootstrap.Modal.getInstance($('editSlotModal'))?.hide();
-        }
+        alert(`Slot #${slotNum} is now available.`);
+        window.closeEditModal();
       } catch (err) {
         alert("Error: " + err.message);
       }
-    }
+    };
+
+    window.clearCurrentSlot = function() {
+      const slotNum = Number($('editSlotNum').value);
+      window.clearSlot(slotNum);
+    };
 
     // Save Match Config
-    async function handleSaveMatchConfig(e) {
+    window.handleSaveMatchConfig = async function(e) {
       e.preventDefault();
       const title = $('admTitle').value.trim();
       const time = $('admTime').value.trim();
@@ -557,7 +551,7 @@
 
       const btn = $('saveMatchBtn');
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+      btn.innerHTML = 'Saving...';
 
       try {
         const docRef = doc(db, "tournaments", TOURNAMENT_ID);
@@ -572,7 +566,7 @@
           roomId,
           roomPass
         });
-        showToast("Match details & Room ID published live!");
+        alert("Match details & Room ID published live to all users!");
       } catch (err) {
         console.error("Save error:", err);
         alert("Error: " + err.message);
@@ -580,7 +574,8 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-broadcast"></i> Save & Publish Match Info';
       }
-    }
+      return false;
+    };
 
     // Realtime Sync
     function startSync() {
@@ -593,8 +588,6 @@
             renderAdminSlots();
           } else {
             setDoc(docRef, state);
-            syncFormValues();
-            renderAdminSlots();
           }
         }, (err) => {
           console.warn("Firestore error:", err);
@@ -603,14 +596,6 @@
         console.warn("Firestore listener failed:", e);
       }
     }
-
-    // Init
-    $('matchConfigForm')?.addEventListener('submit', handleSaveMatchConfig);
-    $('editSlotForm')?.addEventListener('submit', handleSaveSlot);
-    $('vacateSlotBtn')?.addEventListener('click', () => {
-      const slotNum = Number($('editSlotNum').value);
-      clearSlot(slotNum);
-    });
 
     syncFormValues();
     renderAdminSlots();
