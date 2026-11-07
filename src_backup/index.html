@@ -2,791 +2,371 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ARENA X — White-Label Free Fire Tournament SaaS Platform</title>
-
-  <!-- Google Fonts & Icons -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RRR ESPORTS — Bangladesh Free Fire & Gaming Tournament Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Google Fonts: Inter & Roboto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF5722',
+              orangeHover: '#E64A19',
+              charcoal: '#212529',
+              dark: '#111827',
+              bgGray: '#F8F9FA',
+              borderGray: '#E5E7EB',
+              muted: '#6C757D'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --bg-canvas: #0B0F19;
-      --card-surface: #131B2E;
-      --card-border: #1E293B;
-      --text-main: #F1F5F9;
-      --text-muted: #94A3B8;
-      --accent-gold: #FACC15;
-      --gold-gradient: linear-gradient(135deg, #FACC15 0%, #FBBF24 100%);
-      --accent-green: #10B981;
-      --accent-blue: #3B82F6;
-      --accent-red: #EF4444;
-      --brand-glow: rgba(250, 204, 21, 0.15);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background-color: var(--bg-canvas);
-      color: var(--text-main);
-      font-family: 'Poppins', 'Hind Siliguri', sans-serif;
-      overflow-x: hidden;
-      line-height: 1.6;
-    }
-
-    /* Fixed Top Navbar */
-    .saas-navbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 70px;
-      background: rgba(11, 15, 25, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--card-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      z-index: 1040;
-    }
-
-    .brand-logo {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-
-    .brand-badge {
-      background: var(--gold-gradient);
-      color: #0B0F19;
-      font-size: 0.65rem;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .btn-nav-demo {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 8px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-      border: 1px solid var(--card-border);
-    }
-
-    .btn-nav-demo:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-    }
-
-    .btn-nav-wa {
-      background: #25D366;
-      color: #0B0F19;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 7px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    .btn-nav-wa:hover {
-      filter: brightness(1.1);
-      color: #0B0F19;
-    }
-
-    /* Hero Section */
-    .hero-section {
-      padding-top: 130px;
-      padding-bottom: 70px;
-      text-align: center;
-      position: relative;
-    }
-
-    .hero-glow-sphere {
-      position: absolute;
-      top: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 500px;
-      height: 350px;
-      background: radial-gradient(circle, rgba(250, 204, 21, 0.12) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
-
-    .hero-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(250, 204, 21, 0.12);
-      border: 1px solid rgba(250, 204, 21, 0.35);
-      color: var(--accent-gold);
-      padding: 6px 14px;
-      border-radius: 30px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-
-    .hero-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      line-height: 1.25;
-      color: #fff;
-      margin-bottom: 18px;
-    }
-
-    @media (max-width: 768px) {
-      .hero-title { font-size: 1.85rem; }
-    }
-
-    .hero-title span {
-      background: var(--gold-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-desc {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      margin-bottom: 30px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .hero-cta-group {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 35px;
-    }
-
-    .btn-hero-primary {
-      background: var(--gold-gradient);
-      color: #0B0F19;
-      font-weight: 800;
-      font-size: 1rem;
-      padding: 13px 26px;
-      border-radius: 10px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
-      transition: all 0.2s;
-    }
-
-    .btn-hero-primary:hover {
-      filter: brightness(1.1);
-      color: #0B0F19;
-      transform: translateY(-2px);
-    }
-
-    .btn-hero-secondary {
-      background: var(--card-surface);
-      border: 1px solid var(--card-border);
-      color: #fff;
-      font-weight: 700;
-      font-size: 1rem;
-      padding: 13px 24px;
-      border-radius: 10px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-hero-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .hero-trust-bar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .trust-item i {
-      color: var(--accent-green);
-    }
-
-    /* Live Demo Interactive Cards */
-    .demo-showcase-section {
-      padding: 30px 16px 60px;
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    .section-head {
-      text-align: center;
-      margin-bottom: 35px;
-    }
-
-    .section-head h2 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .section-head p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .demo-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-
-    @media (max-width: 768px) {
-      .demo-grid { grid-template-columns: 1fr; }
-    }
-
-    .demo-card {
-      background: var(--card-surface);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.25s ease;
-    }
-
-    .demo-card:hover {
-      border-color: rgba(250, 204, 21, 0.5);
-      transform: translateY(-4px);
-    }
-
-    .demo-card-badge {
-      position: absolute;
-      top: 18px;
-      right: 18px;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
-
-    .demo-card-badge.player {
-      background: rgba(59, 130, 246, 0.2);
-      color: #60A5FA;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-    }
-
-    .demo-card-badge.admin {
-      background: rgba(250, 204, 21, 0.2);
-      color: var(--accent-gold);
-      border: 1px solid rgba(250, 204, 21, 0.4);
-    }
-
-    .demo-icon-box {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
-      margin-bottom: 16px;
-    }
-
-    .demo-icon-box.player {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60A5FA;
-    }
-
-    .demo-icon-box.admin {
-      background: rgba(250, 204, 21, 0.15);
-      color: var(--accent-gold);
-    }
-
-    .demo-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .demo-features-list {
-      list-style: none;
-      padding: 0;
-      margin: 16px 0 24px;
-      font-size: 0.88rem;
-      color: var(--text-muted);
-    }
-
-    .demo-features-list li {
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .demo-features-list li i {
-      color: var(--accent-green);
-    }
-
-    .btn-launch-demo {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-launch-demo.player {
-      background: #2563EB;
-      color: #fff;
-    }
-    .btn-launch-demo.player:hover {
-      background: #1D4ED8;
-      color: #fff;
-    }
-
-    .btn-launch-demo.admin {
-      background: var(--gold-gradient);
-      color: #0B0F19;
-    }
-    .btn-launch-demo.admin:hover {
-      filter: brightness(1.1);
-      color: #0B0F19;
-    }
-
-    /* Core Features Grid */
-    .features-section {
-      padding: 50px 16px 60px;
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .feature-grid { grid-template-columns: 1fr; }
-    }
-
-    .feature-box {
-      background: rgba(19, 27, 46, 0.6);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .feature-box-icon {
-      font-size: 1.5rem;
-      color: var(--accent-gold);
-      margin-bottom: 12px;
-    }
-
-    .feature-box-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .feature-box-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 0;
-    }
-
-    /* How It Works (3 Steps) */
-    .steps-section {
-      padding: 50px 16px;
-      max-width: 860px;
-      margin: 0 auto;
-    }
-
-    .step-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 18px;
-      background: var(--card-surface);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 14px;
-    }
-
-    .step-number {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: rgba(250, 204, 21, 0.15);
-      color: var(--accent-gold);
-      font-weight: 800;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    /* Pricing Card */
-    .pricing-section {
-      padding: 50px 16px 70px;
-      max-width: 600px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .pricing-card {
-      background: linear-gradient(145deg, #131B2E 0%, #0F172A 100%);
-      border: 2px solid var(--accent-gold);
-      border-radius: 18px;
-      padding: 35px 25px;
-      box-shadow: 0 12px 35px rgba(250, 204, 21, 0.2);
-    }
-
-    .pricing-badge {
-      background: var(--gold-gradient);
-      color: #0B0F19;
-      font-size: 0.75rem;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 20px;
-      display: inline-block;
-      margin-bottom: 15px;
-    }
-
-    .pricing-amount {
-      font-size: 2.8rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .pricing-desc {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-bottom: 24px;
-    }
-
-    .pricing-list {
-      list-style: none;
-      padding: 0;
-      text-align: left;
-      margin-bottom: 30px;
-      font-size: 0.92rem;
-    }
-
-    .pricing-list li {
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-main);
-    }
-
-    .pricing-list li i {
-      color: var(--accent-green);
-      font-size: 1.1rem;
-    }
-
-    /* Footer */
-    .saas-footer {
-      border-top: 1px solid var(--card-border);
-      padding: 30px 16px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      background: #0B0F19;
-    }
-
-    .saas-footer a {
-      color: var(--accent-gold);
-      text-decoration: none;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F8F9FA; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
   </style>
 </head>
-<body>
+<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col select-none">
 
-  <!-- Top Fixed Navbar -->
-  <header class="saas-navbar">
-    <a href="/" class="brand-logo">
-      <i class="bi bi-controller text-warning"></i> ARENA X
-      <span class="brand-badge">B2B SAAS</span>
-    </a>
-    <div class="nav-actions">
-      <a href="/player" class="btn-nav-demo">
-        <i class="bi bi-play-circle-fill text-warning"></i> Player Demo
+  <!-- Top Announcement Bar (RRR Esports Style) -->
+  <div class="bg-[#FF5722] text-white px-4 py-2 text-xs md:text-sm font-medium shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        <span class="truncate">
+          🔥 RRR ESPORTS — বাংলাদেশের #১ প্রিমিয়াম ফ্রি ফায়ার টুর্নামেন্ট ও অটোমেটেড আর্নিং প্ল্যাটফর্ম
+        </span>
+      </div>
+      <a href="https://wa.me/8801791357521" target="_blank" class="hidden sm:inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-xs font-bold shrink-0 transition-colors">
+        Order Your SaaS
       </a>
-      <a href="/admin" class="btn-nav-demo d-none d-sm-inline-flex">
-        <i class="bi bi-shield-lock-fill text-warning"></i> Admin Demo
-      </a>
-      <a href="https://wa.me/8801791357521?text=Hi%20Sifat,%20I%20want%20to%20buy%20the%20Free%20Fire%20Tournament%20Platform" target="_blank" class="btn-nav-wa">
-        <i class="bi bi-whatsapp"></i> Buy Platform
-      </a>
+    </div>
+  </div>
+
+  <!-- Main Navbar -->
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+          R
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-xl tracking-tight text-gray-900 font-sans">RRR ESPORTS</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase">
+              SAAS PLATFORM
+            </span>
+          </div>
+          <span class="text-[10px] text-gray-500 font-medium">Turnkey Esports Engine</span>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-bold text-gray-600">
+        <a href="#features" class="hover:text-[#FF5722] transition-colors">ফিচারসমূহ</a>
+        <a href="#showcase" class="hover:text-[#FF5722] transition-colors">লাইভ প্রিভিউ</a>
+        <a href="#pricing" class="hover:text-[#FF5722] transition-colors">প্রাইসিং</a>
+        <a href="/player" class="hover:text-[#FF5722] transition-colors">প্লেয়ার ড্যাশবোর্ড</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2.5">
+        <a href="/player" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#FF5722] hover:bg-[#E64A19] text-white transition-colors shadow-sm flex items-center gap-1.5">
+          <span>🎮 Player Demo</span>
+        </a>
+        <a href="/admin" class="hidden sm:inline-flex px-3.5 py-2 rounded-xl text-xs font-bold bg-[#212529] hover:bg-black text-white transition-colors shadow-sm items-center gap-1.5">
+          <span>⚙️ Admin HQ</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-glow-sphere"></div>
-    <div class="hero-content">
-      <div class="hero-pill">
-        <i class="bi bi-patch-check-fill"></i> 100% Turnkey White-Label Esports Platform
+  <main class="flex-1">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 text-center space-y-6">
+      
+      <!-- Pill Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-[#FF5722] text-xs font-bold shadow-sm">
+        <span>⚡ 100% READY-TO-LAUNCH ESPORTS PLATFORM</span>
       </div>
-      <h1 class="hero-title">
-        আপনার নিজের নামে ও লোগোতে চালু করুন <br>
-        <span>Free Fire টুর্নামেন্ট ও স্ক্রিমস প্ল্যাটফর্ম</span>
+
+      <!-- Main Headline -->
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight max-w-4xl mx-auto">
+        আপনার নিজস্ব <span class="text-[#FF5722]">Free Fire & Gaming</span> টুর্নামেন্ট প্ল্যাটফর্ম চালু করুন
       </h1>
-      <p class="hero-desc">
-        হোয়াটসঅ্যাপ গ্রুপে ম্যানুয়ালি স্লট গোনা আর রুম কোড বিলানোর দিন শেষ! ফুল অটোমেটিক ১২-স্কোয়াড বুকিং, কাস্টম রুম ভল্ট এবং লাইভ ফিন্যান্সিয়াল হিসাব—সম্পূর্ণ আপনার নিজের গুগল ও ফায়ারবেস ব্যাকএন্ডে।
+
+      <!-- Subtitle -->
+      <p class="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        অটোমেটেড স্লট বুকিং, রিয়েল-টাইম কাস্টম রুম ভল্ট, bKash/Nagad/Rocket ওয়ালেট ও স্বয়ংক্রিয় ফাইনান্সিয়াল লেজার সহ কমপ্লিট টুর্নামেন্ট SaaS সমাধান।
       </p>
 
-      <div class="hero-cta-group">
-        <a href="/player" class="btn-hero-primary">
-          <i class="bi bi-controller"></i> লাইভ প্লেয়ার ডেমো চালান
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <a href="/player" class="px-6 py-3.5 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm tracking-wide shadow-md transition-all flex items-center gap-2">
+          <span>🎮 লাইভ প্লেয়ার প্যানেল দেখুন</span>
+          <span>→</span>
         </a>
-        <a href="/admin" class="btn-hero-secondary">
-          <i class="bi bi-speedometer2"></i> লাইভ অ্যাডমিন প্যানেল দেখুন
+        <a href="/admin" class="px-6 py-3.5 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-sm tracking-wide shadow-md transition-all flex items-center gap-2">
+          <span>⚙️ লাইভ অ্যাডমিন কন্ট্রোল</span>
+        </a>
+        <a href="https://wa.me/8801791357521?text=Hi,%20I%20want%20to%20buy%20RRR%20Esports%20Platform" target="_blank" class="px-6 py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm tracking-wide shadow-md transition-all flex items-center gap-2">
+          <span>📱 হোয়াটসঅ্যাপে অর্ডার (৳৪,৯৯৯)</span>
         </a>
       </div>
 
-      <div class="hero-trust-bar">
-        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> ১৫ মিনিটে লাইভ সেটআপ</div>
-        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> আপনার নিজস্ব গুগল অ্যাকাউন্ট ও ফায়ারবেস</div>
-        <div class="trust-item"><i class="bi bi-check-circle-fill"></i> ১০০% ফুল ওনারশিপ (নো মান্থলি হাইড ফি)</div>
+      <!-- Quick Trust Indicators -->
+      <div class="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs text-gray-500 font-medium">
+        <span class="flex items-center gap-1.5">✅ ০% ট্রানজেকশন ফি</span>
+        <span class="flex items-center gap-1.5">⚡ মিলিসেকেন্ড ফায়ারবেস সিঙ্ক</span>
+        <span class="flex items-center gap-1.5">🔒 ফুল সোর্স কোড ও মিলিটারি এনক্রিপশন</span>
+        <span class="flex items-center gap-1.5">📱 মোবাইল PWA রেডি</span>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Live Demos Showcase -->
-  <section class="demo-showcase-section">
-    <div class="section-head">
-      <h2>লাইভ ডেমো টেস্ট করুন (Live Interactive Demos)</h2>
-      <p>কিনবার আগেই সরাসরি প্লেয়ার এবং অ্যাডমিন হিসেবে পুরো প্ল্যাটফর্মটি চালিয়ে দেখুন:</p>
-    </div>
-
-    <div class="demo-grid">
-      <!-- Player Demo Card -->
-      <div class="demo-card">
-        <span class="demo-card-badge player">PLAYER SIDE</span>
-        <div>
-          <div class="demo-icon-box player">
-            <i class="bi bi-phone-fill"></i>
+    <!-- LIVE DEMO MATCH CARD PREVIEW (RRR Style) -->
+    <section id="showcase" class="max-w-4xl mx-auto px-4 sm:px-6 pb-16">
+      <div class="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-lg space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4">
+          <div>
+            <span class="text-[10px] font-bold text-[#FF5722] uppercase tracking-wider block">LIVE SYSTEM PREVIEW</span>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-900">প্লেয়ারদের জন্য যেভাবে ম্যাচগুলো প্রদর্শিত হয়</h2>
           </div>
-          <h3 class="demo-title">Player Panel & Booking Demo</h3>
-          <p class="text-secondary small">
-            প্লেয়াররা কীভাবে টুর্নামেন্টের একের পর এক ম্যাচ দেখবে, স্কোয়াড দিয়ে ১২টি স্লট বুক করবে এবং কাস্টম রুম আইডি পাবে:
-          </p>
-          <ul class="demo-features-list">
-            <li><i class="bi bi-check2-circle"></i> নিচে নিচে ম্যাচ কার্ডের সুন্দর লিস্ট</li>
-            <li><i class="bi bi-check2-circle"></i> ১ ক্লিকে রুম আইডি ও পাসওয়ার্ড কপি বাটন</li>
-            <li><i class="bi bi-check2-circle"></i> ১২টি স্কোয়াড স্লট বুকিং (স্কোয়াড + ৪ জন প্লেয়ার + WhatsApp)</li>
-            <li><i class="bi bi-check2-circle"></i> ফেসবুক-গ্রেড ডার্ক মোড মোবাইল ডিজাইন</li>
-          </ul>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 font-mono">
+            🟢 LIVE ENGINE
+          </span>
         </div>
-        <a href="/player" class="btn-launch-demo player">
-          <i class="bi bi-box-arrow-up-right"></i> প্লেয়ার ডেমো ওপেন করুন →
-        </a>
-      </div>
 
-      <!-- Admin Demo Card -->
-      <div class="demo-card">
-        <span class="demo-card-badge admin">ADMIN SIDE</span>
-        <div>
-          <div class="demo-icon-box admin">
-            <i class="bi bi-shield-lock-fill"></i>
+        <!-- Sample RRR Card Inside -->
+        <div class="max-w-md mx-auto bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden flex flex-col justify-between">
+          <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 relative">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="px-2 py-0.5 rounded font-bold bg-[#FF5722] uppercase text-[10px]">
+                CLASSIC MATCH
+              </span>
+              <span class="text-gray-300 font-mono text-[11px]">Bermuda • 4v4 Squad</span>
+            </div>
+            <h3 class="font-bold text-base tracking-tight leading-snug mt-1">BERMUDA SQUAD CHAMPIONSHIP #80</h3>
+            <p class="text-xs text-orange-200 mt-0.5">🕒 Today, 8:30 PM</p>
           </div>
-          <h3 class="demo-title">Organizer Admin & Ledger Demo</h3>
-          <p class="text-secondary small">
-            টুর্নামেন্ট ওনার ও অ্যাডমিনদের জন্য সম্পূর্ণ কন্ট্রোল প্যানেল এবং নিখুঁত হিসাব নিকাশ:
-          </p>
-          <ul class="demo-features-list">
-            <li><i class="bi bi-check2-circle"></i> লাইভ ফিন্যান্সিয়াল লেজার (কী আসলো, কী গেল, নিট লাভ)</li>
-            <li><i class="bi bi-check2-circle"></i> আনলিমিটেড ম্যাচ তৈরি ও শিডিউল আপডেট</li>
-            <li><i class="bi bi-check2-circle"></i> কাস্টম রুম আইডি ও পাসওয়ার্ড রিলিজ কন্ট্রোল</li>
-            <li><i class="bi bi-check2-circle"></i> রেজিস্ট্রেশনকৃত স্কোয়াডের তালিকা ও ১-ক্লিক রিমুভ</li>
-          </ul>
+
+          <div class="p-4 sm:p-5 space-y-4">
+            <div class="grid grid-cols-3 gap-2 bg-gray-50 rounded-xl p-2.5 border border-gray-200 text-center">
+              <div>
+                <span class="text-[10px] text-gray-500 block uppercase font-bold">Entry Fee</span>
+                <strong class="text-sm font-bold text-gray-900">৳ 100</strong>
+              </div>
+              <div>
+                <span class="text-[10px] text-gray-500 block uppercase font-bold">Prize Pool</span>
+                <strong class="text-sm font-bold text-green-700 font-mono">৳ 1,000</strong>
+              </div>
+              <div>
+                <span class="text-[10px] text-gray-500 block uppercase font-bold">Per Kill</span>
+                <strong class="text-sm font-bold text-[#FF5722] font-mono">৳ 20</strong>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center justify-between text-gray-600 text-[11px]">
+                <span>Platform: <strong class="text-gray-900 font-semibold">Mobile</strong></span>
+                <span>Slots: <strong class="text-gray-900 font-semibold">10/12</strong></span>
+              </div>
+              <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-[#FF5722] rounded-full" style="width: 83%"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <a href="/player" class="py-2.5 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm text-center">
+                JOIN — ৳100
+              </a>
+              <a href="/player" class="py-2.5 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm text-center">
+                🔑 Room Details
+              </a>
+            </div>
+          </div>
         </div>
-        <a href="/admin" class="btn-launch-demo admin">
-          <i class="bi bi-box-arrow-up-right"></i> অ্যাডমিন ডেমো ওপেন করুন →
-        </a>
-      </div>
-    </div>
-  </section>
 
-  <!-- Core Features Section -->
-  <section class="features-section">
-    <div class="section-head">
-      <h2>কেন এই সফটওয়্যারটি গিল্ড ও আয়োজকদের সেরা পছন্দ?</h2>
-      <p>বাংলাদেশের ফ্রি ফায়ার কমিউনিটির প্রতিটি ছোট-বড় সমস্যা মাথায় রেখে তৈরি:</p>
-    </div>
-
-    <div class="feature-grid">
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-people-fill"></i></div>
-        <h4 class="feature-box-title">১২ স্কোয়াড স্লট ইঞ্জিন</h4>
-        <p class="feature-box-desc">প্রতিটি স্লটে স্কোয়াডের নাম, ৪ জন প্লেয়ারের ইন-গেম নাম (IGN) ও ক্যাপ্টেনের হোয়াটসঅ্যাপ নাম্বার অটো সেভ হয়।</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-key-fill"></i></div>
-        <h4 class="feature-box-title">কাস্টম রুম ভল্ট</h4>
-        <p class="feature-box-desc">গ্রুপে পাসওয়ার্ড লিক হওয়ার ভয় নেই! ম্যাচ শুরুর নির্দিষ্ট সময় আগে রুম আইডি ও পাসওয়ার্ড অটো-রিলিজ হয় এবং সহজে কপি করা যায়।</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-cash-coin"></i></div>
-        <h4 class="feature-box-title">হিসাবের খাতা (Financial Ledger)</h4>
-        <p class="feature-box-desc">দলগুলো থেকে মোট কত এন্ট্রি ফি আসলো, প্রাইজ বাবদ কত গেল এবং আপনার নিট লাভ কত তা লাইভ ক্যালকুলেট হয়।</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-google"></i></div>
-        <h4 class="feature-box-title">আপনার নিজস্ব ফায়ারবেস</h4>
-        <p class="feature-box-desc">আমরা আপনার নিজের গুগল অ্যাকাউন্টে ফায়ারবেস ডেটাবেজ সেটআপ করে দিব। ফলে সব ডেটা ও নিয়ন্ত্রণ ১০০% আপনার নিজের।</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-        <h4 class="feature-box-title">ইনস্ট্যান্ট রিয়েল-টাইম সিঙ্ক</h4>
-        <p class="feature-box-desc">কোনো প্লেয়ার স্লট বুক করা মাত্রই অন্য সবার স্ক্রিনে রিলোড ছাড়াই ইনস্ট্যান্ট স্লট বুকড দেখায়। কোনো ডুপ্লিকেট বুকিং সম্ভব নয়।</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-box-icon"><i class="bi bi-brush-fill"></i></div>
-        <h4 class="feature-box-title">হোয়াইট-লেবেল ব্র্যান্ডিং</h4>
-        <p class="feature-box-desc">আপনার টুর্নামেন্টের নাম, নিজস্ব লোগো, বিকাশ/নগদ পেমেন্ট নাম্বার এবং রুলস দিয়ে সম্পূর্ণ কাস্টমাইজ করে হস্তান্তর করা হবে।</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works -->
-  <section class="steps-section">
-    <div class="section-head">
-      <h2>৩টি সহজ ধাপে কীভাবে প্ল্যাটফর্মটি আপনার নামে পাবেন?</h2>
-      <p>অর্ডার করা থেকে ডেলিভারি পর্যন্ত সম্পূর্ণ প্রসেস একদম ক্লিয়ার:</p>
-    </div>
-
-    <div class="step-card">
-      <div class="step-number">১</div>
-      <div>
-        <h5 class="fw-bold text-white mb-1">ডেমো টেস্ট করে সিদ্ধান্ত নিন</h5>
-        <p class="text-secondary small mb-0">
-          উপরে দেওয়া প্লেয়ার ডেমো ও অ্যাডমিন প্যানেল নিজে চালিয়ে যাচাই করুন যে সিস্টেমটি আপনার মনের মতো কি না।
+        <p class="text-center text-xs text-gray-500">
+          প্লেয়াররা সরাসরি বিকাশ/নগদে ডিপোজিট করে জয়েন করবে এবং ম্যাচ শুরুর ১০ মিনিট আগে পাসওয়ার্ড আনলক হবে।
         </p>
       </div>
-    </div>
+    </section>
 
-    <div class="step-card">
-      <div class="step-number">২</div>
-      <div>
-        <h5 class="fw-bold text-white mb-1">আপনার ব্র্যান্ড নেম, লোগো ও গুগল অ্যাকাউন্ট দিন</h5>
-        <p class="text-secondary small mb-0">
-          WhatsApp-এ আমাদের আপনার টুর্নামেন্টের নাম, লোগো এবং একটি ফ্রেশ গুগল জিমেইল অ্যাড্রেস পাঠান।
-        </p>
+    <!-- CORE FEATURES (6 Cards in RRR Theme) -->
+    <section id="features" class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 space-y-10">
+      <div class="text-center space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900">প্লাটফর্মের শক্তিশালী ফিচারসমূহ</h2>
+        <p class="text-xs sm:text-sm text-gray-500">আপনার টুর্নামেন্ট বিজনেস অটোমেশনের জন্য প্রতিটি টুল রেডি</p>
       </div>
-    </div>
 
-    <div class="step-card">
-      <div class="step-number">৩</div>
-      <div>
-        <h5 class="fw-bold text-white mb-1">১৫ মিনিটে সম্পূর্ণ লাইভ ডেলিভারি</h5>
-        <p class="text-secondary small mb-0">
-          আমরা আপনার ফায়ারবেসে ডেটাবেজ সেটআপ করে আপনার ব্র্যান্ডেড লাইভ লিংক ও অ্যাডমিন অ্যাক্সেস বুঝিয়ে দেব।
-        </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Card 1 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-orange-100 text-[#FF5722] flex items-center justify-center font-bold text-2xl">
+            🔑
+          </div>
+          <h3 class="font-bold text-base text-gray-900">সিকিউর কাস্টম রুম ভল্ট</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            ম্যাচ শুরুর নির্ধারিত সময় পর্যন্ত রুম আইডি ও পাসওয়ার্ড লক থাকবে। শুধুমাত্র বুকিং সম্পন্ন করা প্লেয়ারদের প্যানেলে ১-ট্যাপ কপি বাটন সহ অটোমেটিক আনলক হবে।
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-green-100 text-green-700 flex items-center justify-center font-bold text-2xl">
+            💳
+          </div>
+          <h3 class="font-bold text-base text-gray-900">bKash, Nagad ও Rocket ওয়ালেট</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            প্লেয়াররা আপনার পার্সোনাল নম্বরে Send Money করে TrxID দিয়ে ডিপোজিট রিকোয়েস্ট পাঠাবে। ডিপোজিট ও উইনিং ব্যালেন্সের আলাদা ক্যালকুলেশন।
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-2xl">
+            📊
+          </div>
+          <h3 class="font-bold text-base text-gray-900">স্বয়ংক্রিয় ফাইনান্সিয়াল লেজার</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            অ্যাডমিন প্যানেলে লাইভ ইনকামিং এন্ট্রি ফি, প্রাইজ আউটফ্লো এবং নেট প্রফিট মার্জিন স্বয়ংক্রিয়ভাবে রিয়েল-টাইমে গণনা হবে।
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-2xl">
+            🎮
+          </div>
+          <h3 class="font-bold text-base text-gray-900">মাল্টি-ম্যাচ ও মাল্টি-গেম সাপোর্ট</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            ফ্রি ফায়ার ক্ল্যাসিক স্কোয়াড, ক্লাশ স্কোয়াড ৪v৪, লোন উলফ এবং লুডু কিং—যেকোনো মোডে ইচ্ছেমতো টুর্নামেন্ট শিডিউল ও রান করার সুবিধা।
+          </p>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-2xl">
+            📱
+          </div>
+          <h3 class="font-bold text-base text-gray-900">মোবাইল-ফার্স্ট PWA এক্সপেরিয়েন্স</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            প্লে স্টোরের ঝামেলা ছাড়াই ইউজাররা হোম স্ক্রিনে অ্যাপ আইকন সেভ করে ব্যবহার করতে পারবে। সাথে বটম ন্যাভিগেশন বার ও ফুল রেসপনসিভনেস।
+          </p>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-2xl">
+            🛡️
+          </div>
+          <h3 class="font-bold text-base text-gray-900">মিলিটারি গ্রেড কোড প্রোটেকশন</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            অ্যান্টি-রিভার্স ইঞ্জিনিয়ারিং, ডেভটুলস ট্র্যাপ, ডোমেন লক এবং ফুল জাভাস্ক্রিপ্ট অবফাসিকেশন। কেউ আপনার কোড বা লজিক চুরি করতে পারবে না।
+          </p>
+        </div>
+
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Pricing Section -->
-  <section class="pricing-section">
-    <div class="pricing-card">
-      <div class="pricing-badge">🔥 COMPLETE TURNKEY PACKAGE</div>
-      <h3 class="fw-bold text-white mb-1">ফুল সেটআপ ও ওনারশিপ</h3>
-      <div class="pricing-amount">৳৩,৫০০ <span class="fs-6 text-secondary fw-normal">/ এককালীন (Lifetime)</span></div>
-      <p class="pricing-desc">কোনো মাসিক হিডেন চার্জ নেই। একবার নিলেই লাইফটাইম আপনার!</p>
+    <!-- PRICING PACKAGES -->
+    <section id="pricing" class="max-w-5xl mx-auto px-4 sm:px-6 pb-20 space-y-8">
+      <div class="text-center space-y-2">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900">স্বচ্ছ ও সাশ্রয়ী ওয়ান-টাইম প্রাইসিং</h2>
+        <p class="text-xs sm:text-sm text-gray-500">কোনো মাসিক চার্জ নেই • কোনো কমিশন নেই • আপনি ১০০% রেভিনিউ রাখবেন</p>
+      </div>
 
-      <ul class="pricing-list">
-        <li><i class="bi bi-check-circle-fill"></i> কমপ্লিট প্লেয়ার প্যানেল (ম্যাচ ফিড + ১২ স্লট বুকিং)</li>
-        <li><i class="bi bi-check-circle-fill"></i> ফুল অ্যাডমিন ড্যাশবোর্ড + ফিন্যান্সিয়াল লেজার</li>
-        <li><i class="bi bi-check-circle-fill"></i> আপনার নিজস্ব ব্র্যান্ড নেম ও লোগো ইন্টিগ্রেশন</li>
-        <li><i class="bi bi-check-circle-fill"></i> আপনার গুগল অ্যাকাউন্টে ডেডিকেটেড ফায়ারবেস সেটআপ</li>
-        <li><i class="bi bi-check-circle-fill"></i> ফ্রি লাইফটাইম হোস্টিং ও SSL সিকিউরিটি</li>
-        <li><i class="bi bi-check-circle-fill"></i> সিফাত বিন শাহজাহান-এর ফুল টেকনিক্যাল সাপোর্ট</li>
-      </ul>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Plan 1 -->
+        <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">STARTER ESPORTS PACK</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-gray-900 font-mono">৳৪,৯৯৯</span>
+              <span class="text-xs text-gray-500 font-medium">/ এককালীন</span>
+            </div>
+            <p class="text-xs text-gray-600">নতুন শুরু করা অর্গানাইজারদের জন্য বেস্ট স্টার্টার প্যাক।</p>
+            
+            <ul class="space-y-2.5 text-xs text-gray-700 pt-2 border-t border-gray-100">
+              <li class="flex items-center gap-2">✓ সম্পূর্ণ RRR ESPORTS ইউজার প্যানেল</li>
+              <li class="flex items-center gap-2">✓ রিয়েল-টাইম কাস্টম রুম ভল্ট (ID & Password)</li>
+              <li class="flex items-center gap-2">✓ ফায়ারবেস ক্লাউড ডাটাবেজ ইন্টিগ্রেশন</li>
+              <li class="flex items-center gap-2">✓ বিকাশ / নগদ / রকেট পেমেন্ট ইনফো</li>
+              <li class="flex items-center gap-2">✓ ১টি ডোমেনে লাইভ ডেপ্লয়মেন্ট</li>
+            </ul>
+          </div>
 
-      <a href="https://wa.me/8801791357521?text=Hi%20Sifat,%20I%20want%20to%20order%20the%20Free%20Fire%20Tournament%20Platform%20for%203500%20BDT" target="_blank" class="btn-hero-primary w-100 justify-content-center">
-        <i class="bi bi-whatsapp"></i> এখনই WhatsApp-এ অর্ডার করুন
-      </a>
-    </div>
-  </section>
+          <a href="https://wa.me/8801791357521?text=I%20want%20to%20order%20Starter%20Esports%20Pack%20(4999%20BDT)" target="_blank" class="w-full py-3 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm text-center">
+            অর্ডার করুন (৳৪,৯৯৯)
+          </a>
+        </div>
+
+        <!-- Plan 2 (Featured) -->
+        <div class="bg-white rounded-3xl p-8 border-2 border-[#FF5722] shadow-xl relative flex flex-col justify-between space-y-6">
+          <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-[#FF5722] text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+            MOST POPULAR
+          </div>
+
+          <div class="space-y-4">
+            <span class="text-xs font-bold text-[#FF5722] uppercase tracking-wider block">PRO ENTERPRISE PACK</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-gray-900 font-mono">৳৯,৯৯৯</span>
+              <span class="text-xs text-gray-500 font-medium">/ এককালীন</span>
+            </div>
+            <p class="text-xs text-gray-600">পূর্ণাঙ্গ বিজনেস ও বড় টুর্নামেন্ট আয়োজকদের জন্য ফুল স্যুট।</p>
+            
+            <ul class="space-y-2.5 text-xs text-gray-700 pt-2 border-t border-gray-100">
+              <li class="flex items-center gap-2">✓ প্লেয়ার প্যানেল + ফুল অ্যাডমিন কন্ট্রোল সেন্টার</li>
+              <li class="flex items-center gap-2">✓ লাইভ ফাইনান্সিয়াল লেজার ও অটো প্রফিট ক্যালকুলেটর</li>
+              <li class="flex items-center gap-2">✓ মাল্টি-ম্যাচ শিডিউলার (Bermuda, Purgatory, Kalahari)</li>
+              <li class="flex items-center gap-2">✓ রেজিস্টার্ড স্কোয়াড রোস্টার ও হোয়াটসঅ্যাপ ডিরেক্ট লিংক</li>
+              <li class="flex items-center gap-2">✓ ফুল মিলিটারি-গ্রেড কোড এনক্রিপশন ও ব্যাকল্যাশ ট্র্যাপ</li>
+              <li class="flex items-center gap-2">✓ ফুল সোর্স কোড ও আজীবন সাপোর্ট</li>
+            </ul>
+          </div>
+
+          <a href="https://wa.me/8801791357521?text=I%20want%20to%20order%20Pro%20Enterprise%20Pack%20(9999%20BDT)" target="_blank" class="w-full py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm text-center">
+            অর্ডার করুন (৳৯,৯৯৯)
+          </a>
+        </div>
+
+      </div>
+    </section>
+  </main>
 
   <!-- Footer -->
-  <footer class="saas-footer">
-    <div class="container">
-      <div class="mb-2">
-        <strong>ARENA X Esports SaaS</strong> • Crafted with precision by <strong>Sifat Bin Shahjahan</strong>
+  <footer class="bg-white border-t border-gray-200 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-[#FF5722] text-white flex items-center justify-center font-bold text-xs">
+          R
+        </div>
+        <span class="font-bold text-gray-900">RRR ESPORTS PLATFORM</span>
+        <span>• Developed by Team Sifr</span>
       </div>
-      <div>
-        Direct WhatsApp Support: <a href="https://wa.me/8801791357521" target="_blank">+8801791357521</a> | Bangladesh
+
+      <div class="flex items-center gap-4">
+        <a href="/player" class="hover:text-[#FF5722] font-semibold">Player Panel</a>
+        <a href="/admin" class="hover:text-[#FF5722] font-semibold">Admin Panel</a>
+        <a href="https://wa.me/8801791357521" target="_blank" class="text-green-700 font-bold hover:underline">WhatsApp: 01791357521</a>
       </div>
     </div>
   </footer>
