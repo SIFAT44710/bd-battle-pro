@@ -31,7 +31,7 @@
       background-color: var(--bg-canvas);
       color: var(--text-main);
       font-family: 'Poppins', sans-serif;
-      padding-top: 70px;
+      padding-top: 75px;
       padding-bottom: 40px;
       min-height: 100vh;
     }
@@ -71,7 +71,7 @@
     }
 
     .container-custom {
-      max-width: 860px;
+      max-width: 680px;
       margin: 0 auto;
       padding: 0 16px;
     }
@@ -79,10 +79,9 @@
     .admin-card {
       background: var(--card-surface);
       border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     }
 
     .form-control, .form-select {
@@ -103,69 +102,26 @@
       color: #0F172A;
       font-weight: 700;
       border: none;
-      padding: 8px 18px;
-      border-radius: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
       cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+      transition: all 0.2s;
     }
 
     .btn-gold:hover { filter: brightness(1.1); color: #0F172A; }
 
-    .slot-row {
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .slot-badge-num {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 0.85rem;
-    }
-
-    .slot-row.booked .slot-badge-num {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--accent-green);
-    }
-
-    /* Modal Backdrop & Box */
-    .custom-modal-backdrop {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 1050;
-      backdrop-filter: blur(4px);
-    }
-
-    .custom-modal-box {
-      display: none;
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 480px;
-      background: #1E293B;
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-      z-index: 1060;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    .room-highlight-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px dashed var(--accent-gold);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 20px 0;
     }
   </style>
 </head>
@@ -177,7 +133,7 @@
       <i class="bi bi-shield-lock-fill text-warning"></i> ARENA X
       <span class="brand-tag">ADMIN</span>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div>
       <a href="/" target="_blank" class="btn btn-sm btn-outline-warning">
         <i class="bi bi-box-arrow-up-right me-1"></i> Open User Panel
       </a>
@@ -187,23 +143,28 @@
   <!-- Main Container -->
   <main class="container-custom">
 
-    <!-- Card 1: Match Configuration & Room Credentials -->
     <div class="admin-card">
-      <h2 class="h5 fw-bold text-white mb-3">
-        <i class="bi bi-controller text-warning me-1"></i> Match Setup & Room Credentials
-      </h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold text-white mb-0">
+          <i class="bi bi-controller text-warning me-1"></i> Match Setup & Room Control
+        </h2>
+        <span class="badge bg-warning text-dark fw-bold">REAL-TIME SYNC</span>
+      </div>
+      <p class="small text-secondary mb-4">Update match schedule, maps, and release Room ID & Password live to all players.</p>
 
       <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)">
+        
+        <div class="mb-3">
+          <label class="form-label small text-secondary">Match Title</label>
+          <input type="text" class="form-control" id="admTitle" value="Free Fire Daily Squad Championship" required>
+        </div>
+
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label small text-secondary">Match Title</label>
-            <input type="text" class="form-control" id="admTitle" value="Free Fire Daily Squad Championship" required>
-          </div>
-          <div class="col-md-3">
             <label class="form-label small text-secondary">Schedule Time</label>
             <input type="text" class="form-control" id="admTime" value="08:30 PM" placeholder="e.g. 08:30 PM" required>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-6">
             <label class="form-label small text-secondary">Match Status</label>
             <select class="form-select" id="admStatus">
               <option value="upcoming">Upcoming</option>
@@ -214,7 +175,7 @@
         </div>
 
         <div class="row g-3 mb-3">
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label small text-secondary">Total Matches (Series)</label>
             <select class="form-select" id="admMatchCount">
               <option value="1">1 Match</option>
@@ -225,113 +186,47 @@
               <option value="6">6 Matches</option>
             </select>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label small text-secondary">Maps to Play</label>
             <input type="text" class="form-control" id="admMaps" value="Bermuda, Purgatory, Kalahari" placeholder="e.g. Bermuda, Purgatory" required>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small text-secondary">Entry Fee (৳)</label>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label small text-secondary">Entry Fee (BDT ৳)</label>
             <input type="number" class="form-control" id="admEntryFee" value="100" required>
           </div>
-          <div class="col-md-2">
-            <label class="form-label small text-secondary">Prize Pool (৳)</label>
+          <div class="col-6">
+            <label class="form-label small text-secondary">Prize Pool (BDT ৳)</label>
             <input type="number" class="form-control" id="admPrizePool" value="1000" required>
           </div>
         </div>
 
-        <!-- Room ID & Password (Instant User Sync) -->
-        <div class="p-3 bg-dark rounded border border-warning border-opacity-50 mb-3">
+        <!-- Custom Room ID & Password -->
+        <div class="room-highlight-box">
           <div class="fw-bold text-warning small mb-2">
-            <i class="bi bi-key-fill me-1"></i> Room ID & Password (Instantly shows on user page)
+            <i class="bi bi-key-fill me-1"></i> Custom Room Credentials (Instantly shows on user page)
           </div>
-          <div class="row g-2">
-            <div class="col-md-6">
-              <label class="form-label small text-secondary">Custom Room ID</label>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small text-secondary">Room ID</label>
               <input type="text" class="form-control" id="admRoomId" placeholder="e.g. 893411">
             </div>
-            <div class="col-md-6">
+            <div class="col-6">
               <label class="form-label small text-secondary">Room Password</label>
               <input type="text" class="form-control" id="admRoomPass" placeholder="e.g. 7788">
             </div>
           </div>
         </div>
 
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn-gold" id="saveMatchBtn">
-            <i class="bi bi-broadcast"></i> Save & Publish Match Info
-          </button>
-        </div>
+        <button type="submit" class="btn-gold" id="saveMatchBtn">
+          <i class="bi bi-broadcast"></i> Save & Publish Live to Players
+        </button>
       </form>
     </div>
 
-    <!-- Card 2: 12 Squad Slots Manager -->
-    <div class="admin-card">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h2 class="h5 fw-bold text-white mb-0">
-            <i class="bi bi-people-fill text-warning me-1"></i> 12 Squad Slots Manager
-          </h2>
-          <span class="small text-secondary" id="admSlotSummary">0 / 12 Slots Booked</span>
-        </div>
-      </div>
-
-      <div id="admSlotsContainer">
-        <!-- Rendered by JS -->
-      </div>
-    </div>
-
   </main>
-
-  <!-- BULLETPROOF EDIT MODAL -->
-  <div id="editSlotBackdrop" class="custom-modal-backdrop" onclick="window.closeEditModal()"></div>
-  <div id="editSlotBox" class="custom-modal-box">
-    <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom border-secondary">
-      <h5 class="fw-bold text-white mb-0" id="editSlotModalTitle">Edit Slot</h5>
-      <button type="button" class="btn btn-sm btn-outline-secondary text-white" onclick="window.closeEditModal()">&times;</button>
-    </div>
-
-    <form id="editSlotForm" onsubmit="window.handleSaveSlot(event)">
-      <input type="hidden" id="editSlotNum">
-      <div class="mb-3">
-        <label class="form-label small text-secondary">Squad Name</label>
-        <input type="text" class="form-control" id="editSquadName" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label small text-secondary">Leader / Player 1</label>
-        <input type="text" class="form-control" id="editPlayer1" required>
-      </div>
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <label class="form-label small text-secondary">Player 2</label>
-          <input type="text" class="form-control" id="editPlayer2">
-        </div>
-        <div class="col-6">
-          <label class="form-label small text-secondary">Player 3</label>
-          <input type="text" class="form-control" id="editPlayer3">
-        </div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label small text-secondary">Player 4</label>
-        <input type="text" class="form-control" id="editPlayer4">
-      </div>
-      <div class="mb-3">
-        <label class="form-label small text-secondary">WhatsApp Number</label>
-        <input type="tel" class="form-control" id="editContact">
-      </div>
-
-      <div class="d-flex justify-content-between mt-3">
-        <button type="button" class="btn btn-outline-danger btn-sm" onclick="window.clearCurrentSlot()">
-          <i class="bi bi-trash3"></i> Clear Slot
-        </button>
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeEditModal()">Cancel</button>
-          <button type="submit" class="btn-gold btn-sm">
-            <i class="bi bi-save"></i> Save Squad
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
 
   <!-- FIREBASE FIRESTORE SYNC SCRIPT -->
   <script type="module">
@@ -360,43 +255,10 @@
       entryFee: 100,
       prizePool: 1000,
       roomId: "893411",
-      roomPass: "7788",
-      slots: Array.from({ length: 12 }, (_, i) => ({
-        slotNumber: i + 1,
-        booked: i === 0 || i === 1,
-        squadName: i === 0 ? "DARK VORTEX" : (i === 1 ? "71 ESPL" : ""),
-        player1: i === 0 ? "Vortex_Boss" : (i === 1 ? "71_Tiger" : ""),
-        player2: i === 0 ? "Vortex_Fire" : (i === 1 ? "71_Sifat" : ""),
-        player3: i === 0 ? "Vortex_Sniper" : (i === 1 ? "71_Shooter" : ""),
-        player4: i === 0 ? "Vortex_Ghost" : (i === 1 ? "71_Storm" : ""),
-        contact: i === 0 ? "01711000001" : (i === 1 ? "01791357521" : "")
-      }))
+      roomPass: "7788"
     };
 
     const $ = (id) => document.getElementById(id);
-
-    // Modal Control
-    window.openEditSlotModal = function(slotNum) {
-      const slot = (state.slots || []).find(s => s.slotNumber === slotNum);
-      if (!slot) return;
-
-      $('editSlotNum').value = slotNum;
-      $('editSlotModalTitle').textContent = `Manage Slot #${slotNum}`;
-      $('editSquadName').value = slot.squadName || '';
-      $('editPlayer1').value = slot.player1 || '';
-      $('editPlayer2').value = slot.player2 || '';
-      $('editPlayer3').value = slot.player3 || '';
-      $('editPlayer4').value = slot.player4 || '';
-      $('editContact').value = slot.contact || '';
-
-      $('editSlotBackdrop').style.display = 'block';
-      $('editSlotBox').style.display = 'block';
-    };
-
-    window.closeEditModal = function() {
-      $('editSlotBackdrop').style.display = 'none';
-      $('editSlotBox').style.display = 'none';
-    };
 
     // Sync Form Values
     function syncFormValues() {
@@ -410,131 +272,6 @@
       if ($('admRoomId')) $('admRoomId').value = state.roomId || '';
       if ($('admRoomPass')) $('admRoomPass').value = state.roomPass || '';
     }
-
-    // Render Slots in Admin
-    function renderAdminSlots() {
-      const slots = state.slots || [];
-      const bookedCount = slots.filter(s => s.booked).length;
-      if ($('admSlotSummary')) $('admSlotSummary').textContent = `${bookedCount} / 12 Slots Booked`;
-
-      const container = $('admSlotsContainer');
-      if (!container) return;
-
-      container.innerHTML = slots.map(s => {
-        if (s.booked) {
-          return `
-            <div class="slot-row booked">
-              <div class="d-flex align-items-center gap-3">
-                <div class="slot-badge-num">${s.slotNumber}</div>
-                <div>
-                  <div class="fw-bold text-white fs-6">${s.squadName}</div>
-                  <div class="small text-secondary">
-                    Players: <span class="text-warning">${s.player1 || 'N/A'}</span>, ${s.player2 || ''}, ${s.player3 || ''}, ${s.player4 || ''}
-                    • WhatsApp: <span class="text-success">${s.contact || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-warning" onclick="window.openEditSlotModal(${s.slotNumber})">
-                  <i class="bi bi-pencil-square"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="window.clearSlot(${s.slotNumber})" title="Make Available">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        } else {
-          return `
-            <div class="slot-row">
-              <div class="d-flex align-items-center gap-3">
-                <div class="slot-badge-num">${s.slotNumber}</div>
-                <div>
-                  <div class="fw-bold text-secondary">Slot #${s.slotNumber} Available</div>
-                  <div class="small text-muted">Ready for booking</div>
-                </div>
-              </div>
-              <div>
-                <button class="btn btn-sm btn-outline-warning" onclick="window.openEditSlotModal(${s.slotNumber})">
-                  <i class="bi bi-plus-lg"></i> Assign Squad
-                </button>
-              </div>
-            </div>
-          `;
-        }
-      }).join('');
-    }
-
-    // Save Edited Slot
-    window.handleSaveSlot = async function(e) {
-      e.preventDefault();
-      const slotNum = Number($('editSlotNum').value);
-      const squadName = $('editSquadName').value.trim();
-      const player1 = $('editPlayer1').value.trim();
-      const player2 = $('editPlayer2').value.trim();
-      const player3 = $('editPlayer3').value.trim();
-      const player4 = $('editPlayer4').value.trim();
-      const contact = $('editContact').value.trim();
-
-      const currentSlots = [...(state.slots || [])];
-      const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
-      if (idx === -1) return false;
-
-      currentSlots[idx] = {
-        slotNumber: slotNum,
-        booked: true,
-        squadName,
-        player1,
-        player2,
-        player3,
-        player4,
-        contact
-      };
-
-      try {
-        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
-        await updateDoc(docRef, { slots: currentSlots });
-        alert(`Slot #${slotNum} saved successfully!`);
-        window.closeEditModal();
-      } catch (err) {
-        alert("Error saving slot: " + err.message);
-      }
-      return false;
-    };
-
-    // Clear Slot
-    window.clearSlot = async function(slotNum) {
-      if (!confirm(`Clear and make Slot #${slotNum} available?`)) return;
-
-      const currentSlots = [...(state.slots || [])];
-      const idx = currentSlots.findIndex(s => s.slotNumber === slotNum);
-      if (idx === -1) return;
-
-      currentSlots[idx] = {
-        slotNumber: slotNum,
-        booked: false,
-        squadName: "",
-        player1: "",
-        player2: "",
-        player3: "",
-        player4: "",
-        contact: ""
-      };
-
-      try {
-        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
-        await updateDoc(docRef, { slots: currentSlots });
-        alert(`Slot #${slotNum} is now available.`);
-        window.closeEditModal();
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
-    };
-
-    window.clearCurrentSlot = function() {
-      const slotNum = Number($('editSlotNum').value);
-      window.clearSlot(slotNum);
-    };
 
     // Save Match Config
     window.handleSaveMatchConfig = async function(e) {
@@ -572,7 +309,7 @@
         alert("Error: " + err.message);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-broadcast"></i> Save & Publish Match Info';
+        btn.innerHTML = '<i class="bi bi-broadcast"></i> Save & Publish Live to Players';
       }
       return false;
     };
@@ -585,7 +322,6 @@
           if (snap.exists()) {
             state = { ...state, ...snap.data() };
             syncFormValues();
-            renderAdminSlots();
           } else {
             setDoc(docRef, state);
           }
@@ -598,7 +334,6 @@
     }
 
     syncFormValues();
-    renderAdminSlots();
     startSync();
   </script>
 </body>
