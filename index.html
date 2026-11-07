@@ -1,195 +1,368 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FF Squad Arena — ১২ টিমের ফ্রি ফায়ার স্কোয়াড টুর্নামেন্ট ও লাইভ পয়েন্ট টেবিল</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>FF SQUAD ARENA — 12 Teams Tournament</title>
+
+  <!-- Bootstrap 5 CSS & Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   
-  <!-- CSS Stylesheet -->
+  <!-- Custom Style (ARENA X Dark Theme) -->
   <link rel="stylesheet" href="css/style.css">
-  
-  <!-- Firebase JS SDK (Optional CDN for Real-time Cloud Sync) -->
+
+  <!-- Firebase JS SDK (CDN) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-  <!-- Top Sticky Navigation -->
-  <header class="navbar">
-    <div class="container nav-wrapper">
-      <a href="index.html" class="brand-logo">
-        <div class="brand-badge">FF</div>
-        <div class="brand-text">
-          <h1>SQUAD <span>ARENA</span></h1>
-          <span class="brand-tag">১২ টিম স্কোয়াড প্ল্যাটফর্ম</span>
-        </div>
-      </a>
-
-      <div class="nav-links">
-        <a href="#standings" class="nav-btn nav-btn-ghost">পয়েন্ট টেবিল</a>
-        <a href="#slots" class="nav-btn nav-btn-ghost">১২টি স্লট</a>
-        <a href="register.html" class="nav-btn nav-btn-primary">+ রেজিস্ট্রেশন</a>
-        <a href="admin.html" class="nav-btn nav-btn-admin">এডমিন প্যানেল</a>
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="header-logo-badge">FF</div>
+      <div class="header-title">
+        ARENA X
+        <span>SQUAD MASTERS (12 TEAMS)</span>
       </div>
+    </div>
+    <div class="header-right">
+      <span class="header-badge-tag">FFWS Points</span>
+      <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="openRegisterModal()" style="font-size: 0.75rem;">
+        <i class="bi bi-plus-circle"></i> Register
+      </button>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="container">
+  <!-- Main Content Container -->
+  <main class="container" style="max-width: 720px; padding: 15px 12px;">
 
-    <!-- 1. Hero Section -->
-    <section class="hero-banner">
-      <div class="hero-card">
-        <div class="hero-pill">
-          <span>👑</span>
-          <span>Official FFWS Points System • 12 Teams / 48 Players</span>
+    <!-- ========================================== -->
+    <!-- 1. HOME SECTION -->
+    <!-- ========================================== -->
+    <section id="home-section" class="section active">
+      
+      <!-- Tournament Info Card -->
+      <div class="custom-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="badge bg-warning text-dark fw-bold">Live Tournament</span>
+          <span class="text-secondary small" id="homeFormatText">12 Squads • 3 Matches</span>
         </div>
-
-        <h2 class="hero-title" id="tournamentTitle">
-          Free Fire Daily Squad Masters — 12 Teams
-        </h2>
-
-        <p class="hero-desc" id="tournamentRules">
-          মোবাইল অনলি টুর্নামেন্ট। ফেসবুক ও হোয়াটসঅ্যাপ গ্রুপের ১২ টিমের লাইভ স্কোয়াড টুর্নামেন্ট ও অটোমেটিক পয়েন্ট টেবিল।
+        <h4 class="fw-bold mb-1" id="homeTourneyTitle">Free Fire Daily Squad Masters</h4>
+        <p class="text-secondary small mb-3" id="homeTourneyRules">
+          Mobile only. Official FFWS Points system. 4 players per squad.
         </p>
 
-        <!-- Stats Counter Row -->
-        <div class="hero-stats-row">
-          <div class="stat-box">
-            <span class="val" id="registeredTeamsCount">8 / 12</span>
-            <span class="lbl">কনফার্মড স্কোয়াড</span>
+        <!-- Stats Grid -->
+        <div class="row g-2 text-center">
+          <div class="col-4">
+            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
+              <small class="text-secondary d-block" style="font-size: 0.68rem;">SQUADS</small>
+              <span class="fw-bold text-warning" id="homeSlotsCount">8 / 12</span>
+            </div>
           </div>
-          <div class="stat-box highlight">
-            <span class="val" id="totalPrizePool">৳১,০০০</span>
-            <span class="lbl">প্রাইজ পুল</span>
+          <div class="col-4">
+            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
+              <small class="text-secondary d-block" style="font-size: 0.68rem;">PRIZE POOL</small>
+              <span class="fw-bold text-success" id="homePrizePool">৳1,000</span>
+            </div>
           </div>
-          <div class="stat-box">
-            <span class="val" id="totalMatchesCount">৩ Matches</span>
-            <span class="lbl">সিরিজ ফরম্যাট</span>
-          </div>
-          <div class="stat-box">
-            <span class="val" style="color: var(--secondary);">FFWS Rule</span>
-            <span class="lbl">বুয়াহ = ১২ PTS + ১/কিল</span>
+          <div class="col-4">
+            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
+              <small class="text-secondary d-block" style="font-size: 0.68rem;">PER KILL</small>
+              <span class="fw-bold text-info">+1 PT</span>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Room Credentials Vault -->
+      <div class="vault-box">
+        <div>
+          <span class="vault-badge mb-1 d-inline-block">CUSTOM ROOM VAULT</span>
+          <div class="fw-bold" style="font-size: 0.9rem;">
+            Map: <span id="homeVaultMap" class="text-warning">Bermuda</span> • Time: <span id="homeVaultTime">9:00 PM</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-warning" onclick="copyCreds('id')">
+            ID: <strong id="homeVaultId">FF-SQUAD-88219</strong> <i class="bi bi-copy ms-1"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-warning" onclick="copyCreds('pass')">
+            Pass: <strong id="homeVaultPass">squad2026</strong> <i class="bi bi-copy ms-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-grid gap-2 mb-3">
+        <button class="btn btn-custom btn-custom-accent" onclick="switchSection('standings-section')">
+          <i class="bi bi-trophy-fill"></i> View Live Points Table
+        </button>
+        <button class="btn btn-custom btn-custom-secondary" onclick="shareWhatsAppReport()">
+          <i class="bi bi-whatsapp text-success"></i> Copy Points Table for WhatsApp
+        </button>
+      </div>
+
+      <!-- Next Matches Series -->
+      <div class="section-title">
+        <span><i class="bi bi-controller text-warning me-1"></i> Match Schedule</span>
+      </div>
+      <div id="homeMatchesList">
+        <!-- Rendered by JS -->
+      </div>
+
     </section>
 
-    <!-- 2. Room ID & Password Vault Banner -->
-    <section class="vault-banner" id="roomVaultSection">
-      <div class="vault-info">
-        <div class="vault-icon">🔑</div>
-        <div class="vault-text">
-          <h3>কাস্টম রুম আইডি ও পাসওয়ার্ড</h3>
-          <p>ম্যাচ: <span id="vaultMap">Bermuda</span> • সময়: <span id="vaultTime">9:00 PM</span></p>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <div class="vault-creds">
-          <span style="color: var(--text-muted);">ROOM:</span>
-          <strong id="vaultRoomId" style="color: #fff;">FF-SQUAD-88219</strong>
-          <button class="copy-btn" onclick="copyVaultText('id')">কপি</button>
-        </div>
-
-        <div class="vault-creds">
-          <span style="color: var(--text-muted);">PASS:</span>
-          <strong id="vaultRoomPass" style="color: #fff;">squad2026</strong>
-          <button class="copy-btn" onclick="copyVaultText('pass')">কপি</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Points Table & Standings Section -->
-    <section id="standings">
-      <div class="section-header">
-        <div class="section-title">
-          <span>📊 লাইভ পয়েন্ট টেবিল</span>
-          <span class="badge">Official FFWS</span>
-        </div>
-        <button onclick="shareToWhatsApp()" class="nav-btn" style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3);">
-          <span>📲 WA/FB গ্রুপে শেয়ার</span>
+    <!-- ========================================== -->
+    <!-- 2. STANDINGS SECTION (POINTS TABLE) -->
+    <!-- ========================================== -->
+    <section id="standings-section" class="section">
+      
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-trophy-fill text-warning me-1"></i> Points Table</h5>
+        <button class="btn btn-sm btn-success fw-bold" onclick="shareWhatsAppReport()">
+          <i class="bi bi-whatsapp"></i> Share Standings
         </button>
       </div>
 
       <!-- Match Series Tabs -->
-      <div class="tabs-row" id="matchTabs">
-        <!-- Injected via app.js (Overall Standings, Match 1, Match 2, Match 3...) -->
+      <div class="btn-group w-100 mb-3" id="standingsTabs" role="group">
+        <!-- Injected via JS -->
       </div>
 
-      <p id="activeTabTitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">
-        Overall Tournament Standings (Total Points)
-      </p>
+      <div class="points-table-container custom-card p-0 mb-3">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th style="width: 45px;">#</th>
+              <th>TEAM</th>
+              <th>M</th>
+              <th>BOOYAH</th>
+              <th>KILLS</th>
+              <th>PLACE</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody id="standingsTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
 
-      <!-- Table Component -->
-      <div class="table-card">
-        <div class="table-responsive">
-          <table class="points-table">
+      <!-- Points Rule Note -->
+      <div class="p-2 text-center rounded bg-dark border border-secondary border-opacity-25 mb-4">
+        <small class="text-secondary" style="font-size: 0.72rem;">
+          Official FFWS: #1=12, #2=9, #3=8, #4=7, #5=6, #6=5, #7=4, #8=3, #9=2, #10=1, #11-12=0 • +1 pt per kill
+        </small>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. SLOTS SECTION (1-12 SQUADS) -->
+    <!-- ========================================== -->
+    <section id="slots-section" class="section">
+      
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-info me-1"></i> 12 Squad Slots</h5>
+        <button class="btn btn-sm btn-warning text-dark fw-bold" onclick="openRegisterModal()">
+          <i class="bi bi-plus-lg"></i> Register Slot
+        </button>
+      </div>
+
+      <div id="slotsListContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. ADMIN SECTION -->
+    <!-- ========================================== -->
+    <section id="admin-section" class="section">
+      
+      <div class="section-title">
+        <span><i class="bi bi-shield-lock-fill text-danger me-1"></i> Organizer Control</span>
+        <button class="btn btn-sm btn-outline-danger" onclick="resetDefaultData()">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset Data
+        </button>
+      </div>
+
+      <!-- 1. Room Credentials Editor -->
+      <div class="custom-card">
+        <h6 class="fw-bold mb-3"><i class="bi bi-key-fill text-warning me-1"></i> Room Credentials</h6>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="small text-secondary">Match Map</label>
+            <input type="text" id="adminMapInput" class="form-control" placeholder="Bermuda">
+          </div>
+          <div class="col-6">
+            <label class="small text-secondary">Match Time</label>
+            <input type="text" id="adminTimeInput" class="form-control" placeholder="9:00 PM">
+          </div>
+          <div class="col-6">
+            <label class="small text-secondary">Room ID</label>
+            <input type="text" id="adminRoomIdInput" class="form-control" placeholder="FF-SQUAD-XXXX">
+          </div>
+          <div class="col-6">
+            <label class="small text-secondary">Password</label>
+            <input type="text" id="adminPassInput" class="form-control" placeholder="Pass123">
+          </div>
+        </div>
+        <button class="btn btn-custom btn-custom-primary w-100 btn-sm" onclick="saveAdminRoomCreds()">
+          Update Room Credentials
+        </button>
+      </div>
+
+      <!-- 2. Match Score Entry -->
+      <div class="custom-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold m-0"><i class="bi bi-pencil-square text-success me-1"></i> Score Entry</h6>
+          <select id="adminMatchSelector" class="form-select form-select-sm" style="width: auto;" onchange="loadAdminScores(this.value)">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <p class="text-secondary small mb-3">Input team Placement Rank (1-12) & Kill Count.</p>
+
+        <div class="points-table-container mb-3">
+          <table class="table-custom">
             <thead>
               <tr>
-                <th style="width: 50px;">র‍্যাঙ্ক</th>
-                <th>টিমের নাম ও লিডার</th>
-                <th>ম্যাচ</th>
-                <th>বুয়াহ (Booyah)</th>
-                <th>কিল পয়েন্ট</th>
-                <th>প্লেসমেন্ট পয়েন্ট</th>
-                <th>টোটাল পয়েন্ট</th>
+                <th style="width: 50px;">Slot</th>
+                <th>Team</th>
+                <th style="width: 100px;">Rank (1-12)</th>
+                <th style="width: 100px;">Kills</th>
+                <th>Pts</th>
               </tr>
             </thead>
-            <tbody id="pointsTableBody">
-              <!-- Dynamically populated by app.js -->
+            <tbody id="adminScoreTableBody">
+              <!-- Dynamically populated -->
             </tbody>
           </table>
         </div>
-      </div>
 
-      <!-- 1-Click WhatsApp / Messenger Share Action Box -->
-      <div class="share-action-card">
-        <div class="share-info">
-          <h3>📋 হোয়াটসঅ্যাপ বা মেসেঞ্জার গ্রুপে রেজাল্ট পোস্ট করবেন?</h3>
-          <p>এক ক্লিকে ফুল পয়েন্ট টেবিল ইমোজি টেক্সট ফরম্যাটে কপি হয়ে যাবে। সরাসরি ফেসবুক বা হোয়াটসঅ্যাপ গ্রুপে পেস্ট করুন!</p>
-        </div>
-        <button class="btn-whatsapp" onclick="shareToWhatsApp()">
-          <span>📋 কপি পয়েন্ট টেবিল (WhatsApp/FB)</span>
+        <button class="btn btn-custom btn-custom-accent w-100" onclick="saveAdminScores()">
+          <i class="bi bi-save"></i> Save Match Results
         </button>
       </div>
-    </section>
 
-    <!-- 4. 12-Slot Squad Seating Grid -->
-    <section id="slots" style="margin-top: 36px;">
-      <div class="section-header">
-        <div class="section-title">
-          <span>🛡️ ১২টি টিম ও ৪৮ প্লেয়ার স্লট লিস্ট</span>
-          <span class="badge" style="background: var(--secondary);">১-১২ স্লট</span>
+      <!-- 3. Manage Teams Directly -->
+      <div class="custom-card">
+        <h6 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-info me-1"></i> Manage 12 Squads</h6>
+        <div id="adminTeamsList">
+          <!-- Populated by JS -->
         </div>
-        <a href="register.html" class="nav-btn nav-btn-primary">
-          + খালি স্লট বুক করুন
-        </a>
       </div>
 
-      <div class="slots-grid" id="slotsGrid">
-        <!-- Dynamically rendered by app.js -->
-      </div>
     </section>
 
   </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <p>
-        <strong>FF SQUAD ARENA</strong> — ফ্রি ফায়ার ১২ টিমের লাইভ স্কোয়াড টুর্নামেন্ট ও অটো পয়েন্ট টেবিল।
-      </p>
-      <p style="margin-top: 6px; font-size: 11px;">
-        Designed & Architected with pure HTML, CSS, JS & Firebase • Powered by <span>Sifat Bin Shahjahan</span>
-      </p>
+  <!-- Register Squad Modal -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background-color: var(--secondary-bg); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div class="modal-header border-secondary border-opacity-25">
+          <h6 class="modal-title fw-bold"><i class="bi bi-shield-check text-warning me-1"></i> Squad Registration (4 Players)</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="quickRegisterForm">
+            <div class="mb-2">
+              <label class="small text-secondary">Select Available Slot (1-12) *</label>
+              <select id="regSlotSelect" class="form-select" required></select>
+            </div>
+            <div class="mb-2">
+              <label class="small text-secondary">Team / Squad Name *</label>
+              <input type="text" id="regTeamName" class="form-control" placeholder="e.g. VIPER ESPORTS" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="small text-secondary">Captain Name *</label>
+                <input type="text" id="regCaptainName" class="form-control" placeholder="Captain Name" required>
+              </div>
+              <div class="col-6">
+                <label class="small text-secondary">WhatsApp Number *</label>
+                <input type="tel" id="regCaptainPhone" class="form-control" placeholder="017xxxxxxxx" required>
+              </div>
+            </div>
+
+            <div class="border-top border-secondary border-opacity-25 pt-2 mb-2">
+              <span class="small fw-bold text-warning d-block mb-2">Player In-Game Names (IGN) & UIDs:</span>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <input type="text" id="regP1Name" class="form-control" placeholder="Player 1 IGN" required>
+                </div>
+                <div class="col-6">
+                  <input type="text" id="regP1Uid" class="form-control" placeholder="Player 1 UID" required>
+                </div>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <input type="text" id="regP2Name" class="form-control" placeholder="Player 2 IGN" required>
+                </div>
+                <div class="col-6">
+                  <input type="text" id="regP2Uid" class="form-control" placeholder="Player 2 UID" required>
+                </div>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <input type="text" id="regP3Name" class="form-control" placeholder="Player 3 IGN" required>
+                </div>
+                <div class="col-6">
+                  <input type="text" id="regP3Uid" class="form-control" placeholder="Player 3 UID" required>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <input type="text" id="regP4Name" class="form-control" placeholder="Player 4 IGN" required>
+                </div>
+                <div class="col-6">
+                  <input type="text" id="regP4Uid" class="form-control" placeholder="Player 4 UID" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid mt-3">
+              <button type="submit" class="btn btn-warning fw-bold text-dark">
+                Confirm Registration
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-  </footer>
+  </div>
 
-  <!-- Notification Toast -->
-  <div id="toastNotice" class="toast-notice"></div>
+  <!-- Bottom Navigation Bar (ARENA X STYLE) -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchSection('home-section')">
+      <i class="bi bi-house-door-fill"></i>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="switchSection('standings-section')">
+      <i class="bi bi-trophy-fill"></i>
+      <span>Standings</span>
+    </button>
+    <button class="nav-item" onclick="switchSection('slots-section')">
+      <i class="bi bi-people-fill"></i>
+      <span>Slots</span>
+    </button>
+    <button class="nav-item" onclick="switchSection('admin-section')">
+      <i class="bi bi-shield-lock-fill"></i>
+      <span>Admin</span>
+    </button>
+  </nav>
 
-  <!-- Scripts -->
+  <!-- Toast Notification -->
+  <div id="appToast" class="toast-notice"></div>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App Scripts -->
   <script src="js/points-engine.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/app.js"></script>

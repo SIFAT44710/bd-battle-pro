@@ -1,159 +1,193 @@
 /**
- * FF SQUAD ARENA — CORE APP LOGIC
- * Coordinates:
- *  - Real-time Points Table & Standings display
- *  - 12-Slot Squad Grid
- *  - Dynamic Series Match Tabs
- *  - 1-Click Copy Room ID & Password
- *  - 1-Click WhatsApp / Facebook Points Table sharing
+ * FF SQUAD ARENA — CORE APP LOGIC (ARENA X STYLE)
+ * Clean English UI, Fast SPA Section Switching, Mobile-First
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Check if we are on index.html
-  const pointsTableBody = document.getElementById('pointsTableBody');
-  const slotsGrid = document.getElementById('slotsGrid');
-  const matchTabs = document.getElementById('matchTabs');
-  const activeTabTitle = document.getElementById('activeTabTitle');
-  
-  let currentActiveTab = 'overall'; // 'overall' or matchId
+let activeStandingsTab = 'overall';
+let activeAdminMatchId = 'match-1';
+let registerModalInstance = null;
 
-  // Listen to Storage updates
+// Initialize on DOM Ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Bootstrap modal setup
+  const modalEl = document.getElementById('registerModal');
+  if (modalEl && typeof bootstrap !== 'undefined') {
+    registerModalInstance = new bootstrap.Modal(modalEl);
+  }
+
+  // Register Form Submit
+  const regForm = document.getElementById('quickRegisterForm');
+  if (regForm) {
+    regForm.addEventListener('submit', handleRegistrationSubmit);
+  }
+
+  // Subscribe to storage
   if (window.tourneyStorage) {
     window.tourneyStorage.subscribe((data) => {
-      renderApp(data);
+      renderAll(data);
     });
   }
+});
 
-  function renderApp(data) {
-    if (!data) return;
+// SPA Section Switcher
+window.switchSection = function(sectionId) {
+  document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
 
-    // 1. Render Meta Header
-    const tournamentTitle = document.getElementById('tournamentTitle');
-    const tournamentRules = document.getElementById('tournamentRules');
-    const registeredTeamsCount = document.getElementById('registeredTeamsCount');
-    const totalPrizePool = document.getElementById('totalPrizePool');
-    const totalMatchesCount = document.getElementById('totalMatchesCount');
+  const targetSec = document.getElementById(sectionId);
+  if (targetSec) targetSec.classList.add('active');
 
-    const bookedTeams = data.teams.filter(t => t.isBooked);
-
-    if (tournamentTitle) tournamentTitle.textContent = data.meta.title;
-    if (tournamentRules) tournamentRules.textContent = data.meta.rules;
-    if (registeredTeamsCount) registeredTeamsCount.textContent = `${bookedTeams.length} / 12`;
-    if (totalPrizePool) totalPrizePool.textContent = `৳${data.meta.prizePoolBDT}`;
-    if (totalMatchesCount) totalMatchesCount.textContent = `${data.matches.length} Matches`;
-
-    // 2. Render Room Vault Banner
-    renderRoomVault(data.roomCredentials);
-
-    // 3. Render Match Tabs
-    renderTabs(data);
-
-    // 4. Render Table (Based on current active tab)
-    renderPointsTable(data, currentActiveTab);
-
-    // 5. Render 12-Slot Squad Grid
-    renderSlotsGrid(data.teams);
+  // Highlight matching nav item
+  const navMap = {
+    'home-section': 0,
+    'standings-section': 1,
+    'slots-section': 2,
+    'admin-section': 3
+  };
+  const navButtons = document.querySelectorAll('.bottom-nav .nav-item');
+  const index = navMap[sectionId];
+  if (index !== undefined && navButtons[index]) {
+    navButtons[index].classList.add('active');
   }
 
-  function renderRoomVault(creds) {
-    const roomIdEl = document.getElementById('vaultRoomId');
-    const roomPassEl = document.getElementById('vaultRoomPass');
-    const roomMapEl = document.getElementById('vaultMap');
-    const roomTimeEl = document.getElementById('vaultTime');
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
-    if (roomIdEl && creds) roomIdEl.textContent = creds.roomId || 'Not Released';
-    if (roomPassEl && creds) roomPassEl.textContent = creds.roomPassword || '••••••';
-    if (roomMapEl && creds) roomMapEl.textContent = creds.map || 'Bermuda';
-    if (roomTimeEl && creds) roomTimeEl.textContent = creds.matchTime || 'TBA';
+// Render Everything
+function renderAll(data) {
+  if (!data) return;
+
+  renderHome(data);
+  renderStandings(data);
+  renderSlots(data);
+  renderAdmin(data);
+  populateRegisterSlotOptions(data);
+}
+
+// 1. Home Section Render
+function renderHome(data) {
+  const booked = data.teams.filter(t => t.isBooked);
+  
+  const titleEl = document.getElementById('homeTourneyTitle');
+  const rulesEl = document.getElementById('homeTourneyRules');
+  const slotsCountEl = document.getElementById('homeSlotsCount');
+  const prizePoolEl = document.getElementById('homePrizePool');
+  const formatTextEl = document.getElementById('homeFormatText');
+
+  if (titleEl) titleEl.textContent = data.meta.title;
+  if (rulesEl) rulesEl.textContent = data.meta.rules;
+  if (slotsCountEl) slotsCountEl.textContent = `${booked.length} / 12`;
+  if (prizePoolEl) prizePoolEl.textContent = `৳${data.meta.prizePoolBDT}`;
+  if (formatTextEl) formatTextEl.textContent = `12 Squads • ${data.matches.length} Matches`;
+
+  // Room Vault
+  const creds = data.roomCredentials;
+  if (creds) {
+    const mapEl = document.getElementById('homeVaultMap');
+    const timeEl = document.getElementById('homeVaultTime');
+    const idEl = document.getElementById('homeVaultId');
+    const passEl = document.getElementById('homeVaultPass');
+
+    if (mapEl) mapEl.textContent = creds.map || 'Bermuda';
+    if (timeEl) timeEl.textContent = creds.matchTime || '9:00 PM';
+    if (idEl) idEl.textContent = creds.roomId || 'TBA';
+    if (passEl) passEl.textContent = creds.roomPassword || '••••';
   }
 
-  function renderTabs(data) {
-    if (!matchTabs) return;
-    matchTabs.innerHTML = '';
+  // Match Schedule Cards
+  const matchesList = document.getElementById('homeMatchesList');
+  if (matchesList) {
+    matchesList.innerHTML = '';
+    data.matches.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'custom-card mb-2 d-flex justify-content-between align-items-center';
+      const badgeClass = m.status === 'completed' ? 'bg-success' : 'bg-primary';
+      card.innerHTML = `
+        <div>
+          <span class="badge ${badgeClass} mb-1">Match #${m.matchNumber}</span>
+          <h6 class="fw-bold m-0">${m.map} Map</h6>
+        </div>
+        <div class="text-end">
+          <span class="text-secondary small d-block">${m.status.toUpperCase()}</span>
+          <button class="btn btn-sm btn-outline-warning py-0 px-2 mt-1" onclick="switchSection('standings-section')">
+            Results
+          </button>
+        </div>
+      `;
+      matchesList.appendChild(card);
+    });
+  }
+}
+
+// 2. Standings (Points Table) Render
+function renderStandings(data) {
+  const tabsContainer = document.getElementById('standingsTabs');
+  const tableBody = document.getElementById('standingsTableBody');
+
+  if (tabsContainer) {
+    tabsContainer.innerHTML = '';
 
     // Overall Tab
     const overallBtn = document.createElement('button');
-    overallBtn.className = `tab-btn ${currentActiveTab === 'overall' ? 'active' : ''}`;
-    overallBtn.textContent = '🏆 Overall Standings';
+    overallBtn.className = `btn btn-sm ${activeStandingsTab === 'overall' ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`;
+    overallBtn.textContent = 'Overall';
     overallBtn.onclick = () => {
-      currentActiveTab = 'overall';
-      renderTabs(data);
-      renderPointsTable(data, 'overall');
+      activeStandingsTab = 'overall';
+      renderStandings(data);
     };
-    matchTabs.appendChild(overallBtn);
+    tabsContainer.appendChild(overallBtn);
 
-    // Match Specific Tabs
+    // Each Match Tab
     data.matches.forEach(m => {
       const matchBtn = document.createElement('button');
-      matchBtn.className = `tab-btn ${currentActiveTab === m.id ? 'active' : ''}`;
-      const statusIcon = m.status === 'completed' ? '✓' : '⏱';
-      matchBtn.textContent = `Match #${m.matchNumber} (${m.map}) ${statusIcon}`;
+      matchBtn.className = `btn btn-sm ${activeStandingsTab === m.id ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`;
+      matchBtn.textContent = `Match ${m.matchNumber}`;
       matchBtn.onclick = () => {
-        currentActiveTab = m.id;
-        renderTabs(data);
-        renderPointsTable(data, m.id);
+        activeStandingsTab = m.id;
+        renderStandings(data);
       };
-      matchTabs.appendChild(matchBtn);
+      tabsContainer.appendChild(matchBtn);
     });
   }
 
-  function renderPointsTable(data, activeTab) {
-    if (!pointsTableBody) return;
-    pointsTableBody.innerHTML = '';
+  if (tableBody) {
+    tableBody.innerHTML = '';
 
-    if (activeTab === 'overall') {
-      if (activeTabTitle) activeTabTitle.textContent = 'Overall Tournament Standings (Total Points)';
-
+    if (activeStandingsTab === 'overall') {
       const standings = window.PointsEngine.calculateOverallStandings(data.teams, data.matches);
 
       standings.forEach(row => {
         const tr = document.createElement('tr');
-
-        // Rank Badge
-        let rankClass = 'rank-other';
-        if (row.overallRank === 1) rankClass = 'rank-1';
-        else if (row.overallRank === 2) rankClass = 'rank-2';
-        else if (row.overallRank === 3) rankClass = 'rank-3';
+        let rankClass = row.overallRank === 1 ? 'rank-1' : row.overallRank === 2 ? 'rank-2' : row.overallRank === 3 ? 'rank-3' : 'rank-other';
 
         tr.innerHTML = `
+          <td><span class="rank-badge ${rankClass}">${row.overallRank}</span></td>
           <td>
-            <span class="rank-badge ${rankClass}">#${row.overallRank}</span>
+            <strong>${row.teamName}</strong>
+            <small class="text-secondary d-block" style="font-size: 0.7rem;">Slot #${row.slot} • ${row.captainName}</small>
           </td>
-          <td>
-            <div class="team-cell">
-              <div class="team-avatar">S${row.slot}</div>
-              <div class="team-details">
-                <h4>${row.teamName}</h4>
-                <p>Leader: ${row.captainName}</p>
-              </div>
-            </div>
-          </td>
-          <td><strong>${row.matchesPlayed}</strong></td>
-          <td>
-            ${row.booyahs > 0 ? `<span class="booyah-badge">👑 ${row.booyahs} Booyah</span>` : '<span style="color: var(--text-muted);">-</span>'}
-          </td>
-          <td><span style="font-family: var(--font-mono);">${row.totalKillPoints} pts</span></td>
-          <td><span style="font-family: var(--font-mono);">${row.totalPlacePoints} pts</span></td>
-          <td><span class="pts-highlight">${row.totalPoints} PTS</span></td>
+          <td>${row.matchesPlayed}</td>
+          <td>${row.booyahs > 0 ? `<span class="badge bg-warning text-dark">👑 ${row.booyahs}</span>` : '-'}</td>
+          <td>${row.totalKillPoints}</td>
+          <td>${row.totalPlacePoints}</td>
+          <td class="fw-bold text-warning">${row.totalPoints}</td>
         `;
-        pointsTableBody.appendChild(tr);
+        tableBody.appendChild(tr);
       });
-
     } else {
-      // Single Match Breakdown
-      const currentMatch = data.matches.find(m => m.id === activeTab);
+      // Single Match
+      const currentMatch = data.matches.find(m => m.id === activeStandingsTab);
       if (!currentMatch) return;
 
-      if (activeTabTitle) activeTabTitle.textContent = `Match #${currentMatch.matchNumber} Results (${currentMatch.map})`;
-
-      const matchRows = [];
+      const rows = [];
       data.teams.forEach(t => {
         const res = currentMatch.results ? currentMatch.results[t.id] : null;
         if (res) {
           const pts = window.PointsEngine.calculateMatchPoints(res.rank, res.kills);
-          matchRows.push({
+          rows.push({
             slot: t.slot,
-            teamName: t.teamName || `Slot #${t.slot}`,
+            teamName: t.teamName,
             captainName: t.captainName,
             rank: pts.rank,
             kills: pts.kills,
@@ -165,142 +199,347 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Sort by Match Rank
-      matchRows.sort((a, b) => a.rank - b.rank);
+      rows.sort((a, b) => a.rank - b.rank);
 
-      if (matchRows.length === 0) {
-        pointsTableBody.innerHTML = `
+      if (rows.length === 0) {
+        tableBody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; padding: 28px; color: var(--text-muted);">
-              ⏳ Match #${currentMatch.matchNumber} results have not been published by the organizer yet.
+            <td colspan="7" class="text-center text-secondary py-4">
+              Match #${currentMatch.matchNumber} results not entered yet.
             </td>
           </tr>
         `;
         return;
       }
 
-      matchRows.forEach(row => {
+      rows.forEach(r => {
         const tr = document.createElement('tr');
-        let rankClass = row.rank === 1 ? 'rank-1' : row.rank === 2 ? 'rank-2' : row.rank === 3 ? 'rank-3' : 'rank-other';
+        let rankClass = r.rank === 1 ? 'rank-1' : r.rank === 2 ? 'rank-2' : r.rank === 3 ? 'rank-3' : 'rank-other';
 
         tr.innerHTML = `
-          <td><span class="rank-badge ${rankClass}">#${row.rank}</span></td>
+          <td><span class="rank-badge ${rankClass}">${r.rank}</span></td>
           <td>
-            <div class="team-cell">
-              <div class="team-avatar">S${row.slot}</div>
-              <div class="team-details">
-                <h4>${row.teamName}</h4>
-                <p>Leader: ${row.captainName}</p>
-              </div>
-            </div>
+            <strong>${r.teamName}</strong>
+            <small class="text-secondary d-block" style="font-size: 0.7rem;">Slot #${r.slot}</small>
           </td>
           <td>1</td>
-          <td>${row.isBooyah ? '<span class="booyah-badge">👑 1 Booyah</span>' : '<span style="color: var(--text-muted);">-</span>'}</td>
-          <td><span style="font-family: var(--font-mono);">${row.killPoints} pts (${row.kills} kills)</span></td>
-          <td><span style="font-family: var(--font-mono);">${row.placePoints} pts</span></td>
-          <td><span class="pts-highlight">${row.totalPoints} PTS</span></td>
+          <td>${r.isBooyah ? '<span class="badge bg-warning text-dark">👑 Booyah</span>' : '-'}</td>
+          <td>${r.killPoints}</td>
+          <td>${r.placePoints}</td>
+          <td class="fw-bold text-warning">${r.totalPoints}</td>
         `;
-        pointsTableBody.appendChild(tr);
+        tableBody.appendChild(tr);
       });
     }
   }
+}
 
-  function renderSlotsGrid(teams) {
-    if (!slotsGrid) return;
-    slotsGrid.innerHTML = '';
+// 3. Slots (1-12) Render
+function renderSlots(data) {
+  const container = document.getElementById('slotsListContainer');
+  if (!container) return;
+  container.innerHTML = '';
 
-    teams.forEach(team => {
-      const card = document.createElement('div');
-      card.className = `slot-card ${team.isBooked ? 'booked' : 'empty'}`;
+  data.teams.forEach(team => {
+    const card = document.createElement('div');
+    card.className = `slot-row-card ${team.isBooked ? 'booked' : 'empty'}`;
 
-      if (team.isBooked) {
-        const playersHtml = (team.players || []).map(p => `
-          <div class="player-item ${p.isLeader ? 'leader' : ''}">
-            <span>${p.isLeader ? '👑 ' : ''}${p.name}</span>
-            <span class="player-uid">UID: ${p.uid}</span>
+    if (team.isBooked) {
+      const chips = (team.players || []).map(p => `
+        <span class="player-chip">
+          ${p.isLeader ? '<i class="bi bi-star-fill text-warning"></i> ' : ''}${p.name}
+        </span>
+      `).join('');
+
+      card.innerHTML = `
+        <div style="flex-grow: 1;">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="slot-tag">SLOT #${team.slot}</span>
+            <strong class="text-white">${team.teamName}</strong>
+            <span class="badge bg-success ms-auto" style="font-size: 0.65rem;">CONFIRMED</span>
           </div>
-        `).join('');
-
-        card.innerHTML = `
-          <div class="slot-header">
-            <span class="slot-number">SLOT #${team.slot}</span>
-            <span class="slot-status-booked">✓ Confirmed</span>
+          <div class="player-chips">${chips}</div>
+          <small class="text-secondary d-block mt-1" style="font-size: 0.72rem;">
+            Leader: ${team.captainName} (WhatsApp: ${team.captainWhatsApp})
+          </small>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div style="flex-grow: 1;">
+          <div class="d-flex align-items-center gap-2">
+            <span class="slot-tag">SLOT #${team.slot}</span>
+            <span class="text-secondary">Available Slot</span>
           </div>
-          <h4 class="slot-team-title">${team.teamName}</h4>
-          <div class="player-list">
-            ${playersHtml}
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
-            <span>Captain: ${team.captainName}</span>
-            <span>📱 ${team.captainWhatsApp}</span>
-          </div>
-        `;
-      } else {
-        card.innerHTML = `
-          <div class="slot-header">
-            <span class="slot-number">SLOT #${team.slot}</span>
-            <span class="slot-status-empty">Available</span>
-          </div>
-          <h4 class="slot-team-title" style="color: var(--text-muted);">Slot #${team.slot} is Empty</h4>
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
-            Squad registration is open for this slot.
-          </p>
-          <a href="register.html?slot=${team.slot}" class="nav-btn nav-btn-primary" style="display: block; text-align: center;">
-            Register Team in Slot #${team.slot}
-          </a>
-        `;
-      }
-
-      slotsGrid.appendChild(card);
-    });
-  }
-
-  // Copy Vault Credential Handlers
-  window.copyVaultText = function(type) {
-    const data = window.tourneyStorage.data;
-    if (!data || !data.roomCredentials) return;
-
-    const textToCopy = type === 'id' ? data.roomCredentials.roomId : data.roomCredentials.roomPassword;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      showToast(`Copied ${type === 'id' ? 'Room ID' : 'Password'}: ${textToCopy}`);
-    });
-  };
-
-  // 1-Click WhatsApp Report Sharing
-  window.shareToWhatsApp = function() {
-    const data = window.tourneyStorage.data;
-    if (!data) return;
-
-    const completedMatches = data.matches.filter(m => m.status === 'completed').length;
-    const standings = window.PointsEngine.calculateOverallStandings(data.teams, data.matches);
-    const reportText = window.PointsEngine.generateWhatsAppReport(
-      data.meta.title,
-      standings,
-      completedMatches,
-      data.matches.length
-    );
-
-    navigator.clipboard.writeText(reportText).then(() => {
-      showToast('📋 Standings copied! Paste into WhatsApp or Facebook Group.');
-      // Optionally open WhatsApp Web
-      const encoded = encodeURIComponent(reportText);
-      const url = `https://wa.me/?text=${encoded}`;
-      window.open(url, '_blank');
-    });
-  };
-
-  function showToast(msg) {
-    let toast = document.getElementById('toastNotice');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'toastNotice';
-      toast.className = 'toast-notice';
-      document.body.appendChild(toast);
+        </div>
+        <button class="btn btn-sm btn-outline-warning" onclick="openRegisterForSlot(${team.slot})">
+          Book Slot
+        </button>
+      `;
     }
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(() => {
-      toast.style.display = 'none';
-    }, 3000);
+
+    container.appendChild(card);
+  });
+}
+
+// 4. Admin Render
+function renderAdmin(data) {
+  // Fill Room Editor inputs
+  if (data.roomCredentials) {
+    const mapInp = document.getElementById('adminMapInput');
+    const timeInp = document.getElementById('adminTimeInput');
+    const idInp = document.getElementById('adminRoomIdInput');
+    const passInp = document.getElementById('adminPassInput');
+
+    if (mapInp) mapInp.value = data.roomCredentials.map || 'Bermuda';
+    if (timeInp) timeInp.value = data.roomCredentials.matchTime || '9:00 PM';
+    if (idInp) idInp.value = data.roomCredentials.roomId || '';
+    if (passInp) passInp.value = data.roomCredentials.roomPassword || '';
   }
-});
+
+  // Populate Admin Match Selector
+  const selector = document.getElementById('adminMatchSelector');
+  if (selector) {
+    selector.innerHTML = '';
+    data.matches.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `Match ${m.matchNumber} (${m.map}) - ${m.status}`;
+      if (m.id === activeAdminMatchId) opt.selected = true;
+      selector.appendChild(opt);
+    });
+  }
+
+  loadAdminScores(activeAdminMatchId);
+  renderAdminTeams(data.teams);
+}
+
+// Load Scores for selected match in Admin
+window.loadAdminScores = function(matchId) {
+  activeAdminMatchId = matchId;
+  const data = window.tourneyStorage.data;
+  if (!data) return;
+
+  const currentMatch = data.matches.find(m => m.id === matchId);
+  const tbody = document.getElementById('adminScoreTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  data.teams.forEach(t => {
+    const tr = document.createElement('tr');
+    const existing = currentMatch && currentMatch.results ? currentMatch.results[t.id] : null;
+    const rankVal = existing ? existing.rank : '';
+    const killsVal = existing ? existing.kills : '0';
+
+    let ptsText = '-';
+    if (existing) {
+      const p = window.PointsEngine.calculateMatchPoints(existing.rank, existing.kills);
+      ptsText = `${p.totalPoints} PTS`;
+    }
+
+    tr.innerHTML = `
+      <td><span class="slot-tag">S#${t.slot}</span></td>
+      <td><strong>${t.teamName || '(Empty)'}</strong></td>
+      <td>
+        <input type="number" min="1" max="12" class="form-control form-control-sm text-center" 
+               id="adm_rank_${t.id}" value="${rankVal}" placeholder="1-12">
+      </td>
+      <td>
+        <input type="number" min="0" class="form-control form-control-sm text-center" 
+               id="adm_kills_${t.id}" value="${killsVal}">
+      </td>
+      <td class="fw-bold text-warning">${ptsText}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+};
+
+// Save Admin Scores
+window.saveAdminScores = function() {
+  const data = window.tourneyStorage.data;
+  const currentMatch = data.matches.find(m => m.id === activeAdminMatchId);
+  if (!currentMatch) return;
+
+  if (!currentMatch.results) currentMatch.results = {};
+
+  data.teams.forEach(t => {
+    const rankEl = document.getElementById(`adm_rank_${t.id}`);
+    const killsEl = document.getElementById(`adm_kills_${t.id}`);
+
+    if (rankEl && rankEl.value) {
+      const rank = parseInt(rankEl.value, 10);
+      const kills = parseInt(killsEl.value, 10) || 0;
+      currentMatch.results[t.id] = { rank, kills };
+    } else {
+      delete currentMatch.results[t.id];
+    }
+  });
+
+  currentMatch.status = 'completed';
+  window.tourneyStorage.sync(data);
+  showToast(`Match #${currentMatch.matchNumber} results saved & updated!`);
+};
+
+// Save Admin Room Credentials
+window.saveAdminRoomCreds = function() {
+  const data = window.tourneyStorage.data;
+  data.roomCredentials = {
+    map: document.getElementById('adminMapInput').value.trim() || 'Bermuda',
+    matchTime: document.getElementById('adminTimeInput').value.trim() || '9:00 PM',
+    roomId: document.getElementById('adminRoomIdInput').value.trim(),
+    roomPassword: document.getElementById('adminPassInput').value.trim(),
+    isUnlocked: true
+  };
+  window.tourneyStorage.sync(data);
+  showToast('Room ID & Password updated!');
+};
+
+// Render Admin Teams List
+function renderAdminTeams(teams) {
+  const container = document.getElementById('adminTeamsList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  teams.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'd-flex align-items-center gap-2 mb-2 p-2 rounded bg-dark border border-secondary border-opacity-25';
+    row.innerHTML = `
+      <span class="slot-tag">S#${t.slot}</span>
+      <input type="text" class="form-control form-control-sm" id="adm_tname_${t.id}" value="${t.teamName || ''}" placeholder="Team Name">
+      <input type="text" class="form-control form-control-sm" id="adm_tphone_${t.id}" value="${t.captainWhatsApp || ''}" placeholder="WhatsApp">
+      <button class="btn btn-sm btn-primary" onclick="saveAdminSingleTeam('${t.id}')">Save</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+window.saveAdminSingleTeam = function(teamId) {
+  const data = window.tourneyStorage.data;
+  const target = data.teams.find(t => t.id === teamId);
+  if (!target) return;
+
+  const name = document.getElementById(`adm_tname_${teamId}`).value.trim();
+  const phone = document.getElementById(`adm_tphone_${teamId}`).value.trim();
+
+  target.teamName = name;
+  target.captainWhatsApp = phone;
+  target.isBooked = name.length > 0;
+
+  window.tourneyStorage.sync(data);
+  showToast(`Slot #${target.slot} updated!`);
+};
+
+// Slot Registration Form Handlers
+function populateRegisterSlotOptions(data, preselectSlot = null) {
+  const select = document.getElementById('regSlotSelect');
+  if (!select) return;
+  select.innerHTML = '';
+
+  data.teams.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.slot;
+    if (t.isBooked) {
+      opt.disabled = true;
+      opt.textContent = `Slot #${t.slot} - [Booked: ${t.teamName}]`;
+    } else {
+      opt.textContent = `Slot #${t.slot} - Available`;
+      if (preselectSlot === t.slot) opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+}
+
+window.openRegisterModal = function() {
+  const data = window.tourneyStorage.data;
+  populateRegisterSlotOptions(data);
+  if (registerModalInstance) registerModalInstance.show();
+};
+
+window.openRegisterForSlot = function(slot) {
+  const data = window.tourneyStorage.data;
+  populateRegisterSlotOptions(data, slot);
+  if (registerModalInstance) registerModalInstance.show();
+};
+
+function handleRegistrationSubmit(e) {
+  e.preventDefault();
+  const slotNumber = parseInt(document.getElementById('regSlotSelect').value, 10);
+  const teamName = document.getElementById('regTeamName').value.trim();
+  const captainName = document.getElementById('regCaptainName').value.trim();
+  const captainPhone = document.getElementById('regCaptainPhone').value.trim();
+
+  const p1Name = document.getElementById('regP1Name').value.trim();
+  const p1Uid = document.getElementById('regP1Uid').value.trim();
+  const p2Name = document.getElementById('regP2Name').value.trim();
+  const p2Uid = document.getElementById('regP2Uid').value.trim();
+  const p3Name = document.getElementById('regP3Name').value.trim();
+  const p3Uid = document.getElementById('regP3Uid').value.trim();
+  const p4Name = document.getElementById('regP4Name').value.trim();
+  const p4Uid = document.getElementById('regP4Uid').value.trim();
+
+  const data = window.tourneyStorage.data;
+  const target = data.teams.find(t => t.slot === slotNumber);
+  if (!target) return;
+
+  target.teamName = teamName;
+  target.captainName = captainName;
+  target.captainWhatsApp = captainPhone;
+  target.isBooked = true;
+  target.players = [
+    { name: p1Name, uid: p1Uid, isLeader: true },
+    { name: p2Name, uid: p2Uid, isLeader: false },
+    { name: p3Name, uid: p3Uid, isLeader: false },
+    { name: p4Name, uid: p4Uid, isLeader: false }
+  ];
+
+  window.tourneyStorage.sync(data);
+
+  if (registerModalInstance) registerModalInstance.hide();
+  document.getElementById('quickRegisterForm').reset();
+  showToast(`Team ${teamName} registered in Slot #${slotNumber}!`);
+  switchSection('slots-section');
+}
+
+// 1-Click Copy Credential
+window.copyCreds = function(type) {
+  const data = window.tourneyStorage.data;
+  if (!data || !data.roomCredentials) return;
+  const val = type === 'id' ? data.roomCredentials.roomId : data.roomCredentials.roomPassword;
+  navigator.clipboard.writeText(val).then(() => {
+    showToast(`Copied: ${val}`);
+  });
+};
+
+// 1-Click WhatsApp Share
+window.shareWhatsAppReport = function() {
+  const data = window.tourneyStorage.data;
+  if (!data) return;
+
+  const completed = data.matches.filter(m => m.status === 'completed').length;
+  const standings = window.PointsEngine.calculateOverallStandings(data.teams, data.matches);
+  const text = window.PointsEngine.generateWhatsAppReport(data.meta.title, standings, completed, data.matches.length);
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Standings copied! Paste into WhatsApp/FB group.');
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  });
+};
+
+// Reset Default Data
+window.resetDefaultData = function() {
+  if (confirm('Reset all match scores and teams to default?')) {
+    window.tourneyStorage.resetToDefault();
+    showToast('Data reset to default.');
+  }
+};
+
+// Toast Helper
+function showToast(msg) {
+  const toast = document.getElementById('appToast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => {
+    toast.style.display = 'none';
+  }, 2500);
+}
