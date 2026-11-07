@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>FF SQUAD ARENA — 12 Teams Tournament</title>
+  <title>ARENA X — 12 Teams Squad Tournament</title>
 
   <!-- Bootstrap 5 CSS & Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,8 +28,8 @@
       </div>
     </div>
     <div class="header-right">
-      <span class="header-badge-tag">FFWS Points</span>
-      <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="openRegisterModal()" style="font-size: 0.75rem;">
+      <span class="header-badge-tag">FFWS Rules</span>
+      <button class="btn btn-sm btn-warning fw-bold text-dark" onclick="openRegisterModal()">
         <i class="bi bi-plus-circle"></i> Register
       </button>
     </div>
@@ -44,72 +44,72 @@
     <section id="home-section" class="section active">
       
       <!-- Tournament Info Card -->
-      <div class="custom-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="badge bg-warning text-dark fw-bold">Live Tournament</span>
-          <span class="text-secondary small" id="homeFormatText">12 Squads • 3 Matches</span>
+      <div class="tournament-card">
+        <div class="tournament-card-header">
+          <div class="tournament-card-tags">
+            <span>Free Fire</span>
+            <span>Squad (4v4)</span>
+            <span>12 Teams</span>
+          </div>
+          <div class="tournament-card-timer" id="homeTimerTag">
+            <i class="bi bi-broadcast text-danger me-1"></i> Live
+          </div>
         </div>
-        <h4 class="fw-bold mb-1" id="homeTourneyTitle">Free Fire Daily Squad Masters</h4>
-        <p class="text-secondary small mb-3" id="homeTourneyRules">
-          Mobile only. Official FFWS Points system. 4 players per squad.
-        </p>
 
-        <!-- Stats Grid -->
-        <div class="row g-2 text-center">
-          <div class="col-4">
-            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
-              <small class="text-secondary d-block" style="font-size: 0.68rem;">SQUADS</small>
-              <span class="fw-bold text-warning" id="homeSlotsCount">8 / 12</span>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
-              <small class="text-secondary d-block" style="font-size: 0.68rem;">PRIZE POOL</small>
-              <span class="fw-bold text-success" id="homePrizePool">৳1,000</span>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="p-2 rounded" style="background: rgba(17, 24, 39, 0.6); border: 1px solid var(--border-color);">
-              <small class="text-secondary d-block" style="font-size: 0.68rem;">PER KILL</small>
-              <span class="fw-bold text-info">+1 PT</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        <h4 class="tournament-card-title" id="homeTourneyTitle">
+          Free Fire Daily Squad Masters
+        </h4>
 
-      <!-- Room Credentials Vault -->
-      <div class="vault-box">
-        <div>
-          <span class="vault-badge mb-1 d-inline-block">CUSTOM ROOM VAULT</span>
-          <div class="fw-bold" style="font-size: 0.9rem;">
-            Map: <span id="homeVaultMap" class="text-warning">Bermuda</span> • Time: <span id="homeVaultTime">9:00 PM</span>
+        <div class="tournament-card-info">
+          <div class="info-item text-center">
+            <small>ENTRY FEE</small>
+            <strong class="text-warning" id="homeEntryFee">৳100</strong>
+          </div>
+          <div class="info-item text-center">
+            <small>PRIZE POOL</small>
+            <strong class="text-success" id="homePrizePool">৳1,000</strong>
+          </div>
+          <div class="info-item text-center">
+            <small>PER KILL</small>
+            <strong class="text-info">+1 PT</strong>
+          </div>
+          <div class="info-item text-center">
+            <small>SLOTS</small>
+            <strong class="text-light" id="homeSlotsRatio">8 / 12</strong>
           </div>
         </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-warning" onclick="copyCreds('id')">
-            ID: <strong id="homeVaultId">FF-SQUAD-88219</strong> <i class="bi bi-copy ms-1"></i>
+
+        <div class="tournament-card-actions">
+          <button class="btn btn-custom btn-custom-secondary" onclick="openRoomModalForMatch(1)">
+            <i class="bi bi-key-fill text-warning"></i> Room ID & Pass
           </button>
-          <button class="btn btn-sm btn-outline-warning" onclick="copyCreds('pass')">
-            Pass: <strong id="homeVaultPass">squad2026</strong> <i class="bi bi-copy ms-1"></i>
+          <button class="btn btn-custom btn-custom-accent" onclick="openRegisterModal()">
+            <i class="bi bi-controller"></i> Register Squad
           </button>
         </div>
       </div>
 
       <!-- Quick Action Buttons -->
-      <div class="d-grid gap-2 mb-3">
-        <button class="btn btn-custom btn-custom-accent" onclick="switchSection('standings-section')">
-          <i class="bi bi-trophy-fill"></i> View Live Points Table
-        </button>
-        <button class="btn btn-custom btn-custom-secondary" onclick="shareWhatsAppReport()">
-          <i class="bi bi-whatsapp text-success"></i> Copy Points Table for WhatsApp
-        </button>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <button class="btn btn-custom btn-custom-secondary w-100 py-2" onclick="switchSection('standings-section')">
+            <i class="bi bi-trophy-fill text-warning"></i> View Standings
+          </button>
+        </div>
+        <div class="col-6">
+          <button class="btn btn-custom btn-custom-secondary w-100 py-2" onclick="shareWhatsAppReport()">
+            <i class="bi bi-whatsapp text-success"></i> WhatsApp Report
+          </button>
+        </div>
       </div>
 
-      <!-- Next Matches Series -->
-      <div class="section-title">
-        <span><i class="bi bi-controller text-warning me-1"></i> Match Schedule</span>
+      <!-- Series Matches List -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold m-0 text-secondary">
+          <i class="bi bi-play-circle-fill text-warning me-1"></i> Series Matches (<span id="homeMatchesCount">3</span>)
+        </h6>
       </div>
-      <div id="homeMatchesList">
+      <div id="homeMatchesContainer">
         <!-- Rendered by JS -->
       </div>
 
@@ -123,7 +123,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold m-0"><i class="bi bi-trophy-fill text-warning me-1"></i> Points Table</h5>
         <button class="btn btn-sm btn-success fw-bold" onclick="shareWhatsAppReport()">
-          <i class="bi bi-whatsapp"></i> Share Standings
+          <i class="bi bi-whatsapp"></i> Copy Report
         </button>
       </div>
 
@@ -132,7 +132,7 @@
         <!-- Injected via JS -->
       </div>
 
-      <div class="points-table-container custom-card p-0 mb-3">
+      <div class="points-table-container mb-3">
         <table class="table-custom">
           <thead>
             <tr>
@@ -151,7 +151,6 @@
         </table>
       </div>
 
-      <!-- Points Rule Note -->
       <div class="p-2 text-center rounded bg-dark border border-secondary border-opacity-25 mb-4">
         <small class="text-secondary" style="font-size: 0.72rem;">
           Official FFWS: #1=12, #2=9, #3=8, #4=7, #5=6, #6=5, #7=4, #8=3, #9=2, #10=1, #11-12=0 • +1 pt per kill
@@ -168,7 +167,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-info me-1"></i> 12 Squad Slots</h5>
         <button class="btn btn-sm btn-warning text-dark fw-bold" onclick="openRegisterModal()">
-          <i class="bi bi-plus-lg"></i> Register Slot
+          <i class="bi bi-plus-lg"></i> Book Slot
         </button>
       </div>
 
@@ -183,57 +182,88 @@
     <!-- ========================================== -->
     <section id="admin-section" class="section">
       
-      <div class="section-title">
-        <span><i class="bi bi-shield-lock-fill text-danger me-1"></i> Organizer Control</span>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-shield-lock-fill text-danger me-1"></i> Organizer Control</h5>
         <button class="btn btn-sm btn-outline-danger" onclick="resetDefaultData()">
-          <i class="bi bi-arrow-counterclockwise"></i> Reset Data
+          <i class="bi bi-arrow-counterclockwise"></i> Reset
         </button>
       </div>
 
-      <!-- 1. Room Credentials Editor -->
-      <div class="custom-card">
-        <h6 class="fw-bold mb-3"><i class="bi bi-key-fill text-warning me-1"></i> Room Credentials</h6>
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="small text-secondary">Match Map</label>
-            <input type="text" id="adminMapInput" class="form-control" placeholder="Bermuda">
+      <!-- 1. Series Matches Configuration -->
+      <div class="custom-card mb-3">
+        <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-sliders me-1"></i> Series Format & Match Count</h6>
+        <p class="text-secondary small mb-3">Select how many matches are in this tournament (1 to 6 matches):</p>
+        
+        <div class="row g-2 align-items-center mb-3">
+          <div class="col-8">
+            <select id="adminSeriesCountSelect" class="form-select" onchange="changeTournamentMatchCount(this.value)">
+              <option value="1">1 Match Tournament (Single Match)</option>
+              <option value="2">2 Matches Series</option>
+              <option value="3" selected>3 Matches Series (Standard)</option>
+              <option value="4">4 Matches Series</option>
+              <option value="5">5 Matches Series</option>
+              <option value="6">6 Matches Series (Grand Final)</option>
+            </select>
           </div>
-          <div class="col-6">
-            <label class="small text-secondary">Match Time</label>
-            <input type="text" id="adminTimeInput" class="form-control" placeholder="9:00 PM">
-          </div>
-          <div class="col-6">
-            <label class="small text-secondary">Room ID</label>
-            <input type="text" id="adminRoomIdInput" class="form-control" placeholder="FF-SQUAD-XXXX">
-          </div>
-          <div class="col-6">
-            <label class="small text-secondary">Password</label>
-            <input type="text" id="adminPassInput" class="form-control" placeholder="Pass123">
+          <div class="col-4">
+            <button class="btn btn-sm btn-primary w-100" onclick="applyMatchCount()">
+              Apply
+            </button>
           </div>
         </div>
-        <button class="btn btn-custom btn-custom-primary w-100 btn-sm" onclick="saveAdminRoomCreds()">
-          Update Room Credentials
-        </button>
+
+        <!-- Room Credentials & Map Setup for Selected Match -->
+        <div class="border-top border-secondary border-opacity-25 pt-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small fw-bold text-light">Configure Match:</span>
+            <select id="adminMatchSelector" class="form-select form-select-sm" style="width: auto;" onchange="loadAdminScores(this.value)">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="small text-secondary">Map</label>
+              <select id="adminMapSelect" class="form-select form-select-sm">
+                <option value="Bermuda">Bermuda</option>
+                <option value="Purgatory">Purgatory</option>
+                <option value="Kalahari">Kalahari</option>
+                <option value="Alpine">Alpine</option>
+                <option value="Nexterra">Nexterra</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="small text-secondary">Match Time</label>
+              <input type="text" id="adminTimeInput" class="form-control form-control-sm" placeholder="9:00 PM">
+            </div>
+            <div class="col-6">
+              <label class="small text-secondary">Room ID</label>
+              <input type="text" id="adminRoomIdInput" class="form-control form-control-sm" placeholder="FF-ROOM-XXXX">
+            </div>
+            <div class="col-6">
+              <label class="small text-secondary">Password</label>
+              <input type="text" id="adminPassInput" class="form-control form-control-sm" placeholder="Pass123">
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline-warning w-100 mt-1" onclick="saveAdminRoomCreds()">
+            Save Room ID & Map for this Match
+          </button>
+        </div>
       </div>
 
       <!-- 2. Match Score Entry -->
-      <div class="custom-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold m-0"><i class="bi bi-pencil-square text-success me-1"></i> Score Entry</h6>
-          <select id="adminMatchSelector" class="form-select form-select-sm" style="width: auto;" onchange="loadAdminScores(this.value)">
-            <!-- Populated via JS -->
-          </select>
-        </div>
-        <p class="text-secondary small mb-3">Input team Placement Rank (1-12) & Kill Count.</p>
+      <div class="custom-card mb-3">
+        <h6 class="fw-bold mb-1 text-success"><i class="bi bi-pencil-square me-1"></i> Result Entry (Ranks & Kills)</h6>
+        <p class="text-secondary small mb-3">Enter Placement Rank (1-12) & Team Kills for the active match.</p>
 
         <div class="points-table-container mb-3">
           <table class="table-custom">
             <thead>
               <tr>
-                <th style="width: 50px;">Slot</th>
+                <th style="width: 45px;">Slot</th>
                 <th>Team</th>
-                <th style="width: 100px;">Rank (1-12)</th>
-                <th style="width: 100px;">Kills</th>
+                <th style="width: 85px;">Rank</th>
+                <th style="width: 85px;">Kills</th>
                 <th>Pts</th>
               </tr>
             </thead>
@@ -244,13 +274,13 @@
         </div>
 
         <button class="btn btn-custom btn-custom-accent w-100" onclick="saveAdminScores()">
-          <i class="bi bi-save"></i> Save Match Results
+          <i class="bi bi-check2-circle"></i> Save & Recalculate Standings
         </button>
       </div>
 
       <!-- 3. Manage Teams Directly -->
       <div class="custom-card">
-        <h6 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-info me-1"></i> Manage 12 Squads</h6>
+        <h6 class="fw-bold mb-2 text-info"><i class="bi bi-person-lines-fill me-1"></i> 12 Squad Names</h6>
         <div id="adminTeamsList">
           <!-- Populated by JS -->
         </div>
@@ -260,22 +290,65 @@
 
   </main>
 
-  <!-- Register Squad Modal -->
+  <!-- ARENA X Room ID & Password Modal -->
+  <div class="modal fade" id="idPasswordModalEl" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background-color: var(--secondary-bg); border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div class="modal-header border-secondary border-opacity-25">
+          <h6 class="modal-title fw-bold"><i class="bi bi-key-fill text-warning me-1"></i> Room ID & Password</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p class="small text-secondary mb-3">Match: <strong id="modalMatchLabel" class="text-warning">Match 1 (Bermuda)</strong></p>
+          
+          <div class="my-2 p-3 text-start" style="background: var(--primary-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-secondary d-block">ROOM ID:</small>
+                <h4 id="roomIdDisplayEl" class="text-warning fw-bold m-0" style="font-family: var(--font-mono);">FF-SQUAD-88219</h4>
+              </div>
+              <button class="btn btn-sm btn-outline-warning" onclick="copyModalField('id')">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="my-2 p-3 text-start" style="background: var(--primary-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-secondary d-block">PASSWORD:</small>
+                <h4 id="roomPasswordDisplayEl" class="text-warning fw-bold m-0" style="font-family: var(--font-mono);">squad2026</h4>
+              </div>
+              <button class="btn btn-sm btn-outline-warning" onclick="copyModalField('pass')">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+
+          <p class="small text-warning mt-3 mb-0">
+            <i class="bi bi-exclamation-triangle me-1"></i> Join custom room within 10 minutes of release.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Squad Modal (NO UID, ONLY IGN) -->
   <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background-color: var(--secondary-bg); border: 1px solid var(--border-color); color: var(--text-primary);">
         <div class="modal-header border-secondary border-opacity-25">
-          <h6 class="modal-title fw-bold"><i class="bi bi-shield-check text-warning me-1"></i> Squad Registration (4 Players)</h6>
+          <h6 class="modal-title fw-bold"><i class="bi bi-shield-check text-warning me-1"></i> Register Squad (4 Players)</h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="quickRegisterForm">
             <div class="mb-2">
-              <label class="small text-secondary">Select Available Slot (1-12) *</label>
+              <label class="small text-secondary">Slot Number (1-12) *</label>
               <select id="regSlotSelect" class="form-select" required></select>
             </div>
             <div class="mb-2">
-              <label class="small text-secondary">Team / Squad Name *</label>
+              <label class="small text-secondary">Squad / Team Name *</label>
               <input type="text" id="regTeamName" class="form-control" placeholder="e.g. VIPER ESPORTS" required>
             </div>
             <div class="row g-2 mb-3">
@@ -289,39 +362,20 @@
               </div>
             </div>
 
+            <!-- 4 Players IGN (NO UID) -->
             <div class="border-top border-secondary border-opacity-25 pt-2 mb-2">
-              <span class="small fw-bold text-warning d-block mb-2">Player In-Game Names (IGN) & UIDs:</span>
-              <div class="row g-2 mb-2">
-                <div class="col-6">
-                  <input type="text" id="regP1Name" class="form-control" placeholder="Player 1 IGN" required>
-                </div>
-                <div class="col-6">
-                  <input type="text" id="regP1Uid" class="form-control" placeholder="Player 1 UID" required>
-                </div>
+              <span class="small fw-bold text-warning d-block mb-2">4 Player In-Game Names (IGN):</span>
+              <div class="mb-2">
+                <input type="text" id="regP1Name" class="form-control" placeholder="Player 1 IGN (Leader)" required>
               </div>
-              <div class="row g-2 mb-2">
-                <div class="col-6">
-                  <input type="text" id="regP2Name" class="form-control" placeholder="Player 2 IGN" required>
-                </div>
-                <div class="col-6">
-                  <input type="text" id="regP2Uid" class="form-control" placeholder="Player 2 UID" required>
-                </div>
+              <div class="mb-2">
+                <input type="text" id="regP2Name" class="form-control" placeholder="Player 2 IGN" required>
               </div>
-              <div class="row g-2 mb-2">
-                <div class="col-6">
-                  <input type="text" id="regP3Name" class="form-control" placeholder="Player 3 IGN" required>
-                </div>
-                <div class="col-6">
-                  <input type="text" id="regP3Uid" class="form-control" placeholder="Player 3 UID" required>
-                </div>
+              <div class="mb-2">
+                <input type="text" id="regP3Name" class="form-control" placeholder="Player 3 IGN" required>
               </div>
-              <div class="row g-2">
-                <div class="col-6">
-                  <input type="text" id="regP4Name" class="form-control" placeholder="Player 4 IGN" required>
-                </div>
-                <div class="col-6">
-                  <input type="text" id="regP4Uid" class="form-control" placeholder="Player 4 UID" required>
-                </div>
+              <div class="mb-2">
+                <input type="text" id="regP4Name" class="form-control" placeholder="Player 4 IGN" required>
               </div>
             </div>
 

@@ -1,18 +1,26 @@
 /**
  * FF SQUAD ARENA — CORE APP LOGIC (ARENA X STYLE)
  * Clean English UI, Fast SPA Section Switching, Mobile-First
+ * No Free Fire UID, IGN Only, Dynamic 1-6 Match Series
  */
 
 let activeStandingsTab = 'overall';
 let activeAdminMatchId = 'match-1';
 let registerModalInstance = null;
+let roomModalInstance = null;
+let activeModalMatchId = 1;
 
 // Initialize on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   // Bootstrap modal setup
-  const modalEl = document.getElementById('registerModal');
-  if (modalEl && typeof bootstrap !== 'undefined') {
-    registerModalInstance = new bootstrap.Modal(modalEl);
+  const regEl = document.getElementById('registerModal');
+  if (regEl && typeof bootstrap !== 'undefined') {
+    registerModalInstance = new bootstrap.Modal(regEl);
+  }
+
+  const roomEl = document.getElementById('idPasswordModalEl');
+  if (roomEl && typeof bootstrap !== 'undefined') {
+    roomModalInstance = new bootstrap.Modal(roomEl);
   }
 
   // Register Form Submit
@@ -37,7 +45,6 @@ window.switchSection = function(sectionId) {
   const targetSec = document.getElementById(sectionId);
   if (targetSec) targetSec.classList.add('active');
 
-  // Highlight matching nav item
   const navMap = {
     'home-section': 0,
     'standings-section': 1,
@@ -50,7 +57,6 @@ window.switchSection = function(sectionId) {
     navButtons[index].classList.add('active');
   }
 
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -70,55 +76,79 @@ function renderHome(data) {
   const booked = data.teams.filter(t => t.isBooked);
   
   const titleEl = document.getElementById('homeTourneyTitle');
-  const rulesEl = document.getElementById('homeTourneyRules');
-  const slotsCountEl = document.getElementById('homeSlotsCount');
+  const entryFeeEl = document.getElementById('homeEntryFee');
   const prizePoolEl = document.getElementById('homePrizePool');
-  const formatTextEl = document.getElementById('homeFormatText');
+  const slotsRatioEl = document.getElementById('homeSlotsRatio');
+  const matchesCountEl = document.getElementById('homeMatchesCount');
 
   if (titleEl) titleEl.textContent = data.meta.title;
-  if (rulesEl) rulesEl.textContent = data.meta.rules;
-  if (slotsCountEl) slotsCountEl.textContent = `${booked.length} / 12`;
+  if (entryFeeEl) entryFeeEl.textContent = `৳${data.meta.entryFeeBDT}`;
   if (prizePoolEl) prizePoolEl.textContent = `৳${data.meta.prizePoolBDT}`;
-  if (formatTextEl) formatTextEl.textContent = `12 Squads • ${data.matches.length} Matches`;
+  if (slotsRatioEl) slotsRatioEl.textContent = `${booked.length} / 12`;
+  if (matchesCountEl) matchesCountEl.textContent = `${data.matches.length}`;
 
-  // Room Vault
-  const creds = data.roomCredentials;
-  if (creds) {
-    const mapEl = document.getElementById('homeVaultMap');
-    const timeEl = document.getElementById('homeVaultTime');
-    const idEl = document.getElementById('homeVaultId');
-    const passEl = document.getElementById('homeVaultPass');
-
-    if (mapEl) mapEl.textContent = creds.map || 'Bermuda';
-    if (timeEl) timeEl.textContent = creds.matchTime || '9:00 PM';
-    if (idEl) idEl.textContent = creds.roomId || 'TBA';
-    if (passEl) passEl.textContent = creds.roomPassword || '••••';
-  }
-
-  // Match Schedule Cards
-  const matchesList = document.getElementById('homeMatchesList');
-  if (matchesList) {
-    matchesList.innerHTML = '';
+  // Render Series Matches List
+  const container = document.getElementById('homeMatchesContainer');
+  if (container) {
+    container.innerHTML = '';
     data.matches.forEach(m => {
       const card = document.createElement('div');
-      card.className = 'custom-card mb-2 d-flex justify-content-between align-items-center';
-      const badgeClass = m.status === 'completed' ? 'bg-success' : 'bg-primary';
+      card.className = 'tournament-card p-3 mb-2';
+      const isLive = m.status === 'live';
+      const isDone = m.status === 'completed';
+      const badgeColor = isDone ? 'bg-success' : isLive ? 'bg-danger' : 'bg-primary';
+
       card.innerHTML = `
-        <div>
-          <span class="badge ${badgeClass} mb-1">Match #${m.matchNumber}</span>
-          <h6 class="fw-bold m-0">${m.map} Map</h6>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <span class="badge ${badgeColor} me-1">Match #${m.matchNumber}</span>
+            <strong class="text-white">${m.map} Map</strong>
+          </div>
+          <small class="text-secondary"><i class="bi bi-clock me-1"></i>${m.time || '9:00 PM'}</small>
         </div>
-        <div class="text-end">
-          <span class="text-secondary small d-block">${m.status.toUpperCase()}</span>
-          <button class="btn btn-sm btn-outline-warning py-0 px-2 mt-1" onclick="switchSection('standings-section')">
-            Results
+        <div class="d-flex justify-content-between align-items-center pt-1 border-top border-secondary border-opacity-25">
+          <span class="small text-secondary">Status: <strong class="text-light">${m.status.toUpperCase()}</strong></span>
+          <button class="btn btn-sm btn-outline-warning py-1 px-3" onclick="openRoomModalForMatch(${m.matchNumber})">
+            <i class="bi bi-key-fill"></i> Room ID & Pass
           </button>
         </div>
       `;
-      matchesList.appendChild(card);
+      container.appendChild(card);
     });
   }
 }
+
+// Open Room ID & Pass Modal for specific match
+window.openRoomModalForMatch = function(matchNumber) {
+  const data = window.tourneyStorage.data;
+  if (!data) return;
+
+  const targetMatch = data.matches.find(m => m.matchNumber === matchNumber) || data.matches[0];
+  if (!targetMatch) return;
+
+  activeModalMatchId = targetMatch.matchNumber;
+
+  const labelEl = document.getElementById('modalMatchLabel');
+  const idEl = document.getElementById('roomIdDisplayEl');
+  const passEl = document.getElementById('roomPasswordDisplayEl');
+
+  if (labelEl) labelEl.textContent = `Match #${targetMatch.matchNumber} (${targetMatch.map}) • ${targetMatch.time || '9:00 PM'}`;
+  if (idEl) idEl.textContent = targetMatch.roomId || 'TBA';
+  if (passEl) passEl.textContent = targetMatch.roomPassword || '••••';
+
+  if (roomModalInstance) roomModalInstance.show();
+};
+
+window.copyModalField = function(type) {
+  const data = window.tourneyStorage.data;
+  const targetMatch = data.matches.find(m => m.matchNumber === activeModalMatchId) || data.matches[0];
+  if (!targetMatch) return;
+
+  const val = type === 'id' ? targetMatch.roomId : targetMatch.roomPassword;
+  navigator.clipboard.writeText(val || '').then(() => {
+    showToast(`Copied ${type === 'id' ? 'Room ID' : 'Password'}: ${val}`);
+  });
+};
 
 // 2. Standings (Points Table) Render
 function renderStandings(data) {
@@ -131,7 +161,7 @@ function renderStandings(data) {
     // Overall Tab
     const overallBtn = document.createElement('button');
     overallBtn.className = `btn btn-sm ${activeStandingsTab === 'overall' ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`;
-    overallBtn.textContent = 'Overall';
+    overallBtn.textContent = 'Overall Standings';
     overallBtn.onclick = () => {
       activeStandingsTab = 'overall';
       renderStandings(data);
@@ -142,7 +172,7 @@ function renderStandings(data) {
     data.matches.forEach(m => {
       const matchBtn = document.createElement('button');
       matchBtn.className = `btn btn-sm ${activeStandingsTab === m.id ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`;
-      matchBtn.textContent = `Match ${m.matchNumber}`;
+      matchBtn.textContent = `M${m.matchNumber} (${m.map})`;
       matchBtn.onclick = () => {
         activeStandingsTab = m.id;
         renderStandings(data);
@@ -176,7 +206,6 @@ function renderStandings(data) {
         tableBody.appendChild(tr);
       });
     } else {
-      // Single Match
       const currentMatch = data.matches.find(m => m.id === activeStandingsTab);
       if (!currentMatch) return;
 
@@ -234,7 +263,7 @@ function renderStandings(data) {
   }
 }
 
-// 3. Slots (1-12) Render
+// 3. Slots (1-12) Render - IGN ONLY, ZERO UID
 function renderSlots(data) {
   const container = document.getElementById('slotsListContainer');
   if (!container) return;
@@ -256,11 +285,11 @@ function renderSlots(data) {
           <div class="d-flex align-items-center gap-2 mb-1">
             <span class="slot-tag">SLOT #${team.slot}</span>
             <strong class="text-white">${team.teamName}</strong>
-            <span class="badge bg-success ms-auto" style="font-size: 0.65rem;">CONFIRMED</span>
+            <span class="badge bg-success ms-auto" style="font-size: 0.65rem;">BOOKED</span>
           </div>
           <div class="player-chips">${chips}</div>
           <small class="text-secondary d-block mt-1" style="font-size: 0.72rem;">
-            Leader: ${team.captainName} (WhatsApp: ${team.captainWhatsApp})
+            Captain: ${team.captainName} (WhatsApp: ${team.captainWhatsApp})
           </small>
         </div>
       `;
@@ -269,7 +298,7 @@ function renderSlots(data) {
         <div style="flex-grow: 1;">
           <div class="d-flex align-items-center gap-2">
             <span class="slot-tag">SLOT #${team.slot}</span>
-            <span class="text-secondary">Available Slot</span>
+            <span class="text-secondary">Available</span>
           </div>
         </div>
         <button class="btn btn-sm btn-outline-warning" onclick="openRegisterForSlot(${team.slot})">
@@ -284,17 +313,10 @@ function renderSlots(data) {
 
 // 4. Admin Render
 function renderAdmin(data) {
-  // Fill Room Editor inputs
-  if (data.roomCredentials) {
-    const mapInp = document.getElementById('adminMapInput');
-    const timeInp = document.getElementById('adminTimeInput');
-    const idInp = document.getElementById('adminRoomIdInput');
-    const passInp = document.getElementById('adminPassInput');
-
-    if (mapInp) mapInp.value = data.roomCredentials.map || 'Bermuda';
-    if (timeInp) timeInp.value = data.roomCredentials.matchTime || '9:00 PM';
-    if (idInp) idInp.value = data.roomCredentials.roomId || '';
-    if (passInp) passInp.value = data.roomCredentials.roomPassword || '';
+  // Sync series count select
+  const countSelect = document.getElementById('adminSeriesCountSelect');
+  if (countSelect) {
+    countSelect.value = `${data.matches.length}`;
   }
 
   // Populate Admin Match Selector
@@ -304,15 +326,69 @@ function renderAdmin(data) {
     data.matches.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.id;
-      opt.textContent = `Match ${m.matchNumber} (${m.map}) - ${m.status}`;
+      opt.textContent = `Match #${m.matchNumber} (${m.map})`;
       if (m.id === activeAdminMatchId) opt.selected = true;
       selector.appendChild(opt);
     });
   }
 
+  // Load selected match details into inputs
+  const currentMatch = data.matches.find(m => m.id === activeAdminMatchId) || data.matches[0];
+  if (currentMatch) {
+    activeAdminMatchId = currentMatch.id;
+    const mapSelect = document.getElementById('adminMapSelect');
+    const timeInp = document.getElementById('adminTimeInput');
+    const idInp = document.getElementById('adminRoomIdInput');
+    const passInp = document.getElementById('adminPassInput');
+
+    if (mapSelect) mapSelect.value = currentMatch.map || 'Bermuda';
+    if (timeInp) timeInp.value = currentMatch.time || '9:00 PM';
+    if (idInp) idInp.value = currentMatch.roomId || '';
+    if (passInp) passInp.value = currentMatch.roomPassword || '';
+  }
+
   loadAdminScores(activeAdminMatchId);
   renderAdminTeams(data.teams);
 }
+
+// Dynamic Series Matches Count Changer (1 to 6)
+window.changeTournamentMatchCount = function(count) {
+  // Triggered on select change
+};
+
+window.applyMatchCount = function() {
+  const count = parseInt(document.getElementById('adminSeriesCountSelect').value, 10);
+  const data = window.tourneyStorage.data;
+  if (!count || count < 1 || count > 6) return;
+
+  const defaultMaps = ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'Nexterra', 'Bermuda'];
+  const newMatches = [];
+
+  for (let i = 1; i <= count; i++) {
+    const existing = data.matches.find(m => m.matchNumber === i);
+    if (existing) {
+      newMatches.push(existing);
+    } else {
+      newMatches.push({
+        id: `match-${i}`,
+        matchNumber: i,
+        map: defaultMaps[(i - 1) % defaultMaps.length],
+        time: `${8 + i}:00 PM`,
+        roomId: `FF-SQUAD-${Math.floor(10000 + Math.random() * 90000)}`,
+        roomPassword: `pass${i}2026`,
+        status: 'upcoming',
+        results: {}
+      });
+    }
+  }
+
+  data.matches = newMatches;
+  data.meta.totalMatches = count;
+  activeAdminMatchId = newMatches[0].id;
+
+  window.tourneyStorage.sync(data);
+  showToast(`Tournament updated to ${count} Matches Series!`);
+};
 
 // Load Scores for selected match in Admin
 window.loadAdminScores = function(matchId) {
@@ -321,13 +397,25 @@ window.loadAdminScores = function(matchId) {
   if (!data) return;
 
   const currentMatch = data.matches.find(m => m.id === matchId);
+  if (currentMatch) {
+    const mapSelect = document.getElementById('adminMapSelect');
+    const timeInp = document.getElementById('adminTimeInput');
+    const idInp = document.getElementById('adminRoomIdInput');
+    const passInp = document.getElementById('adminPassInput');
+
+    if (mapSelect) mapSelect.value = currentMatch.map || 'Bermuda';
+    if (timeInp) timeInp.value = currentMatch.time || '9:00 PM';
+    if (idInp) idInp.value = currentMatch.roomId || '';
+    if (passInp) passInp.value = currentMatch.roomPassword || '';
+  }
+
   const tbody = document.getElementById('adminScoreTableBody');
-  if (!tbody) return;
+  if (!tbody || !currentMatch) return;
   tbody.innerHTML = '';
 
   data.teams.forEach(t => {
     const tr = document.createElement('tr');
-    const existing = currentMatch && currentMatch.results ? currentMatch.results[t.id] : null;
+    const existing = currentMatch.results ? currentMatch.results[t.id] : null;
     const rankVal = existing ? existing.rank : '';
     const killsVal = existing ? existing.kills : '0';
 
@@ -354,7 +442,7 @@ window.loadAdminScores = function(matchId) {
   });
 };
 
-// Save Admin Scores
+// Save Admin Scores for the active match
 window.saveAdminScores = function() {
   const data = window.tourneyStorage.data;
   const currentMatch = data.matches.find(m => m.id === activeAdminMatchId);
@@ -377,21 +465,22 @@ window.saveAdminScores = function() {
 
   currentMatch.status = 'completed';
   window.tourneyStorage.sync(data);
-  showToast(`Match #${currentMatch.matchNumber} results saved & updated!`);
+  showToast(`Match #${currentMatch.matchNumber} results saved & standings updated!`);
 };
 
-// Save Admin Room Credentials
+// Save Admin Room Credentials for the selected match
 window.saveAdminRoomCreds = function() {
   const data = window.tourneyStorage.data;
-  data.roomCredentials = {
-    map: document.getElementById('adminMapInput').value.trim() || 'Bermuda',
-    matchTime: document.getElementById('adminTimeInput').value.trim() || '9:00 PM',
-    roomId: document.getElementById('adminRoomIdInput').value.trim(),
-    roomPassword: document.getElementById('adminPassInput').value.trim(),
-    isUnlocked: true
-  };
+  const currentMatch = data.matches.find(m => m.id === activeAdminMatchId);
+  if (!currentMatch) return;
+
+  currentMatch.map = document.getElementById('adminMapSelect').value;
+  currentMatch.time = document.getElementById('adminTimeInput').value.trim() || '9:00 PM';
+  currentMatch.roomId = document.getElementById('adminRoomIdInput').value.trim();
+  currentMatch.roomPassword = document.getElementById('adminPassInput').value.trim();
+
   window.tourneyStorage.sync(data);
-  showToast('Room ID & Password updated!');
+  showToast(`Room ID & Password saved for Match #${currentMatch.matchNumber}!`);
 };
 
 // Render Admin Teams List
@@ -429,7 +518,7 @@ window.saveAdminSingleTeam = function(teamId) {
   showToast(`Slot #${target.slot} updated!`);
 };
 
-// Slot Registration Form Handlers
+// Slot Registration Form Handlers (NO UID, ONLY IGN)
 function populateRegisterSlotOptions(data, preselectSlot = null) {
   const select = document.getElementById('regSlotSelect');
   if (!select) return;
@@ -469,13 +558,9 @@ function handleRegistrationSubmit(e) {
   const captainPhone = document.getElementById('regCaptainPhone').value.trim();
 
   const p1Name = document.getElementById('regP1Name').value.trim();
-  const p1Uid = document.getElementById('regP1Uid').value.trim();
   const p2Name = document.getElementById('regP2Name').value.trim();
-  const p2Uid = document.getElementById('regP2Uid').value.trim();
   const p3Name = document.getElementById('regP3Name').value.trim();
-  const p3Uid = document.getElementById('regP3Uid').value.trim();
   const p4Name = document.getElementById('regP4Name').value.trim();
-  const p4Uid = document.getElementById('regP4Uid').value.trim();
 
   const data = window.tourneyStorage.data;
   const target = data.teams.find(t => t.slot === slotNumber);
@@ -486,10 +571,10 @@ function handleRegistrationSubmit(e) {
   target.captainWhatsApp = captainPhone;
   target.isBooked = true;
   target.players = [
-    { name: p1Name, uid: p1Uid, isLeader: true },
-    { name: p2Name, uid: p2Uid, isLeader: false },
-    { name: p3Name, uid: p3Uid, isLeader: false },
-    { name: p4Name, uid: p4Uid, isLeader: false }
+    { name: p1Name, isLeader: true },
+    { name: p2Name, isLeader: false },
+    { name: p3Name, isLeader: false },
+    { name: p4Name, isLeader: false }
   ];
 
   window.tourneyStorage.sync(data);
@@ -499,16 +584,6 @@ function handleRegistrationSubmit(e) {
   showToast(`Team ${teamName} registered in Slot #${slotNumber}!`);
   switchSection('slots-section');
 }
-
-// 1-Click Copy Credential
-window.copyCreds = function(type) {
-  const data = window.tourneyStorage.data;
-  if (!data || !data.roomCredentials) return;
-  const val = type === 'id' ? data.roomCredentials.roomId : data.roomCredentials.roomPassword;
-  navigator.clipboard.writeText(val).then(() => {
-    showToast(`Copied: ${val}`);
-  });
-};
 
 // 1-Click WhatsApp Share
 window.shareWhatsAppReport = function() {

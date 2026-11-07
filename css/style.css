@@ -1,7 +1,6 @@
 /* ==============================================================================
-   FF SQUAD ARENA — ARENA X STYLE (LIGHTWEIGHT & EASY TO USE)
-   Stack: Bootstrap 5 + Bootstrap Icons + Poppins
-   Aesthetic: Slate 900 / Slate 800 / Yellow Accent (#FACC15) / Blue Accent (#3B82F6)
+   FF SQUAD ARENA — EXACT ARENA X OBSIDIAN THEME
+   Pure CSS, Bootstrap 5 + Bootstrap Icons + Poppins Font
    ============================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -54,7 +53,7 @@ a:hover {
   color: #FBBF24;
 }
 
-/* Header */
+/* App Header */
 .app-header {
   position: fixed;
   top: 0;
@@ -104,12 +103,6 @@ a:hover {
   text-transform: uppercase;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .header-badge-tag {
   background: rgba(59, 130, 246, 0.15);
   border: 1px solid rgba(59, 130, 246, 0.35);
@@ -120,7 +113,7 @@ a:hover {
   border-radius: 20px;
 }
 
-/* Bottom Navigation */
+/* Bottom Navigation Bar */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -163,11 +156,8 @@ a:hover {
   color: var(--accent-color);
   font-weight: 700;
 }
-.nav-item:hover {
-  color: #F8FAFC;
-}
 
-/* SPA Sections */
+/* Sections */
 .section {
   display: none;
   animation: fadeIn 0.2s ease-in-out;
@@ -181,32 +171,83 @@ a:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Custom Cards */
-.custom-card {
+/* ARENA X Tournament Card */
+.tournament-card {
   background-color: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tournament-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tournament-card-tags {
+  display: flex;
+  gap: 6px;
+}
+.tournament-card-tags span {
+  background-color: var(--primary-bg);
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
   border: 1px solid var(--border-color);
 }
 
-.section-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.tournament-card-timer {
+  background-color: rgba(250, 204, 21, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
-/* Buttons */
+.tournament-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.tournament-card-info {
+  display: flex;
+  justify-content: space-between;
+  background: var(--primary-bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-color);
+}
+.tournament-card-info .info-item small {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  display: block;
+}
+.tournament-card-info .info-item strong {
+  font-size: 0.92rem;
+}
+
+.tournament-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .btn-custom {
   border-radius: 6px;
   font-size: 0.88rem;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border: none;
   display: inline-flex;
   align-items: center;
@@ -214,14 +255,6 @@ a:hover {
   gap: 6px;
   transition: all 0.2s ease;
   cursor: pointer;
-}
-
-.btn-custom-primary {
-  background-color: var(--primary-button-bg);
-  color: #fff;
-}
-.btn-custom-primary:hover {
-  background-color: #2563EB;
 }
 
 .btn-custom-accent {
@@ -242,42 +275,12 @@ a:hover {
   background-color: #334155;
 }
 
-.btn-custom-success {
-  background-color: var(--success-color);
-  color: #fff;
-}
-.btn-custom-success:hover {
-  background-color: #059669;
-}
-
-/* Room Vault Box */
-.vault-box {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-  border: 1px solid rgba(250, 204, 21, 0.3);
-  border-radius: 10px;
-  padding: 14px 16px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.vault-badge {
-  background: rgba(250, 204, 21, 0.15);
-  color: var(--accent-color);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
 /* Points Table */
 .points-table-container {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
 .table-custom {
@@ -299,7 +302,7 @@ a:hover {
 }
 
 .table-custom td {
-  padding: 12px;
+  padding: 11px 12px;
   border-bottom: 1px solid rgba(51, 65, 85, 0.6);
   white-space: nowrap;
 }
@@ -323,7 +326,7 @@ a:hover {
 .rank-3 { background: #F59E0B; color: #fff; }
 .rank-other { background: #334155; color: #94A3B8; }
 
-/* Slot Cards */
+/* Slot Row Cards */
 .slot-row-card {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -346,10 +349,10 @@ a:hover {
 .slot-tag {
   background-color: #111827;
   border: 1px solid var(--border-color);
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--accent-color);
 }
@@ -358,12 +361,12 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 5px;
 }
 .player-chip {
   background: #111827;
   border: 1px solid var(--border-color);
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
   font-size: 0.72rem;
   color: var(--text-secondary);

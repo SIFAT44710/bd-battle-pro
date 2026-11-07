@@ -4,7 +4,7 @@
  * Features:
  *  - Real-time Cloud Sync with Firestore / Realtime Database
  *  - Automatic LocalStorage Fallback Layer for offline/fast caching
- *  - 12 Squads / 48 Players tournament schema
+ *  - 12 Squads / 48 Players tournament schema (No UID, Pure IGN)
  */
 
 const LOCAL_STORAGE_KEY = 'ff_squad_arena_data_v1';
@@ -17,21 +17,12 @@ const DEFAULT_TOURNAMENT_DATA = {
     organizer: 'Sifat Bin Shahjahan',
     contactWhatsApp: '01791357521',
     format: '12 Teams / 48 Players',
-    entryFeeBDT: 100, // ৳100 per squad (৳25/player)
+    entryFeeBDT: 100,
     prizePoolBDT: 1000,
-    currentMatchIndex: 0,
     totalMatches: 3,
-    rules: '1. No emulators allowed (Mobile only).\n2. Official FFWS Points system.\n3. Squad must join custom room within 10 minutes of ID release.'
+    rules: 'Mobile only. Official FFWS Points system. 4 players per squad.'
   },
-  roomCredentials: {
-    matchNumber: 1,
-    roomId: 'FF-SQUAD-88219',
-    roomPassword: 'squad2026',
-    matchTime: '9:00 PM',
-    map: 'Bermuda',
-    isUnlocked: true
-  },
-  // 12 Squad Slots
+  // 12 Squad Slots (No UID, IGN only)
   teams: [
     {
       id: 'team-1',
@@ -41,10 +32,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01711223344',
       isBooked: true,
       players: [
-        { name: '亗TANVIR亗', uid: '2948201948', isLeader: true },
-        { name: 'VIPER_SHADOW', uid: '3849102941', isLeader: false },
-        { name: 'VIPER_NINJA', uid: '1948204910', isLeader: false },
-        { name: 'VIPER_BOT', uid: '9284019284', isLeader: false }
+        { name: '亗TANVIR亗', isLeader: true },
+        { name: 'VIPER_SHADOW', isLeader: false },
+        { name: 'VIPER_NINJA', isLeader: false },
+        { name: 'VIPER_BOT', isLeader: false }
       ]
     },
     {
@@ -55,10 +46,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01811223355',
       isBooked: true,
       players: [
-        { name: 'MAFIA_RAKIB', uid: '3184920491', isLeader: true },
-        { name: 'MAFIA_BOSS', uid: '2948194820', isLeader: false },
-        { name: 'MAFIA_SNIPER', uid: '8392019482', isLeader: false },
-        { name: 'MAFIA_GOD', uid: '4829104928', isLeader: false }
+        { name: 'MAFIA_RAKIB', isLeader: true },
+        { name: 'MAFIA_BOSS', isLeader: false },
+        { name: 'MAFIA_SNIPER', isLeader: false },
+        { name: 'MAFIA_GOD', isLeader: false }
       ]
     },
     {
@@ -69,10 +60,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01911223366',
       isBooked: true,
       players: [
-        { name: '7X_FAHIM', uid: '7482910492', isLeader: true },
-        { name: '7X_THUNDER', uid: '2948192048', isLeader: false },
-        { name: '7X_STORM', uid: '3948201948', isLeader: false },
-        { name: '7X_BLAZE', uid: '8492019482', isLeader: false }
+        { name: '7X_FAHIM', isLeader: true },
+        { name: '7X_THUNDER', isLeader: false },
+        { name: '7X_STORM', isLeader: false },
+        { name: '7X_BLAZE', isLeader: false }
       ]
     },
     {
@@ -83,10 +74,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01611223377',
       isBooked: true,
       players: [
-        { name: 'DEVIL_ALAMIN', uid: '9482019482', isLeader: true },
-        { name: 'DEVIL_RUSHER', uid: '8392019482', isLeader: false },
-        { name: 'DEVIL_KILLER', uid: '4829104928', isLeader: false },
-        { name: 'DEVIL_FIRE', uid: '2948194820', isLeader: false }
+        { name: 'DEVIL_ALAMIN', isLeader: true },
+        { name: 'DEVIL_RUSHER', isLeader: false },
+        { name: 'DEVIL_KILLER', isLeader: false },
+        { name: 'DEVIL_FIRE', isLeader: false }
       ]
     },
     {
@@ -97,10 +88,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01511223388',
       isBooked: true,
       players: [
-        { name: 'TITAN_SHAKIB', uid: '3948201948', isLeader: true },
-        { name: 'TITAN_SNIPER', uid: '8492019482', isLeader: false },
-        { name: 'TITAN_FLASH', uid: '2948192048', isLeader: false },
-        { name: 'TITAN_DEAD', uid: '7482910492', isLeader: false }
+        { name: 'TITAN_SHAKIB', isLeader: true },
+        { name: 'TITAN_SNIPER', isLeader: false },
+        { name: 'TITAN_FLASH', isLeader: false },
+        { name: 'TITAN_DEAD', isLeader: false }
       ]
     },
     {
@@ -111,10 +102,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01722334455',
       isBooked: true,
       players: [
-        { name: 'KNIGHT_MEHEDI', uid: '1948204910', isLeader: true },
-        { name: 'KNIGHT_DRAGON', uid: '3849102941', isLeader: false },
-        { name: 'KNIGHT_CYBORG', uid: '2948201948', isLeader: false },
-        { name: 'KNIGHT_FROST', uid: '9284019284', isLeader: false }
+        { name: 'KNIGHT_MEHEDI', isLeader: true },
+        { name: 'KNIGHT_DRAGON', isLeader: false },
+        { name: 'KNIGHT_CYBORG', isLeader: false },
+        { name: 'KNIGHT_FROST', isLeader: false }
       ]
     },
     {
@@ -125,10 +116,10 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01822334466',
       isBooked: true,
       players: [
-        { name: 'CYBER_NAYEEM', uid: '2948194820', isLeader: true },
-        { name: 'CYBER_ZERO', uid: '3184920491', isLeader: false },
-        { name: 'CYBER_VIPER', uid: '8392019482', isLeader: false },
-        { name: 'CYBER_APEX', uid: '4829104928', isLeader: false }
+        { name: 'CYBER_NAYEEM', isLeader: true },
+        { name: 'CYBER_ZERO', isLeader: false },
+        { name: 'CYBER_VIPER', isLeader: false },
+        { name: 'CYBER_APEX', isLeader: false }
       ]
     },
     {
@@ -139,13 +130,13 @@ const DEFAULT_TOURNAMENT_DATA = {
       captainWhatsApp: '01922334477',
       isBooked: true,
       players: [
-        { name: 'SILENT_SOHAN', uid: '8492019482', isLeader: true },
-        { name: 'SILENT_GHOST', uid: '7482910492', isLeader: false },
-        { name: 'SILENT_SMOKE', uid: '2948192048', isLeader: false },
-        { name: 'SILENT_VENOM', uid: '3948201948', isLeader: false }
+        { name: 'SILENT_SOHAN', isLeader: true },
+        { name: 'SILENT_GHOST', isLeader: false },
+        { name: 'SILENT_SMOKE', isLeader: false },
+        { name: 'SILENT_VENOM', isLeader: false }
       ]
     },
-    // Slots 9, 10, 11, 12 Open for Registration / Admin Assignment
+    // Slots 9, 10, 11, 12 Open
     {
       id: 'team-9',
       slot: 9,
@@ -183,12 +174,15 @@ const DEFAULT_TOURNAMENT_DATA = {
       players: []
     }
   ],
-  // Dynamic Series Matches
+  // Dynamic Series Matches (Each with its own Map, Room ID, Password, and Results)
   matches: [
     {
       id: 'match-1',
       matchNumber: 1,
       map: 'Bermuda',
+      time: '8:30 PM',
+      roomId: 'FF-SQUAD-88219',
+      roomPassword: 'rush2026',
       status: 'completed',
       results: {
         'team-1': { rank: 1, kills: 11 },
@@ -205,6 +199,9 @@ const DEFAULT_TOURNAMENT_DATA = {
       id: 'match-2',
       matchNumber: 2,
       map: 'Purgatory',
+      time: '9:15 PM',
+      roomId: 'FF-SQUAD-99104',
+      roomPassword: 'purg2026',
       status: 'completed',
       results: {
         'team-2': { rank: 1, kills: 9 },
@@ -221,6 +218,9 @@ const DEFAULT_TOURNAMENT_DATA = {
       id: 'match-3',
       matchNumber: 3,
       map: 'Kalahari',
+      time: '10:00 PM',
+      roomId: 'FF-SQUAD-10394',
+      roomPassword: 'kala2026',
       status: 'upcoming',
       results: {}
     }
@@ -276,13 +276,10 @@ class TournamentStorage {
           firebase.initializeApp(window.FIREBASE_CONFIG);
         }
 
-        // Try Firestore or Realtime Database
         if (firebase.firestore) {
           this.firestoreDb = firebase.firestore();
           this.isFirebaseReady = true;
-          console.log('🔥 Firebase Firestore connected successfully!');
 
-          // Listen for live snapshot updates
           this.firestoreDb.collection('tournaments').doc('current').onSnapshot(doc => {
             if (doc.exists) {
               const val = doc.data();
@@ -290,43 +287,23 @@ class TournamentStorage {
               localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(val));
               this.notify(val);
             } else {
-              // Initialize doc if empty
               this.firestoreDb.collection('tournaments').doc('current').set(this.data);
-            }
-          });
-        } else if (firebase.database) {
-          this.rtdb = firebase.database();
-          this.isFirebaseReady = true;
-          console.log('🔥 Firebase Realtime Database connected successfully!');
-
-          this.rtdb.ref('squad_tournament').on('value', snapshot => {
-            const val = snapshot.val();
-            if (val) {
-              this.data = val;
-              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(val));
-              this.notify(val);
             }
           });
         }
       } catch (err) {
         console.warn('Firebase online connection fallback to LocalStorage:', err);
       }
-    } else {
-      console.log('⚡ LocalStorage mode active.');
     }
   }
 
   async sync(newData) {
     this.saveLocal(newData);
-    if (this.isFirebaseReady) {
+    if (this.isFirebaseReady && this.firestoreDb) {
       try {
-        if (this.firestoreDb) {
-          await this.firestoreDb.collection('tournaments').doc('current').set(newData);
-        } else if (this.rtdb) {
-          await this.rtdb.ref('squad_tournament').set(newData);
-        }
+        await this.firestoreDb.collection('tournaments').doc('current').set(newData);
       } catch (e) {
-        console.warn('Firebase remote write notice (local saved):', e);
+        console.warn('Firebase write notice:', e);
       }
     }
   }
