@@ -1,14 +1,15 @@
 /**
  * FF SQUAD ARENA — FIREBASE & LOCAL STORAGE ENGINE
+ * Connected to Firebase Project: ff-squad-arena-bd (Owner: rifatsifat1010@gmail.com)
  * Features:
- *  - Works 100% out-of-the-box using LocalStorage fallback
- *  - Real-time sync ready when Firebase config keys are plugged in
- *  - Supports Free Fire 12-Squad tournament schema
+ *  - Real-time Cloud Sync with Firestore / Realtime Database
+ *  - Automatic LocalStorage Fallback Layer for offline/fast caching
+ *  - 12 Squads / 48 Players tournament schema
  */
 
 const LOCAL_STORAGE_KEY = 'ff_squad_arena_data_v1';
 
-// Default Demo Tournament Schema
+// Default Tournament Schema
 const DEFAULT_TOURNAMENT_DATA = {
   meta: {
     id: 'squad-tourney-01',
@@ -182,7 +183,7 @@ const DEFAULT_TOURNAMENT_DATA = {
       players: []
     }
   ],
-  // Dynamic Series Matches (e.g. 3 Matches: Bermuda, Purgatory, Kalahari)
+  // Dynamic Series Matches
   matches: [
     {
       id: 'match-1',
@@ -190,14 +191,14 @@ const DEFAULT_TOURNAMENT_DATA = {
       map: 'Bermuda',
       status: 'completed',
       results: {
-        'team-1': { rank: 1, kills: 11 }, // Booyah! 12 + 11 = 23 pts
-        'team-2': { rank: 2, kills: 7 },  // 9 + 7 = 16 pts
-        'team-3': { rank: 3, kills: 4 },  // 8 + 4 = 12 pts
-        'team-4': { rank: 4, kills: 5 },  // 7 + 5 = 12 pts
-        'team-5': { rank: 5, kills: 2 },  // 6 + 2 = 8 pts
-        'team-6': { rank: 6, kills: 3 },  // 5 + 3 = 8 pts
-        'team-7': { rank: 7, kills: 1 },  // 4 + 1 = 5 pts
-        'team-8': { rank: 8, kills: 2 }   // 3 + 2 = 5 pts
+        'team-1': { rank: 1, kills: 11 },
+        'team-2': { rank: 2, kills: 7 },
+        'team-3': { rank: 3, kills: 4 },
+        'team-4': { rank: 4, kills: 5 },
+        'team-5': { rank: 5, kills: 2 },
+        'team-6': { rank: 6, kills: 3 },
+        'team-7': { rank: 7, kills: 1 },
+        'team-8': { rank: 8, kills: 2 }
       }
     },
     {
@@ -206,14 +207,14 @@ const DEFAULT_TOURNAMENT_DATA = {
       map: 'Purgatory',
       status: 'completed',
       results: {
-        'team-2': { rank: 1, kills: 9 },  // Booyah! 12 + 9 = 21 pts
-        'team-3': { rank: 2, kills: 6 },  // 9 + 6 = 15 pts
-        'team-1': { rank: 3, kills: 8 },  // 8 + 8 = 16 pts
-        'team-5': { rank: 4, kills: 4 },  // 7 + 4 = 11 pts
-        'team-4': { rank: 5, kills: 3 },  // 6 + 3 = 9 pts
-        'team-8': { rank: 6, kills: 4 },  // 5 + 4 = 9 pts
-        'team-6': { rank: 7, kills: 2 },  // 4 + 2 = 6 pts
-        'team-7': { rank: 8, kills: 0 }   // 3 + 0 = 3 pts
+        'team-2': { rank: 1, kills: 9 },
+        'team-3': { rank: 2, kills: 6 },
+        'team-1': { rank: 3, kills: 8 },
+        'team-5': { rank: 4, kills: 4 },
+        'team-4': { rank: 5, kills: 3 },
+        'team-8': { rank: 6, kills: 4 },
+        'team-6': { rank: 7, kills: 2 },
+        'team-7': { rank: 8, kills: 0 }
       }
     },
     {
@@ -227,16 +228,17 @@ const DEFAULT_TOURNAMENT_DATA = {
 };
 
 // ==============================================================================
-// FIREBASE CONFIGURATION (PLUG IN YOUR KEYS HERE OR LOAD DYNAMICALLY)
+// OFFICIAL FIREBASE CONFIGURATION (LIVE & LINKED TO rifatsifat1010@gmail.com)
 // ==============================================================================
 window.FIREBASE_CONFIG = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com"
+  projectId: "ff-squad-arena-bd",
+  appId: "1:604500327184:web:2eae6bfddea7ed2ae74395",
+  storageBucket: "ff-squad-arena-bd.firebasestorage.app",
+  apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
+  authDomain: "ff-squad-arena-bd.firebaseapp.com",
+  messagingSenderId: "604500327184",
+  projectNumber: "604500327184",
+  version: "2"
 };
 
 class TournamentStorage {
@@ -268,19 +270,36 @@ class TournamentStorage {
   }
 
   initFirebase() {
-    // If Firebase CDN is loaded and config has valid projectId
-    if (typeof firebase !== 'undefined' && window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId !== "YOUR_PROJECT_ID") {
+    if (typeof firebase !== 'undefined' && window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey) {
       try {
         if (!firebase.apps.length) {
           firebase.initializeApp(window.FIREBASE_CONFIG);
         }
-        this.db = firebase.database ? firebase.database() : null;
-        this.isFirebaseReady = true;
-        console.log('🔥 Firebase initialized successfully!');
 
-        // Listen for live updates
-        if (this.db) {
-          this.db.ref('squad_tournament').on('value', snapshot => {
+        // Try Firestore or Realtime Database
+        if (firebase.firestore) {
+          this.firestoreDb = firebase.firestore();
+          this.isFirebaseReady = true;
+          console.log('🔥 Firebase Firestore connected successfully!');
+
+          // Listen for live snapshot updates
+          this.firestoreDb.collection('tournaments').doc('current').onSnapshot(doc => {
+            if (doc.exists) {
+              const val = doc.data();
+              this.data = val;
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(val));
+              this.notify(val);
+            } else {
+              // Initialize doc if empty
+              this.firestoreDb.collection('tournaments').doc('current').set(this.data);
+            }
+          });
+        } else if (firebase.database) {
+          this.rtdb = firebase.database();
+          this.isFirebaseReady = true;
+          console.log('🔥 Firebase Realtime Database connected successfully!');
+
+          this.rtdb.ref('squad_tournament').on('value', snapshot => {
             const val = snapshot.val();
             if (val) {
               this.data = val;
@@ -290,20 +309,24 @@ class TournamentStorage {
           });
         }
       } catch (err) {
-        console.warn('Firebase init skipped, using LocalStorage engine.', err);
+        console.warn('Firebase online connection fallback to LocalStorage:', err);
       }
     } else {
-      console.log('⚡ LocalStorage Mode Active (Super-fast & Offline-ready). Firebase config can be connected anytime.');
+      console.log('⚡ LocalStorage mode active.');
     }
   }
 
   async sync(newData) {
     this.saveLocal(newData);
-    if (this.isFirebaseReady && this.db) {
+    if (this.isFirebaseReady) {
       try {
-        await this.db.ref('squad_tournament').set(newData);
+        if (this.firestoreDb) {
+          await this.firestoreDb.collection('tournaments').doc('current').set(newData);
+        } else if (this.rtdb) {
+          await this.rtdb.ref('squad_tournament').set(newData);
+        }
       } catch (e) {
-        console.error('Firebase sync failed', e);
+        console.warn('Firebase remote write notice (local saved):', e);
       }
     }
   }
