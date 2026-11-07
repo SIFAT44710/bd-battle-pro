@@ -12,7 +12,7 @@ const ATTACK_BACKLASH_GUARD = `
   'use strict';
 
   // 1. DOMAIN INTEGRITY LOCK (Self-destructs if cloned/run offline on attacker machine)
-  var allowedHosts = ['ff-squad-arena-bd.web.app', 'ff-squad-arena-bd.firebaseapp.com'];
+  var allowedHosts = ['ff-squad-arena-bd.web.app', 'ff-squad-arena-bd.firebaseapp.com', 'localhost', '127.0.0.1'];
   var currentHost = window.location.hostname;
   if (currentHost && allowedHosts.indexOf(currentHost) === -1) {
     while (true) {
