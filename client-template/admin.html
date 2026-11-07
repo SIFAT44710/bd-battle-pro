@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ARENA X — Client Edition Admin HQ</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Google Fonts: Hind Siliguri, Inter & Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        screens: {
+          'xs': '420px',
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+        },
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF5722',
+              orangeHover: '#E64A19',
+              charcoal: '#212529',
+              dark: '#111827',
+              bgGray: '#F8F9FA',
+              borderGray: '#E5E7EB',
+              muted: '#6C757D'
+            }
+          },
+          fontFamily: {
+            sans: ['Hind Siliguri', 'Inter', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #F8F9FA; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
+
+    .custom-modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1050;
+      backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-box {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 24px 20px;
+      z-index: 1060;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col pb-12 select-none overflow-x-hidden">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-3 right-3 left-3 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- AUTH GUARD LOGIN SCREEN (Shown if not logged in as authorized owner) -->
+  <div id="adminAuthScreen" class="fixed inset-0 z-50 bg-[#111827] flex items-center justify-center p-4">
+    <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-5 animate-fade-in">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white text-3xl font-extrabold mx-auto shadow-lg shadow-orange-500/30">
+        X
+      </div>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight" id="authTitle">ARENA X — OWNER ACCESS</h2>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">শুধুমাত্র প্ল্যাটফর্ম ওনারের অনুমোদিত জিমেইল দিয়ে প্রবেশযোগ্য।</p>
+      </div>
+
+      <div class="p-3 bg-orange-50 border border-orange-200 rounded-xl text-xs text-[#FF5722] font-medium text-left flex items-start gap-2">
+        <i class="bi bi-shield-lock-fill text-base shrink-0 mt-0.5"></i>
+        <span>আপনার জিমেইলটি <code class="font-mono bg-white px-1 py-0.5 rounded border border-orange-200 font-bold">siteConfig.js</code> ফাইলের অনুমোদন তালিকায় থাকতে হবে।</span>
+      </div>
+
+      <button type="button" onclick="window.handleGoogleSignIn()" id="googleLoginBtn" class="w-full py-3.5 px-4 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-3">
+        <svg class="w-5 h-5" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Sign in with Google</span>
+      </button>
+
+      <p id="authErrorMsg" class="text-xs text-red-600 font-bold hidden"></p>
+
+      <div class="text-[11px] text-gray-400">
+        Protected by Firebase Auth & ARENA X Security Engine
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATED ADMIN HQ INTERFACE -->
+  <div id="adminMainInterface" class="hidden">
+    
+    <!-- Top Announcement Bar -->
+    <div class="bg-[#FF5722] text-white px-4 py-2 text-xs md:text-sm font-medium shadow-sm w-full">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 overflow-hidden whitespace-nowrap min-w-0">
+          <span class="truncate">
+            🔥 ARENA X OWNER HQ • Logged in as: <span id="authEmailDisplay" class="font-bold underline"></span>
+          </span>
+        </div>
+        <button onclick="window.handleSignOut()" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
+          <i class="bi bi-box-arrow-right"></i> Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-lg sm:text-xl shadow-md shrink-0">
+            X
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-base sm:text-xl tracking-tight text-gray-900 leading-none">ARENA X</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase shrink-0 leading-none">
+                OWNER CONTROL
+              </span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-gray-500 font-medium hidden xs:block truncate leading-tight mt-0.5">Match Controller & Realtime Financial Ledger</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="./player.html" target="_blank" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors flex items-center gap-1">
+            <span>Player View</span> ↗
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 w-full space-y-4 sm:space-y-6">
+
+      <!-- ========================================== -->
+      <!-- VIEW 1: MATCHES LIST (STACKED FEED)        -->
+      <!-- ========================================== -->
+      <section id="adminMatchesListView" class="space-y-4 sm:space-y-6">
+        
+        <!-- Top Action Bar -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FF5722] animate-pulse shrink-0"></span>
+              <h1 class="text-base sm:text-xl font-extrabold text-gray-900 truncate">ম্যাচ কন্ট্রোল ও স্কোয়াড তালিকা</h1>
+            </div>
+            <p class="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
+              প্রতিটি ম্যাচের রুম আইডি, পাসওয়ার্ড ও ১২টি স্কোয়াড স্লট ম্যানেজ করতে ম্যাচ কার্ডে ক্লিক করুন।
+            </p>
+          </div>
+          <button onclick="window.openCreateMatchModal()" class="self-start sm:self-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#FF5722] hover:bg-[#E64A19] text-white shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+            <i class="bi bi-plus-circle-fill"></i> New Match (নতুন ম্যাচ)
+          </button>
+        </div>
+
+        <!-- Container for vertically rendered match cards -->
+        <div id="adminMatchesListContainer" class="space-y-4 sm:space-y-5">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 2: MATCH DETAIL & 12 SQUAD SLOTS      -->
+      <!-- ========================================== -->
+      <section id="adminMatchDetailView" class="hidden space-y-4 sm:space-y-6">
+        
+        <!-- Back Navigation Bar -->
+        <div class="flex items-center justify-between gap-2">
+          <button onclick="window.showAdminMatchesList()" class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:text-[#FF5722] hover:bg-orange-50 transition-all shadow-sm flex items-center gap-1.5">
+            <i class="bi bi-arrow-left"></i> All Matches (সকল ম্যাচ)
+          </button>
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-[#FF5722]" id="detailMatchBadge">
+            UPCOMING
+          </span>
+        </div>
+
+        <!-- Match Setup & Room Control Card -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4 sm:space-y-6">
+          <div class="border-b border-gray-100 pb-3 flex items-center justify-between">
+            <div>
+              <h2 class="text-sm sm:text-lg font-bold text-gray-900" id="detailMatchHeading">Match Setup & Room Control</h2>
+              <p class="text-[11px] sm:text-xs text-gray-500">শিডিউল, ম্যাপ এবং কাস্টম রুম আইডি ও পাসওয়ার্ড আপডেট করুন।</p>
+            </div>
+            <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-orange-100 text-[#FF5722]">
+              REAL-TIME
+            </span>
+          </div>
+
+          <form id="matchConfigForm" onsubmit="window.handleSaveMatchConfig(event)" class="space-y-3 sm:space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Match Title</label>
+              <input type="text" id="admTitle" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Schedule Time</label>
+                <input type="text" id="admTime" placeholder="e.g. 08:30 PM" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Map</label>
+                <input type="text" id="admMap" placeholder="e.g. Bermuda" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                <select id="admStatus" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white">
+                  <option value="upcoming">Upcoming</option>
+                  <option value="live">Live Now</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Entry Fee (BDT ৳)</label>
+                <input type="number" id="admEntryFee" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Prize Pool (BDT ৳)</label>
+                <input type="number" id="admPrizePool" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono">
+              </div>
+            </div>
+
+            <!-- Custom Room ID & Password Vault -->
+            <div class="p-4 bg-orange-50/60 rounded-xl border border-orange-200/80 space-y-3">
+              <span class="text-xs font-bold text-[#FF5722] uppercase tracking-wider block">🔑 Custom Room Vault</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Room ID</label>
+                  <input type="text" id="admRoomId" placeholder="e.g. 893411" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+                  <input type="text" id="admRoomPass" placeholder="e.g. 7788" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono font-bold focus:outline-none focus:border-[#FF5722]">
+                </div>
+              </div>
+              <label class="flex items-center gap-2 cursor-pointer pt-1">
+                <input type="checkbox" id="admShowIdPass" class="w-4 h-4 text-[#FF5722] rounded border-gray-300 focus:ring-[#FF5722]">
+                <span class="text-xs text-gray-700 font-medium">রুম আইডি ও পাসওয়ার্ড প্লেয়ারদের কাছে প্রকাশ করুন (Show to Players)</span>
+              </label>
+            </div>
+
+            <button type="submit" id="saveMatchBtn" class="w-full py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2">
+              <i class="bi bi-broadcast"></i> Save & Publish Live
+            </button>
+          </form>
+        </div>
+
+        <!-- 12 Squad Slots Manager with Pending / Confirm Control -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-gray-900">১২টি স্কোয়াড স্লট ম্যানেজমেন্ট</h3>
+              <p class="text-[11px] sm:text-xs text-gray-500">প্লেয়ারদের পেমেন্ট TrxID চেক করে এক ক্লিকে অনুমোদন (Confirm) দিন।</p>
+            </div>
+            <span class="text-xs font-bold text-[#FF5722] font-mono" id="detailSlotsBookedBadge">0 / 12 Booked</span>
+          </div>
+
+          <div id="adminSlotsContainer" class="space-y-3">
+            <!-- 12 Slots rendered by JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- FINANCIAL LEDGER & OPERATIONS SUMMARY      -->
+      <!-- ========================================== -->
+      <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+          <div>
+            <h2 class="text-sm sm:text-lg font-bold text-gray-900">Financial Ledger & Operations Overview</h2>
+            <p class="text-[11px] sm:text-xs text-gray-500">স্বয়ংক্রিয় টুর্নামেন্ট রেভিনিউ, এন্ট্রি ফি ও প্রাইজ পুল ক্যালকুলেশন</p>
+          </div>
+          <div>
+            <span id="statNetBalance" class="inline-block px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-green-50 text-green-700 border border-green-200 font-mono">
+              +৳0 (লাভ / Profit)
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 pt-1">
+          <div class="bg-gray-50 rounded-xl p-2.5 sm:p-3.5 border border-gray-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Active Matches</span>
+            <span id="statMatchCount" class="text-sm sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">0 Matches</span>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-2.5 sm:p-3.5 border border-gray-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block tracking-wider">Booked Squads</span>
+            <span id="statSquadCount" class="text-sm sm:text-lg font-bold text-gray-900 font-mono block mt-0.5">0 / 0 Squads</span>
+          </div>
+
+          <div class="bg-green-50/70 rounded-xl p-2.5 sm:p-3.5 border border-green-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-green-700 uppercase block tracking-wider">Total Collection</span>
+            <span id="statInflow" class="text-sm sm:text-lg font-bold text-green-700 font-mono block mt-0.5">+৳0</span>
+          </div>
+
+          <div class="bg-orange-50/70 rounded-xl p-2.5 sm:p-3.5 border border-orange-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-[#FF5722] uppercase block tracking-wider">Prize Outflow</span>
+            <span id="statOutflow" class="text-sm sm:text-lg font-bold text-[#FF5722] font-mono block mt-0.5">-৳0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- PAYMENT GATEWAY NUMBERS SETUP              -->
+      <!-- ========================================== -->
+      <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 via-orange-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+              ৳
+            </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold text-gray-900">Payment Gateway Numbers (বিকাশ, নগদ ও রকেট নম্বর)</h2>
+              <p class="text-[11px] sm:text-xs text-gray-500">প্লেয়াররা স্লট বুকিংয়ের সময় এই নম্বরে টাকা পাঠাবে।</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 self-start sm:self-auto flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            REALTIME ACTIVE
+          </span>
+        </div>
+
+        <form id="adminPaymentSettingsForm" onsubmit="window.handleSavePaymentSettings(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            
+            <!-- bKash -->
+            <div class="bg-pink-50/60 border border-pink-200 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#E2136E] flex items-center gap-1.5">
+                  <i class="bi bi-phone-fill"></i> বিকাশ (bKash)
+                </span>
+                <span class="text-[10px] font-semibold bg-pink-100 text-[#E2136E] px-2 py-0.5 rounded">Send Money</span>
+              </div>
+              <input type="tel" id="admBkashNumber" placeholder="01791357521" class="w-full bg-white border border-pink-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-[#E2136E]" required>
+            </div>
+
+            <!-- Nagad -->
+            <div class="bg-orange-50/60 border border-orange-200 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#F6921E] flex items-center gap-1.5">
+                  <i class="bi bi-wallet2"></i> নগদ (Nagad)
+                </span>
+                <span class="text-[10px] font-semibold bg-orange-100 text-[#F6921E] px-2 py-0.5 rounded">Send Money</span>
+              </div>
+              <input type="tel" id="admNagadNumber" placeholder="01791357521" class="w-full bg-white border border-orange-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-[#F6921E]" required>
+            </div>
+
+            <!-- Rocket -->
+            <div class="bg-purple-50/60 border border-purple-200 rounded-xl p-3.5 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-700 flex items-center gap-1.5">
+                  <i class="bi bi-send-fill"></i> রকেট (Rocket)
+                </span>
+                <span class="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Send Money</span>
+              </div>
+              <input type="tel" id="admRocketNumber" placeholder="01791357521" class="w-full bg-white border border-purple-200 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-purple-600" required>
+            </div>
+
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+            <p class="text-[11px] text-gray-500">
+              💡 নম্বর সেভ করলে প্লেয়ার প্যানেলে বুকিং পেজে সাথে সাথে নতুন নম্বর আপডেট হয়ে যাবে।
+            </p>
+            <button type="submit" id="savePaymentSettingsBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#E64A19] hover:from-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+              <i class="bi bi-check2-circle"></i> Save Payment Numbers
+            </button>
+          </div>
+        </form>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- THEMED NOTICE / ALERT MODAL -->
+  <div id="noticeModalBackdrop" class="custom-modal-backdrop" onclick="window.closeNoticeModal()"></div>
+  <div id="noticeModalBox" class="custom-modal-box text-center">
+    <div id="noticeIconContainer" class="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200 text-[#FF5722] flex items-center justify-center text-2xl mb-3 shadow-sm">
+      <i class="bi bi-check-circle-fill text-[#FF5722]" id="noticeIcon"></i>
+    </div>
+    <h3 class="text-base sm:text-lg font-extrabold text-gray-900 mb-1.5" id="noticeTitle">সফল হয়েছে!</h3>
+    <p class="text-xs sm:text-sm text-gray-600 mb-5 leading-relaxed" id="noticeMessage">আপনার কাজটি সফলভাবে সম্পন্ন হয়েছে।</p>
+    <div class="flex items-center gap-2 justify-center" id="noticeActions">
+      <button type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all" onclick="window.closeNoticeModal()" id="noticeConfirmBtn">
+        ঠিক আছে
+      </button>
+    </div>
+  </div>
+
+  <!-- FIREBASE AUTH & FIRESTORE INTEGRATION -->
+  <script type="module">
+    import { siteConfig } from "./siteConfig.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const app = initializeApp(siteConfig.firebase);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const TOURNAMENT_ID = "ff-daily-squad";
+
+    let currentUser = null;
+    let tournamentData = {
+      tournamentName: siteConfig.branding.tournamentName,
+      paymentSettings: {
+        bkashNumber: siteConfig.payments.bkashNumber,
+        nagadNumber: siteConfig.payments.nagadNumber,
+        rocketNumber: siteConfig.payments.rocketNumber
+      },
+      matches: []
+    };
+
+    let activeMatchId = null;
+    const $ = (id) => document.getElementById(id);
+
+    // ── AUTH GUARD ───────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (!siteConfig.security.requireAuthForAdmin) {
+        // Auth bypassed for demo
+        $('adminAuthScreen').classList.add('hidden');
+        $('adminMainInterface').classList.remove('hidden');
+        initDashboard();
+        return;
+      }
+
+      if (user) {
+        const userEmail = (user.email || '').toLowerCase();
+        const allowed = siteConfig.security.adminAuthorizedEmails.map(e => e.toLowerCase());
+
+        if (allowed.includes(userEmail)) {
+          currentUser = user;
+          $('authEmailDisplay').textContent = userEmail;
+          $('adminAuthScreen').classList.add('hidden');
+          $('adminMainInterface').classList.remove('hidden');
+          initDashboard();
+        } else {
+          signOut(auth);
+          $('authErrorMsg').textContent = `প্রবেশাধিকার নেই! '${userEmail}' অনুমোদিত জিমেইল নয়।`;
+          $('authErrorMsg').classList.remove('hidden');
+        }
+      } else {
+        $('adminAuthScreen').classList.remove('hidden');
+        $('adminMainInterface').classList.add('hidden');
+      }
+    });
+
+    window.handleGoogleSignIn = async function() {
+      const provider = new GoogleAuthProvider();
+      $('authErrorMsg').classList.add('hidden');
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        $('authErrorMsg').textContent = "গুগল সাইন-ইন ত্রুটি: " + err.message;
+        $('authErrorMsg').classList.remove('hidden');
+      }
+    };
+
+    window.handleSignOut = async function() {
+      await signOut(auth);
+      window.location.reload();
+    };
+
+    function initDashboard() {
+      startSync();
+    }
+
+    // ── FIRESTORE REALTIME SYNC ──────────────────────────────────
+    function startSync() {
+      const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+      onSnapshot(docRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
+            tournamentData = { ...tournamentData, ...data };
+          }
+          if (data.paymentSettings) {
+            tournamentData.paymentSettings = data.paymentSettings;
+            if ($('admBkashNumber')) $('admBkashNumber').value = data.paymentSettings.bkashNumber || '';
+            if ($('admNagadNumber')) $('admNagadNumber').value = data.paymentSettings.nagadNumber || '';
+            if ($('admRocketNumber')) $('admRocketNumber').value = data.paymentSettings.rocketNumber || '';
+          }
+          updateLedger();
+          if ($('adminMatchDetailView').style.display === 'block') {
+            window.renderAdminMatchDetail();
+          } else {
+            window.renderAdminMatchesList();
+          }
+        }
+      });
+    }
+
+    // ── 1-CLICK CONFIRM PAYMENT ──────────────────────────────────
+    window.confirmSquadPayment = async function(matchId, slotNum) {
+      const updatedMatches = (tournamentData.matches || []).map(m => {
+        if (m.id === matchId) {
+          const newSlots = (m.slots || []).map(s => {
+            if (s.slotNumber === slotNum) {
+              return { ...s, status: 'CONFIRMED' };
+            }
+            return s;
+          });
+          return { ...m, slots: newSlots };
+        }
+        return m;
+      });
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { matches: updatedMatches });
+        tournamentData.matches = updatedMatches;
+        window.showToast(`স্লট #${slotNum} পেমেন্ট কনফার্ম করা হয়েছে! 🟢`, "success");
+        window.renderAdminMatchDetail();
+        updateLedger();
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    window.removeSquad = async function(matchId, slotNum) {
+      if (!confirm(`স্লট #${slotNum} রিমুভ করতে চান?`)) return;
+      const updatedMatches = (tournamentData.matches || []).map(m => {
+        if (m.id === matchId) {
+          const newSlots = (m.slots || []).map(s => {
+            if (s.slotNumber === slotNum) {
+              return { slotNumber: slotNum, booked: false, squadName: "", player1: "", player2: "", player3: "", player4: "", contact: "", trxId: "", status: "" };
+            }
+            return s;
+          });
+          return { ...m, slots: newSlots };
+        }
+        return m;
+      });
+
+      const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+      await updateDoc(docRef, { matches: updatedMatches });
+      window.renderAdminMatchDetail();
+      updateLedger();
+    };
+
+    // Render matches and ledger methods
+    window.renderAdminMatchesList = function() {
+      const container = $('adminMatchesListContainer');
+      if (!container) return;
+      const matches = tournamentData.matches || [];
+      container.innerHTML = matches.map((m, idx) => `
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:border-gray-300" onclick="window.viewAdminMatch('${m.id}')">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FF5722] text-white">${m.map || 'Bermuda'}</span>
+              <span class="text-xs text-gray-500">${m.time || '08:30 PM'}</span>
+            </div>
+            <h3 class="text-base font-bold text-gray-900">${m.title || `Match #${idx+1}`}</h3>
+            <div class="text-xs text-gray-500 mt-1">ফি: ৳${m.entryFee || 100} • প্রাইজ: ৳${m.prizePool || 1000}</div>
+          </div>
+          <button class="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold flex items-center gap-1 self-start sm:self-center">
+            ম্যানেজ করুন →
+          </button>
+        </div>
+      `).join('');
+    };
+
+    window.viewAdminMatch = function(matchId) {
+      activeMatchId = matchId;
+      $('adminMatchesListView').style.display = 'none';
+      $('adminMatchDetailView').style.display = 'block';
+      window.renderAdminMatchDetail();
+    };
+
+    window.showAdminMatchesList = function() {
+      $('adminMatchDetailView').style.display = 'none';
+      $('adminMatchesListView').style.display = 'block';
+      window.renderAdminMatchesList();
+    };
+
+    window.renderAdminMatchDetail = function() {
+      const match = (tournamentData.matches || []).find(m => m.id === activeMatchId);
+      if (!match) return;
+      $('admTitle').value = match.title || '';
+      $('admTime').value = match.time || '';
+      $('admMap').value = match.map || '';
+      $('admStatus').value = match.status || 'upcoming';
+      $('admEntryFee').value = match.entryFee || 100;
+      $('admPrizePool').value = match.prizePool || 1000;
+      $('admRoomId').value = match.roomId || '';
+      $('admRoomPass').value = match.roomPass || '';
+      $('admShowIdPass').checked = !!match.showIdPass;
+
+      const slots = match.slots || [];
+      const booked = slots.filter(s => s.booked).length;
+      $('detailSlotsBookedBadge').textContent = `${booked} / 12 Booked`;
+
+      const slotsBox = $('adminSlotsContainer');
+      slotsBox.innerHTML = slots.map(s => {
+        if (s.booked) {
+          const isPending = s.status === 'PENDING';
+          return `
+            <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-orange-100 text-[#FF5722]">#${s.slotNumber}</span>
+                  <strong class="text-sm font-bold text-gray-900">${s.squadName}</strong>
+                  ${isPending ? `
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 PENDING</span>
+                  ` : `
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">🟢 CONFIRMED</span>
+                  `}
+                </div>
+                <div class="flex items-center gap-1.5">
+                  ${isPending ? `
+                    <button type="button" class="px-2.5 py-1 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-xs transition-colors flex items-center gap-1" onclick="window.confirmSquadPayment('${match.id}', ${s.slotNumber})">
+                      <i class="bi bi-check2-circle"></i> Confirm
+                    </button>
+                  ` : ''}
+                  <button type="button" class="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs" onclick="window.removeSquad('${match.id}', ${s.slotNumber})">
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <div class="text-xs text-gray-600 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-200">
+                <span>Leader: ${s.player1} • Players: ${[s.player2, s.player3, s.player4].filter(Boolean).join(', ')}</span>
+                ${s.trxId ? `<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono font-bold border border-emerald-200">TrxID: ${s.trxId} (${s.paymentMethod || 'bKash'})</span>` : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="p-3 rounded-xl bg-white border border-dashed border-gray-300 flex items-center justify-between">
+              <span class="text-xs text-gray-500 font-mono">Slot #${s.slotNumber} (খালি আছে)</span>
+              <span class="text-[11px] text-gray-400">Available</span>
+            </div>
+          `;
+        }
+      }).join('');
+    };
+
+    function updateLedger() {
+      const matches = tournamentData.matches || [];
+      let totalBooked = 0, totalCapacity = 0, totalInflow = 0, totalOutflow = 0;
+      matches.forEach(m => {
+        (m.slots || []).forEach(s => {
+          totalCapacity++;
+          if (s.booked) {
+            totalBooked++;
+            totalInflow += Number(m.entryFee || 100);
+          }
+        });
+        totalOutflow += Number(m.prizePool || 1000);
+      });
+      $('statMatchCount').textContent = `${matches.length} Matches`;
+      $('statSquadCount').textContent = `${totalBooked} / ${totalCapacity} Squads`;
+      $('statInflow').textContent = `+৳${totalInflow}`;
+      $('statOutflow').textContent = `-৳${totalOutflow}`;
+      const net = totalInflow - totalOutflow;
+      $('statNetBalance').textContent = net >= 0 ? `+৳${net} (লাভ / Profit)` : `-৳${Math.abs(net)} (প্রাইজ ঘাটতি)`;
+    }
+
+    // Save Payment settings
+    window.handleSavePaymentSettings = async function(e) {
+      e.preventDefault();
+      const paymentSettings = {
+        bkashNumber: $('admBkashNumber').value.trim(),
+        nagadNumber: $('admNagadNumber').value.trim(),
+        rocketNumber: $('admRocketNumber').value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+      await updateDoc(docRef, { paymentSettings });
+      window.showToast("পেমেন্ট নম্বর সেভ হয়েছে! ✓", "success");
+      return false;
+    };
+
+    window.showToast = function(msg, type = "success") {
+      const container = $('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'p-3 bg-gray-900 text-white rounded-xl text-xs font-bold shadow-lg';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    };
+
+    window.closeNoticeModal = function() {
+      $('noticeModalBackdrop').style.display = 'none';
+      $('noticeModalBox').style.display = 'none';
+    };
+  </script>
+</body>
+</html>

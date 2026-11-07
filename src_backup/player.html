@@ -10,7 +10,7 @@
   <!-- Google Fonts: Inter & Roboto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <script>
@@ -36,7 +36,7 @@
             }
           },
           fontFamily: {
-            sans: ['Inter', 'Roboto', 'sans-serif']
+            sans: ['Hind Siliguri', 'Inter', 'Roboto', 'sans-serif']
           }
         }
       }
@@ -95,53 +95,23 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-3 right-3 left-3 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Top Announcement Bar (RRR Esports Style) -->
-  <div class="bg-[#FF5722] text-white px-4 py-2 text-xs md:text-sm font-medium shadow-sm w-full">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 overflow-hidden whitespace-nowrap min-w-0">
-        <svg class="w-3.5 h-3.5 shrink-0 fill-current" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-        </svg>
+  <!-- Top Announcement Bar (Live Demo Notice) -->
+  <div class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-2 text-xs font-medium shadow-sm w-full">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0">⚡ LIVE DEMO</span>
         <span class="truncate">
-          🔥 জরুরি নোটিশ: রুম আইডি ও পাসওয়ার্ড ম্যাচ শুরুর ১০-১৫ মিনিট আগে দেওয়া হবে।
+          এটি লাইভ ডেমো ভার্সন। এখানে অ্যাডমিন প্যানেল সবার টেস্ট করার জন্য উন্মুক্ত, তবে আপনার নিজস্ব ওয়েবসাইটে অ্যাডমিন প্যানেল পাসওয়ার্ড/গুগল লগইন দিয়ে সম্পূর্ণ লক করা থাকবে।
         </span>
       </div>
-      <a href="https://wa.me/8801791357521" target="_blank" class="hidden sm:inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
-        WhatsApp Support
+      <a href="/player" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
+        🎮 Player Dashboard ↗
       </a>
     </div>
   </div>
 
-  <!-- Main Navbar (Mobile Edge-to-Edge Optimized) -->
+  <!-- Main Navbar -->
   <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
-      <!-- Logo -->
-      <a href="#" onclick="window.showMatchesList(); return false;" class="flex items-center gap-2 sm:gap-3 no-underline min-w-0">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-lg sm:text-xl shadow-md shrink-0">
-          X
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="font-extrabold text-base sm:text-xl tracking-tight text-gray-900 font-sans leading-none">ARENA X</span>
-            <span class="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase shrink-0 leading-none">
-              4V4 SQUAD
-            </span>
-          </div>
-          <span class="text-[9px] sm:text-[10px] text-gray-500 font-medium hidden xs:block truncate leading-tight mt-0.5">Free Fire Championship</span>
-        </div>
-      </a>
-
-      <!-- Header Links -->
-      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        <a href="https://wa.me/8801791357521" target="_blank" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors flex items-center gap-1">
-          <i class="bi bi-whatsapp"></i> <span class="hidden sm:inline">Support</span>
-        </a>
-        <a href="/admin" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200 transition-colors flex items-center gap-1">
-          <i class="bi bi-shield-lock-fill text-[#FF5722]"></i> <span class="hidden sm:inline">Admin</span>
-        </a>
-      </div>
-    </div>
-  </header>
 
   <!-- Main Content Container (Mobile-first Padding) -->
   <main class="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 w-full space-y-4 sm:space-y-6">
@@ -268,15 +238,35 @@
         <div class="w-8 h-8 rounded-lg bg-orange-100 text-[#FF5722] flex items-center justify-center font-bold text-sm">
           🔑
         </div>
-        <h3 class="text-sm sm:text-base font-bold text-gray-900 mb-0">Room ID & Password</h3>
+        <h3 class="text-sm sm:text-base font-bold text-gray-900 mb-0">Room ID & Password (রুম অ্যাক্সেস)</h3>
       </div>
       <button type="button" class="text-gray-400 hover:text-gray-600 text-lg font-bold p-1" onclick="window.closeIdPassModal()">✕</button>
     </div>
 
     <p class="text-[11px] sm:text-xs text-gray-500 mb-3" id="idPassMatchSubtitle">Match Credentials</p>
 
-    <div id="idPassContentArea" class="space-y-2.5">
-      <!-- Injected by JS -->
+    <!-- Phone Verification Lock Guard -->
+    <div id="idPassLockGuard" class="p-3.5 bg-orange-50/70 border border-orange-200 rounded-xl space-y-2.5 mb-3">
+      <div class="flex items-center gap-1.5 text-xs font-bold text-[#FF5722]">
+        <i class="bi bi-shield-lock-fill"></i> প্লেয়ার ভেরিফিকেশন (Phone Lock Active)
+      </div>
+      <p class="text-[11px] text-gray-600 leading-relaxed">
+        অননুমোদিত প্লেয়ারদের রুম অ্যাক্সেস ঠেকাতে এই সুরক্ষা ব্যবস্থা। স্লট বুকিংয়ের সময় যে <strong>WhatsApp নম্বর</strong> দিয়েছিলেন, সেটি দিয়ে আনলক করুন:
+      </p>
+      <div class="flex gap-2">
+        <input type="tel" id="idPassPhoneInput" placeholder="e.g. 01791357521" class="flex-1 bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono text-gray-900 focus:outline-none focus:border-[#FF5722]">
+        <button type="button" onclick="window.unlockRoomCredentials()" class="px-4 py-2 bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs rounded-xl shadow-sm transition-all shrink-0">
+          আনলক করুন
+        </button>
+      </div>
+      <p id="idPassPhoneError" class="text-[11px] text-red-600 font-semibold hidden"></p>
+      <div class="text-[10px] text-gray-500 font-mono">
+        💡 ডেমো টেস্টের জন্য বুক করা নম্বর: <span class="font-bold text-gray-700">01791357521</span>
+      </div>
+    </div>
+
+    <div id="idPassContentArea" class="space-y-2.5 hidden">
+      <!-- Injected by JS once phone is verified -->
     </div>
 
     <div class="mt-3 pt-2.5 border-t border-gray-100 text-center space-y-2">
@@ -740,9 +730,15 @@
                   </span>
                   <strong class="text-xs sm:text-sm font-bold text-gray-900 truncate">${s.squadName}</strong>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 shrink-0 flex items-center gap-1">
-                    <i class="bi bi-check2-circle"></i> CONFIRMED
-                  </span>
+                ${s.status === 'PENDING' ? `
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0 flex items-center gap-1">
+                      <i class="bi bi-hourglass-split"></i> PENDING
+                    </span>
+                  ` : `
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200 shrink-0 flex items-center gap-1">
+                      <i class="bi bi-check2-circle"></i> CONFIRMED
+                    </span>
+                  `}
               </div>
               <div class="pt-1.5 border-t border-gray-200">
                 <span class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Squad Players:</span>
@@ -780,12 +776,103 @@
     // ==========================================
     // ROOM ID & PASSWORD MODAL
     // ==========================================
+    
+    let unlockedMatchId = null;
+
+    window.unlockRoomCredentials = function() {
+      const match = getActiveMatch();
+      if (!match) return;
+
+      const phoneInput = $('idPassPhoneInput');
+      const errBox = $('idPassPhoneError');
+      const inputPhone = (phoneInput ? phoneInput.value : '').trim().replace(/[^0-9]/g, '');
+
+      if (!inputPhone || inputPhone.length < 11) {
+        if (errBox) {
+          errBox.textContent = "অনুগ্রহ করে সঠিক ১১ ডিজিটের মোবাইল/WhatsApp নম্বর দিন।";
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const slots = match.slots || [];
+      const matchedSlot = slots.find(s => {
+        if (!s.booked || !s.contact) return false;
+        const cleanContact = s.contact.replace(/[^0-9]/g, '');
+        return cleanContact.endsWith(inputPhone) || inputPhone.endsWith(cleanContact);
+      });
+
+      if (!matchedSlot) {
+        if (errBox) {
+          errBox.textContent = "এই নম্বরে কোনো স্লট বুকিং পাওয়া যায়নি! শুধুমাত্র এই ম্যাচের প্লেয়াররাই রুম পাসওয়ার্ড দেখতে পারবে।";
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (matchedSlot.status === 'PENDING') {
+        if (errBox) {
+          errBox.textContent = "আপনার পেমেন্ট এখনও পেন্ডিং (Pending) রয়েছে। এডমিন পেমেন্ট চেক করে কনফার্ম করার পর রুম আইডি দেখতে পাবেন।";
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Success: verified
+      if (errBox) errBox.classList.add('hidden');
+      $('idPassLockGuard').classList.add('hidden');
+      $('idPassContentArea').classList.remove('hidden');
+      window.renderRoomCredentials(match);
+      window.showToast("রুম আইডি ও পাসওয়ার্ড আনলক হয়েছে! 🔓", "success");
+    };
+
+    window.renderRoomCredentials = function(match) {
+      const area = $('idPassContentArea');
+      const show = match.showIdPass && match.roomId;
+
+      if (show) {
+        area.innerHTML = `
+          <div class="p-2.5 sm:p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block">Room ID (কাস্টম রুম আইডি)</span>
+            <div class="font-mono font-bold text-xl sm:text-2xl text-gray-900 tracking-wider my-0.5">${match.roomId}</div>
+            <button class="w-full sm:w-auto px-4 py-1 rounded-lg bg-gray-900 hover:bg-black text-white font-bold text-xs transition-colors" onclick="window.copyToClipboard('${match.roomId}', this)">
+              <i class="bi bi-clipboard"></i> Copy Room ID
+            </button>
+          </div>
+
+          <div class="p-2.5 sm:p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+            <span class="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase block">Room Password (পাসওয়ার্ড)</span>
+            <div class="font-mono font-bold text-xl sm:text-2xl text-[#FF5722] tracking-wider my-0.5">${match.roomPass || 'N/A'}</div>
+            <button class="w-full sm:w-auto px-4 py-1 rounded-lg bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs transition-colors" onclick="window.copyToClipboard('${match.roomPass || ''}', this)">
+              <i class="bi bi-clipboard"></i> Copy Password
+            </button>
+          </div>
+        `;
+      } else {
+        area.innerHTML = `
+          <div class="text-center py-5 px-2">
+            <i class="bi bi-shield-lock-fill text-[#FF5722] text-2xl sm:text-3xl mb-1.5 block"></i>
+            <h4 class="font-bold text-gray-900 text-xs sm:text-sm">আইডি ও পাসওয়ার্ড এখনও প্রকাশ হয়নি</h4>
+            <p class="text-[11px] text-gray-500 mt-1 mb-0 leading-relaxed">
+              ম্যাচ শুরু হওয়ার ১০-১৫ মিনিট আগে এডমিন রুম আইডি ও পাসওয়ার্ড এই বক্সে পাবলিশ করবেন।
+            </p>
+          </div>
+        `;
+      }
+    };
+
     window.openIdPassModal = function(matchId) {
       const mId = matchId || activeMatchId;
       const match = (tournamentData.matches || []).find(m => m.id === mId) || getActiveMatch();
       if (!match) return;
 
       $('idPassMatchSubtitle').textContent = `${match.title || `Match #${match.matchNumber}`} • Start: ${match.time || '08:30 PM'}`;
+
+      // Reset lock state for security
+      if ($('idPassPhoneInput')) $('idPassPhoneInput').value = '';
+      if ($('idPassPhoneError')) $('idPassPhoneError').classList.add('hidden');
+      if ($('idPassLockGuard')) $('idPassLockGuard').classList.remove('hidden');
+      if ($('idPassContentArea')) $('idPassContentArea').classList.add('hidden');
 
       const area = $('idPassContentArea');
       const show = match.showIdPass && match.roomId;
@@ -1008,6 +1095,7 @@
                 return {
                   slotNumber: slotNum,
                   booked: true,
+                  status: 'PENDING',
                   squadName,
                   player1,
                   player2,
@@ -1033,10 +1121,10 @@
         window.closeBookingModal();
         $('bookingForm').reset();
         window.showNoticeModal({
-          title: "পেমেন্ট ভেরিফাইড ও স্লট বুকিং সফল! 🎉",
-          message: `অভিনন্দন! আপনার স্কোয়াড <strong>"${squadName}"</strong>-এর <strong>৳${fee}</strong> পেমেন্ট যাচাই করা হয়েছে এবং <strong>স্লট #${slotNum}</strong> চূড়ান্তভাবে বুক করা হয়েছে।<br><br><span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-800">TrxID: ${trxId} (${selectedPaymentProvider.toUpperCase()})</span><br><br><span class="text-[#FF5722] font-semibold text-xs">ম্যাচ শুরুর ১০-১৫ মিনিট আগে রুম আইডি ও পাসওয়ার্ড এই পেজের রুম বক্সে শো করবে।</span>`,
+          title: "স্লট বুকিং সম্পন্ন! (পেন্ডিং অনুমোদন) ⏳",
+          message: `অভিনন্দন! আপনার স্কোয়াড <strong>"${squadName}"</strong>-এর <strong>৳${fee}</strong> পেমেন্ট রিকোয়েস্ট (TrxID: ${trxId}) সফলভাবে সাবমিট হয়েছে।<br><br><span class="font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-xs">স্ট্যাটাস: পেন্ডিং (Pending Approval)</span><br><br><p class="text-xs text-gray-600">অ্যাডমিন পেমেন্ট চেক করে কনফার্ম করার সাথে সাথে স্লটটি ১০০% চূড়ান্ত হবে এবং আপনার WhatsApp নম্বর দিয়ে রুম আইডি ও পাসওয়ার্ড আনলক করতে পারবেন।</p>`,
           type: "success",
-          confirmText: "ধন্যবাদ / সম্পন্ন"
+          confirmText: "ধন্যবাদ / বুঝেছি"
         });
       } catch (err) {
         console.error("Booking failed:", err);
