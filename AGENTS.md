@@ -1,30 +1,24 @@
-# Sifat Bin Shahjahan's Master Directives — BD Battle Pro / Sifr Esports
+# Sifat Bin Shahjahan's Master Directives — FF Squad Arena
 
 ## Project Overview
-- **Name:** BD Battle Pro (Official Turnkey Esports Showcase by Sifr Esports / AppKinbo)
-- **Product:** White-Label Free Fire Tournament Platform + SifrPay 1-Sec Auto-MFS Gateway
-- **Production URL:** https://bd-battle-pro.vercel.app/
-- **GitHub:** https://github.com/SIFAT44710/bd-battle-pro.git
-- **Target Audience:** Free Fire Guild Leaders, YouTubers, Gaming Streamers, Custom Room Organizers in Bangladesh.
+- **Name:** FF Squad Arena (Lightweight Free Fire 12-Squad Tournament Engine)
+- **Product:** Ultra-Lightweight Pure HTML + CSS + Vanilla JS + Firebase Esports Platform
+- **Target Audience:** Free Fire Guild Leaders, WhatsApp Group Organizers, Facebook Group Admins & Messenger Community Match Referees in Bangladesh.
+- **Architectural Scope:** 100% Free Fire Squad Tournaments (12 Teams / 48 Players) with zero Next.js or node_modules bloat.
 
-## Core Directives & Standards
+## Core Directives & Rules
 1. **Communication Standard:** Friendly, casual, high-conviction Banglish for conversation; professional, clean English for code, commits, and technical docs.
-2. **Currency:** ALWAYS BDT (৳ / Taka via `<BDT />`). NEVER USD ($). Standard placeholders: `৳১,২০০` or `৳৩৫,০০০`.
+2. **Currency:** ALWAYS BDT (৳ / Taka). NEVER USD ($). Standard placeholders: `৳১,০০০` or `৳১০০/squad`.
 3. **OS / Shell:** Windows 11, PowerShell. Chaining with `;` only, NEVER `&&`.
-4. **Design Standard:** Dark stealth esports (#0A0E17 background, #FF2438 crimson accent, #00A3FF electric blue, #F8FAFC text). Ultra-clean, card-driven, zero unnecessary text paragraphs matching RRR Esports (`rrresports.com`).
-5. **Mobile First:** Responsive 100dvh viewport, bottom sticky navigation (`MobileNav.tsx`), high touch targets.
+4. **Architecture:** Pure Static HTML5 + CSS3 + Vanilla JavaScript + Firebase (Realtime Database / Firestore CDN) with LocalStorage auto-fallback. Zero build tools or heavy dependencies required.
+5. **Esports Rules:** Official FFWS Points System (#1=12, #2=9, #3=8, #4=7, #5=6, #6=5, #7=4, #8=3, #9=2, #10=1, #11-12=0 + 1 pt/kill) with tie-breaker logic.
+6. **Social Sharing:** 1-Click formatted text export for Facebook and WhatsApp groups.
 
-## Commercial B2B Offer & Pricing (3-Tier Model)
-- **1. Starter Decoy (Warning):** ৳২,০০০ - ৳৫,০০০ (Cheap Kodular/Firebase app — 100% hackable, manual SMS matching hell).
-- **2. Professional Business (Best Seller):** ৳৩৫,০০০ (Booking: ৳৫,০০০) — Web PWA + Android APK, SifrPay 1-Sec Auto-MFS, PostgreSQL Atomic Server-Side Wallet, 15-Min Room Vault, Full Admin Panel.
-- **3. Enterprise Auto-Empire (VIP):** ৳৮৫,০০০+ — Gemini Vision AI OCR Screenshot Scanner, Multi-SIM SifrPay Load Balancing, Custom Brackets, Multi-Moderator RBAC.
-
-## Financial Economics
-- Single Match: 48 slots @ ৳25 = ৳1,200 revenue - ৳950 prize = ৳250 net profit (21% margin).
-- 8 Matches/Day = ৳2,000/day = ৳60,000+ monthly net profit for the organizer.
-- Investment Recoup: Full ৳35,000 cost recovered in 17.5 days.
-
-## Architectural Security
-- **Atomic Wallet Ledger:** `balance`, `winning_cash`, and `bonus_cash` strictly separated on server.
-- **SBS Kill-Switch:** Centralized tenant suspension switch (`/sbs`) for unpaid dues or installment defaults.
-- **15-Min Time-Gated Room Vault:** Cryptographically gated room credentials accessible only within 15 minutes of match start for verified slot holders.
+## Project Structure
+- `index.html`: Live Lobby, 12-Slot Seating, Room ID/Pass Vault & Live Points Table (Overall & Match Tabs).
+- `register.html`: Captain 4-Player Squad Registration Form (IGN + UID).
+- `admin.html`: Organizer Command Center (Direct Team Entry, Series Match Score Input & 1-Click WhatsApp Report).
+- `css/style.css`: Pure responsive dark-mode styling (#0A0E17 canvas, #FF2438, #00A3FF, #10B981).
+- `js/points-engine.js`: Official FFWS points calculator & WhatsApp text report generator.
+- `js/firebase-config.js`: Firebase Realtime DB sync engine with automatic LocalStorage fallback.
+- `js/app.js`: Reactive UI rendering & event handlers.

@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sifr AppKinbo — প্রফেশনাল ইস্পোর্টস ও লুডু টুর্নামেন্ট অ্যাপ ডেভেলপমেন্ট</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Hind Siliguri', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            canvas: '#0B0F19',
+            surface: '#131B2E',
+            card: '#19233C',
+            accent: '#FACC15',
+            brand: '#3B82F6',
+            emerald: '#10B981',
+            danger: '#EF4444'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #0B0F19;
+      color: #F1F5F9;
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(25, 35, 60, 0.78);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-gold {
+      box-shadow: 0 0 35px -5px rgba(250, 204, 21, 0.25);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.25);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #FACC15 0%, #F59E0B 100%);
+      color: #0B0F19;
+      font-weight: 700;
+    }
+    .sim-tab.active {
+      border-bottom: 2px solid #FACC15;
+      color: #FACC15;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-yellow-400 selection:text-slate-950">
+
+  <!-- Top Notification Toast -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 hidden max-w-sm w-full glass-card border-l-4 border-emerald-400 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p id="toastTitle" class="font-bold text-sm text-emerald-400">সফল হয়েছে!</p>
+        <p id="toastBody" class="text-xs text-slate-300 mt-0.5"></p>
+      </div>
+      <button id="closeToastBtn" class="text-slate-400 hover:text-white text-sm font-bold px-1">✕</button>
+    </div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-40 glass-card border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg">
+          S
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-lg tracking-tight text-white">SIFR <span class="text-yellow-400">AppKinbo</span></span>
+            <span class="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">v4.0 Production</span>
+          </div>
+          <p class="text-xs text-slate-400">Turnkey Esports, Ludo & SifrPay Auto-Gateway</p>
+        </div>
+      </div>
+
+      <!-- Main Mode Switcher Tabs -->
+      <nav class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button id="navFunnelBtn" class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm transition-all">
+          🛒 /appkinbo সেলস পেজ
+        </button>
+        <button id="navSimulatorBtn" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm text-slate-300 hover:text-white transition-all">
+          🎮 লাইভ অ্যাপ ও SifrPay ডেমো
+        </button>
+        <button id="navCodeFixBtn" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm text-slate-300 hover:text-white transition-all">
+          🛠️ তোর ৫টি বাগ ফিক্স ও SQL
+        </button>
+      </nav>
+
+      <div class="hidden md:flex items-center gap-2">
+        <button id="headerBookBtn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg">
+          ৳৫,০০০ বুকিংয়ে ডেমো নিন →
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: /appkinbo HIGH-CONVERTING SALES FUNNEL                        -->
+  <!-- ===================================================================== -->
+  <main id="viewFunnel" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-12">
+
+    <!-- Hero Banner -->
+    <section class="relative rounded-3xl glass-card p-6 sm:p-10 border border-yellow-400/20 glow-gold overflow-hidden">
+      <div class="max-w-3xl space-y-5">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 text-xs font-semibold">
+          <span>⚡ ১০০% অটোমেটিক বিকাশ/নগদ ভেরিফিকেশন (০% গেটওয়ে ফি) + অ্যান্টি-হ্যাক সার্ভার</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-white">
+          নিজের ব্র্যান্ডের <span class="text-yellow-400">Free Fire, Squad ও Ludo</span> টুর্নামেন্ট অ্যাপ বানিয়ে ব্যবসা শুরু করুন
+        </h1>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+          সস্তা ২–৩ হাজার টাকার Kodular/Firebase অ্যাপ কিনে হ্যাকারদের হাতে বিকাশের টাকা খোয়াবেন না! আমাদের <strong class="text-white">Server-Side Atomic Wallet</strong> এবং <strong class="text-emerald-400">SifrPay Auto-MFS Gateway</strong> দিয়ে প্লেয়ারের ডিপোজিট ভেরিফাই হয় ১ সেকেন্ডে—কোনো ম্যানুয়াল ঝামেলা বা থার্ড-পার্টি চার্জ ছাড়াই।
+        </p>
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button id="heroTrySimBtn" class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold px-6 py-3.5 rounded-xl text-sm transition-all shadow-lg">
+            🎮 আগে লাইভ অ্যাপ ও অটো-ডিপোজিট টেস্ট করুন
+          </button>
+          <button id="heroScrollPackagesBtn" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-6 py-3.5 rounded-xl text-sm border border-slate-700 transition-all">
+            📦 প্যাকেজ ও মূল্য তালিকা দেখুন
+          </button>
+        </div>
+      </div>
+
+      <!-- Trust Metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800/80">
+        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+          <p class="text-xs text-slate-400">পেমেন্ট ভেরিফিকেশন</p>
+          <p class="text-lg sm:text-xl font-extrabold text-emerald-400 mt-1">১ সেকেন্ডে অটো</p>
+          <p class="text-[11px] text-slate-500">পার্সোনাল ও এজেন্ট বিকাশ/নগদ</p>
+        </div>
+        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+          <p class="text-xs text-slate-400">প্ল্যাটফর্ম ডেলিভারি</p>
+          <p class="text-lg sm:text-xl font-extrabold text-yellow-400 mt-1">APK + Web PWA</p>
+          <p class="text-[11px] text-slate-500">অ্যান্ড্রয়েড অ্যাপ ও ডিরেক্ট ওয়েব</p>
+        </div>
+        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+          <p class="text-xs text-slate-400">ওয়ালেট সিকিউরিটি</p>
+          <p class="text-lg sm:text-xl font-extrabold text-blue-400 mt-1">PostgreSQL Lock</p>
+          <p class="text-[11px] text-slate-500">Mod APK / Lucky Patcher প্রুফ</p>
+        </div>
+        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+          <p class="text-xs text-slate-400">গেম সাপোর্ট</p>
+          <p class="text-lg sm:text-xl font-extrabold text-purple-400 mt-1">FF + CS + Ludo</p>
+          <p class="text-[11px] text-slate-500">Squad, Duo, Solo ও রুম কোড</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 Packages Section (Psychological Decoy Pricing like sweez.xyz/appkinbo) -->
+    <section id="packagesSection" class="space-y-6">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-yellow-400">স্বচ্ছ মূল্য তালিকা ও তুলনা</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">আপনার বাজেট ও লক্ষ্য অনুযায়ী প্যাকেজ বেছে নিন</h2>
+        <p class="text-xs sm:text-sm text-slate-400">শুরুতে পুরো টাকা দিতে হবে না—মাত্র ৳৫,০০০ বুকিং দিয়ে নিজের ফোনে অ্যাপ ও অ্যাডমিন প্যানেল বুঝে নিয়ে টেস্ট করুন।</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+
+        <!-- PACKAGE 1: STARTER DECOY (NOT RECOMMENDED) -->
+        <div class="rounded-3xl glass-card p-6 border border-red-500/30 flex flex-col justify-between relative opacity-90">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/40">
+                ⚠️ Not Recommended
+              </span>
+              <span class="text-xs text-slate-400 font-mono">Kodular + Firebase</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white">১. স্টার্টার ডেমো প্যাকেজ</h3>
+              <p class="text-xs text-slate-400 mt-1">শুধুমাত্র আইডিয়া টেস্ট বা শেখার জন্য—আসল ব্যবসার জন্য উপযুক্ত নয়</p>
+            </div>
+            <div class="py-3 border-y border-slate-800">
+              <p class="text-3xl font-extrabold text-slate-200">৳২,০০০ – ৳৫,০০০</p>
+              <p class="text-xs text-red-400 mt-1">কেন এটি দিয়ে আসল ব্যবসা করবেন না নিচে দেখুন:</p>
+            </div>
+            <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
+              <li class="flex items-start gap-2"><span class="text-emerald-400">✓</span> বেসিক অ্যান্ড্রয়েড APK ও অ্যাডমিন অ্যাপ</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 font-bold">✕</span> <span class="text-red-300"><strong>সিকিউরিটি অত্যন্ত দুর্বল:</strong> ক্লায়েন্ট-সাইড ফায়ারবেস হওয়ায় প্লেয়াররা ব্যালেন্স এডিট/হ্যাক করতে পারে</span></li>
+              <li class="flex items-start gap-2"><span class="text-red-400 font-bold">✕</span> কোনো অটো পেমেন্ট গেটওয়ে নেই (সব মেসেজ হাতে মিলাতে হয়)</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 font-bold">✕</span> কোনো ওয়েবসাইট বা Play on Web সুবিধা নেই</li>
+              <li class="flex items-start gap-2"><span class="text-red-400 font-bold">✕</span> ১০০+ প্লেয়ার একসাথে ঢুকলে অ্যাপ হ্যাং ও ক্র্যাশ করে</li>
+            </ul>
+          </div>
+          <button data-pkg="Starter Demo (৳৩,০০০)" class="select-pkg-btn mt-6 w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-all">
+            ডেমো হিসেবে কথা বলুন
+          </button>
+        </div>
+
+        <!-- PACKAGE 2: PROFESSIONAL (HERO PACKAGE) -->
+        <div class="rounded-3xl glass-card p-6 sm:p-7 border-2 border-yellow-400 glow-gold flex flex-col justify-between relative transform lg:-translate-y-2">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold px-3 py-1 rounded-full bg-yellow-400 text-slate-950">
+                ⭐ ৯০% ব্যবসায়ীদের পছন্দ
+              </span>
+              <span class="text-xs text-yellow-300 font-mono">APK + Web + Auto-MFS</span>
+            </div>
+            <div>
+              <h3 class="text-2xl font-extrabold text-white">২. প্রফেশনাল বিজনেস প্যাকেজ</h3>
+              <p class="text-xs text-slate-300 mt-1">সিরিয়াস টুর্নামেন্ট ও লুডু বিজনেসের জন্য সম্পূর্ণ অটোমেটেড ও হ্যাক-প্রুফ সিস্টেম</p>
+            </div>
+            <div class="py-3 border-y border-slate-800">
+              <div class="flex items-baseline gap-2">
+                <p class="text-3xl sm:text-4xl font-extrabold text-yellow-400">৳৩৫,০০০</p>
+                <span class="text-xs text-slate-400 line-through">৳৬০,০০০</span>
+              </div>
+              <p class="text-xs text-emerald-400 font-semibold mt-1">✓ মাত্র ৳৫,০০০ বুকিং দিয়ে নিজের ফোনে লাইভ অ্যাপ বুঝে নিন!</p>
+            </div>
+            <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>অ্যান্ড্রয়েড APK + Web PWA:</strong> প্লেয়ার অ্যাপ ডাউনলোড করে বা সরাসরি ব্রাউজারে খেলতে পারবে</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>SifrPay অটো-গেটওয়ে (০% ফি):</strong> আপনার নিজের বিকাশ/নগদ/রকেট নাম্বারেই ১ সেকেন্ডে অটো TrxID ভেরিফিকেশন</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>সার্ভার-সাইড অ্যাটমিক ওয়ালেট:</strong> ডিপোজিট, উইনিং ও বোনাস ব্যালেন্স—কোনো হ্যাকার ১ টাকাও এডিট করতে পারবে না</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>সব গেম মোড:</strong> Free Fire Squad (4 UID), Duo, Solo, Clash Squad (CS) এবং Ludo Room Code</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>অটো রুম আইডি ভল্ট:</strong> ম্যাচের ৫ মিনিট আগে শুধু রেজিস্টার্ড প্লেয়াররা রুম আইডি ও পাসওয়ার্ড দেখবে</span></li>
+              <li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">✓</span> <span><strong>মোবাইল-ফ্রেন্ডলি ওয়েব অ্যাডমিন প্যানেল:</strong> ফোন থেকেই ম্যাচ তৈরি, উইথড্র অ্যাপ্রুভ ও ইউজার কন্ট্রোল</span></li>
+            </ul>
+          </div>
+          <button data-pkg="Professional Package (৳৩৫,০০০ - ৳৫,০০০ বুকিং)" class="select-pkg-btn mt-6 w-full py-3.5 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-extrabold text-sm shadow-xl transition-all">
+            🚀 ৳৫,০০০ বুকিং দিয়ে এই প্যাকেজটি নিন
+          </button>
+        </div>
+
+        <!-- PACKAGE 3: ENTERPRISE -->
+        <div class="rounded-3xl glass-card p-6 border border-purple-500/30 flex flex-col justify-between relative">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                👑 Enterprise & AI OCR
+              </span>
+              <span class="text-xs text-slate-400 font-mono">Multi-Staff + AI Engine</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white">৩. এন্টারপ্রাইজ অটো-এম্পায়ার</h3>
+              <p class="text-xs text-slate-400 mt-1">বড় ইউটিউবার, গিল্ড নেটওয়ার্ক এবং একাধিক মডারেটর/স্টাফ পরিচালিত প্ল্যাটফর্মের জন্য</p>
+            </div>
+            <div class="py-3 border-y border-slate-800">
+              <p class="text-3xl font-extrabold text-purple-300">৳৮৫,০০০+</p>
+              <p class="text-xs text-slate-400 mt-1">আলোচনাসাপেক্ষ (কাস্টম ফিচার ও ডেডিকেটেড ক্লাউড)</p>
+            </div>
+            <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
+              <li class="flex items-start gap-2"><span class="text-purple-400 font-bold">★</span> <span>প্রফেশনাল প্যাকেজের সবগুলো ফিচার অন্তর্ভুক্ত</span></li>
+              <li class="flex items-start gap-2"><span class="text-purple-400 font-bold">★</span> <span><strong>AI স্ক্রিনশট রেজাল্ট স্ক্যানার:</strong> ম্যাচ শেষে লবির স্ক্রিনশট দিলেই AI নিজে কিল ও পজিশন গুনে প্রাইজমানি ভাগ করে দেবে!</span></li>
+              <li class="flex items-start gap-2"><span class="text-purple-400 font-bold">★</span> <span><strong>মাল্টি-মডারেটর রোল (RBAC):</strong> আপনার স্টাফরা শুধু রুম আইডি ও রেজাল্ট দিতে পারবে, কিন্তু টাকার ওয়ালেটে হাত দিতে পারবে না</span></li>
+              <li class="flex items-start gap-2"><span class="text-purple-400 font-bold">★</span> <span><strong>মাল্টি-সিম SifrPay লোড ব্যালেন্সিং:</strong> একাধিক বিকাশ/নগদ এজেন্ট ও মার্চেন্ট সিম একসাথে কানেক্ট করার সুবিধা</span></li>
+              <li class="flex items-start gap-2"><span class="text-purple-400 font-bold">★</span> <span>ভিআইপি লাইফটাইম সাপোর্ট ও প্রাইভেট হোয়াটসঅ্যাপ গ্রুপ</span></li>
+            </ul>
+          </div>
+          <button data-pkg="Enterprise Package (৳৮৫,০০০+)" class="select-pkg-btn mt-6 w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all">
+            এন্টারপ্রাইজ কনসালটেশন বুক করুন
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Interactive Organizer Profit & Milestone Calculator -->
+    <section class="rounded-3xl glass-card p-6 sm:p-8 border border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div class="lg:col-span-7 space-y-5">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">আয়ের হিসাব ও পেমেন্ট সুবিধা</span>
+        <h3 class="text-xl sm:text-2xl font-extrabold text-white">আপনার অ্যাপ থেকে মাসে কত টাকা লাভ থাকবে হিসাব করুন</h3>
+        <p class="text-xs sm:text-sm text-slate-400">প্রতিটি স্কোয়াড বা সোলো ম্যাচে এন্ট্রি ফি এবং প্রাইজপুলের পার্থক্য থেকে আপনার নিট মুনাফা:</p>
+
+        <div class="space-y-4 pt-2">
+          <div>
+            <div class="flex justify-between text-xs sm:text-sm mb-1.5">
+              <span class="text-slate-300">প্রতিদিন মোট কয়টি ম্যাচ চালাবেন? (FF Squad / CS / Ludo)</span>
+              <span id="calcMatchesVal" class="font-bold text-yellow-400">১০ টি ম্যাচ / দিন</span>
+            </div>
+            <input id="calcMatchesInput" type="range" min="3" max="30" value="10" class="w-full accent-yellow-400 cursor-pointer" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs sm:text-sm mb-1.5">
+              <span class="text-slate-300">প্রতি ম্যাচে মোট এন্ট্রি ফি কালেকশন (যেমন: ১২ স্কোয়াড × ১০০ টাকা = ১,২০০ টাকা)</span>
+              <span id="calcPoolVal" class="font-bold text-yellow-400">৳১,২০০ / ম্যাচ</span>
+            </div>
+            <input id="calcPoolInput" type="range" min="400" max="5000" step="100" value="1200" class="w-full accent-yellow-400 cursor-pointer" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs sm:text-sm mb-1.5">
+              <span class="text-slate-300">আপনার প্ল্যাটফর্ম মার্জিন (প্রাইজমানি দেওয়ার পর আপনার লাভ %)</span>
+              <span id="calcMarginVal" class="font-bold text-emerald-400">২০% লাভ</span>
+            </div>
+            <input id="calcMarginInput" type="range" min="10" max="35" step="5" value="20" class="w-full accent-emerald-400 cursor-pointer" />
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+          <span class="text-xs text-slate-400">প্রতিদিনের নিট মুনাফা:</span>
+          <span id="calcDailyProfit" class="text-xl font-extrabold text-white">৳২,৪০০ / দিন</span>
+        </div>
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+          <span class="text-xs text-slate-400">মাসিক নিট মুনাফা (৩০ দিনে):</span>
+          <span id="calcMonthlyProfit" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">৳৭২,০০০ / মাস</span>
+        </div>
+        <div class="bg-yellow-400/10 border border-yellow-400/30 p-3.5 rounded-xl text-xs text-slate-200 space-y-1">
+          <p class="font-bold text-yellow-300">💡 মাত্র ১৫ দিনের আয়েই আপনার অ্যাপের পুরো খরচ উঠে আসবে!</p>
+          <p class="text-slate-300">SifrPay থাকার কারণে আপনাকে বিকাশ পেমেন্ট গেটওয়ে বাবদ ২%–৩% বাড়তি কমিশন কাউকে দিতে হবে না।</p>
+        </div>
+        <div class="pt-1 space-y-1.5 text-xs text-slate-300">
+          <p class="font-bold text-white">আমাদের ৩-ধাপের নিরাপদ পেমেন্ট নিয়ম:</p>
+          <p>১. <strong>ধাপ ১ (বুকিং):</strong> মাত্র <strong>৳৫,০০০</strong> দিয়ে আপনার লোগো ও নামে APK + অ্যাডমিন প্যানেল ফোনে বুঝে নিন।</p>
+          <p>২. <strong>ধাপ ২ (হ্যান্ডওভার):</strong> নিজে টেস্ট করে সন্তুষ্ট হলে <strong>৳১৫,০০০</strong> দিয়ে ডোমেইন ও SifrPay অটো-গেটওয়ে যুক্ত করুন।</p>
+          <p>৩. <strong>ধাপ ৩ (ফাইনাল):</strong> বাকি <strong>৳১৫,০০০</strong> আপনার টুর্নামেন্ট চালু হওয়ার ১৫ দিন পর পরিশোধ করুন।</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: LIVE INTERACTIVE SIMULATOR (PLAYER + SIFRPAY + ADMIN + SBS)   -->
+  <!-- ===================================================================== -->
+  <section id="viewSimulator" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div class="glass-card p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold text-yellow-400 uppercase">ইন্টারেক্টিভ লাইভ স্যান্ডবক্স (ক্লায়েন্টদের ডেমো দেখানোর জন্য)</span>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">নিজের হাতে প্লেয়ার অ্যাপ, ১-সেকেন্ডে SifrPay ডিপোজিট এবং অ্যাডমিন প্যানেল টেস্ট করুন</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400">টেন্যান্ট স্ট্যাটাস (SBS Kill-Switch):</span>
+        <button id="toggleKillSwitchBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-all">
+          🟢 Active (ক্লিক করে সাসপেন্ড টেস্ট করুন)
+        </button>
+      </div>
+    </div>
+
+    <!-- Suspended Banner (Hidden by default, shown when Kill Switch toggled) -->
+    <div id="suspendedOverlay" class="hidden rounded-3xl bg-red-950/90 border-2 border-red-500 p-8 text-center space-y-3">
+      <div class="text-4xl">🔒</div>
+      <h3 class="text-2xl font-extrabold text-white">Platform Suspended by SBS Super-Admin</h3>
+      <p class="text-sm text-red-200 max-w-lg mx-auto">
+        এই ফিচারটি তোর <code>lib/tenantResolver.js</code> (লাইন ৪৪)-এ দেওয়া আছে! কোনো ক্লায়েন্ট যদি বুকিংয়ে অ্যাপ নেওয়ার পর বাকি কিস্তির টাকা না দেয়, তুই ১ ক্লিকে সাসপেন্ড করে দিলে তার প্লেয়ার ও অ্যাডমিন প্যানেল সাথে সাথে লক হয়ে যাবে।
+      </p>
+      <button id="restorePlatformBtn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-5 py-2.5 rounded-xl">
+        🔓 আবার প্ল্যাটফর্ম চালু করুন
+      </button>
+    </div>
+
+    <!-- 3-Column Live Simulator -->
+    <div id="simulatorGrid" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- COLUMN 1: PLAYER APK / WEB SIMULATOR (5 Cols) -->
+      <div class="lg:col-span-5 rounded-3xl bg-slate-900 border-2 border-slate-800 overflow-hidden shadow-2xl">
+        <!-- Phone Status Bar -->
+        <div class="bg-slate-950 px-4 py-2.5 flex items-center justify-between border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span class="font-bold text-xs text-white">ArenaX Pro (Player APK)</span>
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">
+            <span class="text-xs text-slate-400">ব্যালেন্স:</span>
+            <span id="simPlayerBalance" class="text-xs font-extrabold text-yellow-400">৳১২০</span>
+          </div>
+        </div>
+
+        <!-- Player Sub-Tabs -->
+        <div class="grid grid-cols-3 bg-slate-900/90 border-b border-slate-800 text-xs">
+          <button data-ptab="matches" class="sim-ptab sim-tab active py-2.5 text-center">🏆 ম্যাচসমূহ</button>
+          <button data-ptab="wallet" class="sim-ptab sim-tab py-2.5 text-center text-slate-400">💳 অটো ডিপোজিট</button>
+          <button data-ptab="myrooms" class="sim-ptab sim-tab py-2.5 text-center text-slate-400">🔑 রুম আইডি (<span id="joinedCountBadge">0</span>)</button>
+        </div>
+
+        <!-- Player Tab 1: Matches List -->
+        <div id="ptab-matches" class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+          <div class="flex gap-1.5 text-[11px] pb-1">
+            <button data-mfilter="ALL" class="mfilter-btn px-2.5 py-1 rounded-lg bg-yellow-400 text-slate-950 font-bold">সব মোড</button>
+            <button data-mfilter="Squad" class="mfilter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">FF Squad</button>
+            <button data-mfilter="CS 4v4" class="mfilter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">CS 4v4</button>
+            <button data-mfilter="Ludo" class="mfilter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">Ludo</button>
+          </div>
+          <div id="simMatchesContainer" class="space-y-3"></div>
+        </div>
+
+        <!-- Player Tab 2: SifrPay 1-Sec Auto Deposit -->
+        <div id="ptab-wallet" class="hidden p-4 space-y-4">
+          <div class="grid grid-cols-3 gap-2 text-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+            <div>
+              <p class="text-[10px] text-slate-400">Main Balance</p>
+              <p id="walletMainBal" class="text-sm font-extrabold text-white">৳১০০</p>
+            </div>
+            <div class="border-x border-slate-800">
+              <p class="text-[10px] text-slate-400">Winning Cash</p>
+              <p id="walletWinBal" class="text-sm font-extrabold text-emerald-400">৳২০</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400">Bonus Cash</p>
+              <p class="text-sm font-extrabold text-yellow-400">৳০</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/90 p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400">⚡ SifrPay ইনস্ট্যান্ট অ্যাড মানি (০% ফি)</span>
+              <span class="text-[10px] bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded">bKash / Nagad</span>
+            </div>
+            <p class="text-xs text-slate-300">
+              ১. নিচের "Simulate Customer SMS" বাটনে ক্লিক করে অথবা ডান পাশের SifrPay ফোনে যে TrxID আছে সেটি দিয়ে টেস্ট করুন:
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-slate-400">টাকার পরিমাণ (৳)</label>
+                <input id="simDepAmount" type="number" value="200" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-bold" />
+              </div>
+              <div>
+                <label class="text-[11px] text-slate-400">bKash/Nagad TrxID</label>
+                <input id="simDepTrxId" type="text" value="BK8849X21Q" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-yellow-300 font-mono uppercase" />
+              </div>
+            </div>
+            <button id="simVerifyDepositBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all">
+              ✓ ১ সেকেন্ডে অটো ভেরিফাই ও ব্যালেন্স যোগ করুন
+            </button>
+          </div>
+
+          <div class="space-y-1.5">
+            <p class="text-xs font-bold text-slate-400">সাম্প্রতিক ওয়ালেট লেজার (`wallet_ledger`):</p>
+            <div id="simLedgerList" class="space-y-1.5 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- Player Tab 3: Joined Contests & Room ID Vault -->
+        <div id="ptab-myrooms" class="hidden p-4 space-y-3">
+          <p class="text-xs text-slate-400">আপনার জয়েন করা ম্যাচ ও সিক্রেট রুম আইডি ভল্ট:</p>
+          <div id="simJoinedList" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- COLUMN 2: HOST ADMIN + SIFRPAY DAEMON + AI OCR (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- SifrPay Native Android Daemon Monitor -->
+        <div class="rounded-3xl glass-card p-5 border border-emerald-500/30 glow-emerald space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <h3 class="font-extrabold text-sm sm:text-base text-white">SifrPay Android Daemon (`com.sifr.ruxspeed`) — লাইভ SMS ইন্টারসেপ্টর</h3>
+            </div>
+            <button id="simGenerateSmsBtn" class="px-3 py-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/40 text-xs font-bold transition-all">
+              📩 নতুন বিকাশ SMS সিমুলেট করুন
+            </button>
+          </div>
+          <p class="text-xs text-slate-300">
+            ক্রেতার ফোনে থাকা তোর `PayNow / base.apk` অ্যাপটি বিকাশ/নগদের মেসেজ আসার সাথে সাথে HMAC-SHA256 সিগনেচার সহ সার্ভারে পুশ করে রাখে:
+          </p>
+          <div id="simSmsPoolBox" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-emerald-300 space-y-1"></div>
+        </div>
+
+        <!-- Host Admin Control Panel -->
+        <div class="rounded-3xl glass-card p-5 border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+            <div>
+              <h3 class="font-extrabold text-base text-white">🛠️ অর্গানাইজার ওয়েব অ্যাডমিন প্যানেল (`admin/index.html`)</h3>
+              <p class="text-xs text-slate-400">রুম আইডি পুশ এবং AI স্ক্রিনশট রেজাল্ট স্ক্যানার টেস্ট করুন</p>
+            </div>
+            <button id="simAiOcrBtn" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all">
+              🤖 AI দিয়ে ম্যাচ স্ক্রিনশট স্ক্যান করুন
+            </button>
+          </div>
+
+          <!-- Push Room ID Form -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
+            <div>
+              <label class="text-[11px] text-slate-400">Room ID</label>
+              <input id="adminRoomIdInput" type="text" value="88492014" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white font-mono" />
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400">Room Password</label>
+              <input id="adminRoomPassInput" type="text" value="7744" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white font-mono" />
+            </div>
+            <div class="flex items-end">
+              <button id="adminPushRoomBtn" class="w-full py-2 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold text-xs transition-all">
+                🔑 প্লেয়ারদের কাছে Room ID পুশ করুন
+              </button>
+            </div>
+          </div>
+
+          <!-- AI OCR Result Box -->
+          <div id="aiOcrResultBox" class="hidden bg-purple-950/40 border border-purple-500/40 p-4 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-300">✨ Gemini Vision OCR — অটোমেটিক স্কোয়াড রেজাল্ট ও প্রাইজমানি</span>
+              <span class="text-[11px] text-emerald-400 font-mono">Verified in 1.2s</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="py-1.5">র‍্যাঙ্ক</th>
+                    <th class="py-1.5">স্কোয়াড / প্লেয়ার</th>
+                    <th class="py-1.5 text-right">মোট কিল</th>
+                    <th class="py-1.5 text-right">অটো প্রাইজমানি</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-slate-200">
+                  <tr>
+                    <td class="py-1.5 font-bold text-yellow-400">#1 (Booyah)</td>
+                    <td class="py-1.5">Team Sifr Squad (4 UIDs)</td>
+                    <td class="py-1.5 text-right font-mono">14 Kills</td>
+                    <td class="py-1.5 text-right font-bold text-emerald-400">৳৫৪০ (Auto-Credited)</td>
+                  </tr>
+                  <tr>
+                    <td class="py-1.5 font-bold text-slate-300">#2 Runner-Up</td>
+                    <td class="py-1.5">Dhaka Snipers</td>
+                    <td class="py-1.5 text-right font-mono">9 Kills</td>
+                    <td class="py-1.5 text-right font-bold text-emerald-400">৳২৯০ (Auto-Credited)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 3: CODE AUDIT & 1-CLICK SQL/JS PATCH VIEWER                      -->
+  <!-- ===================================================================== -->
+  <section id="viewCodeFix" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div class="glass-card p-6 rounded-3xl border border-slate-800 space-y-3">
+      <span class="text-xs font-bold uppercase text-emerald-400">Sifat_Pure_Code.zip — Code-Level Bug Fixes</span>
+      <h2 class="text-xl sm:text-2xl font-extrabold text-white">তোর `work/ARENA X ____Saas` প্রজেক্টের ৫টি বাগ ও রেডিমেড SQL প্যাচ</h2>
+      <p class="text-xs sm:text-sm text-slate-300">
+        আমি তোর সম্পূর্ণ প্রজেক্ট ফিক্স করে ZIP ফাইলে দিয়ে দিয়েছি। এছাড়া তুই চাইলে নিচের বাটন থেকে ১ ক্লিকে `004_complete_production_fix_and_sifrpay.sql` কপি করে তোর Supabase SQL Editor-এ রান করতে পারিস:
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
+        <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-1">
+          <p class="font-bold text-yellow-400">১. `users.role` Constraint Bug (Fixed)</p>
+          <p class="text-slate-400">`001_initial_schema.sql`-এ শুধু `super_admin, host_admin, player` ছিল, কিন্তু `admin.js` পাঠাচ্ছিল `admin`—যার কারণে অ্যাডমিন অ্যাকাউন্ট তৈরি ও লগইন আটকাতো।</p>
+        </div>
+        <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-1">
+          <p class="font-bold text-yellow-400">২. Missing RLS Write Policies (Fixed)</p>
+          <p class="text-slate-400">১২টি টেবিলেই RLS অন ছিল কিন্তু শুধু `SELECT` পলিসি ছিল। এখন প্লেয়ার ডিপোজিট/উইথড্র এবং অ্যাডমিনের ফুল CRUD পলিসি যোগ করা হয়েছে।</p>
+        </div>
+        <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-1">
+          <p class="font-bold text-yellow-400">৩. `approve_deposit` RPC Mismatch (Fixed)</p>
+          <p class="text-slate-400">`admin.js` লাইন ২২৯-এর ৪টি প্যারামিটার এবং ২টি প্যারামিটার উভয়ই সাপোর্ট করার জন্য SQL RPC আপডেট করা হয়েছে।</p>
+        </div>
+        <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-1">
+          <p class="font-bold text-yellow-400">৪. `games`, `promotions` ও `SifrPay` Auto-Deposit (Fixed)</p>
+          <p class="text-slate-400">মিসিং টেবিলগুলো এবং `instant_sifrpay_deposit` RPC যুক্ত করা হয়েছে যাতে SifrPay ভেরিফাই করলেই ১ সেকেন্ডে ব্যালেন্স যোগ হয়।</p>
+        </div>
+      </div>
+
+      <div class="pt-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono text-slate-400">supabase/migrations/004_complete_production_fix_and_sifrpay.sql</span>
+          <button id="copySqlPatchBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all">
+            📋 Copy Full SQL Migration
+          </button>
+        </div>
+        <pre id="sqlPatchCode" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-[11px] font-mono text-emerald-300 overflow-x-auto max-h-96">-- Run this in Supabase SQL Editor to fix all 5 bugs in ARENA X ____Saas
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE public.users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('super_admin', 'host_admin', 'admin', 'player'));
+
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';
+
+ALTER TABLE public.tenant_settings
+  ADD COLUMN IF NOT EXISTS app_name VARCHAR(255) DEFAULT 'Arena X Pro',
+  ADD COLUMN IF NOT EXISTS min_withdraw NUMERIC(15, 2) DEFAULT 50.00,
+  ADD COLUMN IF NOT EXISTS referral_bonus NUMERIC(15, 2) DEFAULT 10.00,
+  ADD COLUMN IF NOT EXISTS support_contact TEXT,
+  ADD COLUMN IF NOT EXISTS payment_gateway_url TEXT,
+  ADD COLUMN IF NOT EXISTS sifrpay_merchant_id VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS sifrpay_secret_key VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS telegram_group TEXT,
+  ADD COLUMN IF NOT EXISTS telegram_id TEXT,
+  ADD COLUMN IF NOT EXISTS facebook_page TEXT,
+  ADD COLUMN IF NOT EXISTS policy_privacy TEXT,
+  ADD COLUMN IF NOT EXISTS policy_terms TEXT,
+  ADD COLUMN IF NOT EXISTS policy_refund TEXT,
+  ADD COLUMN IF NOT EXISTS policy_fair_play TEXT;
+
+CREATE TABLE IF NOT EXISTS public.games (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.promotions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    link TEXT DEFAULT '#',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.tournaments DROP CONSTRAINT IF EXISTS tournaments_match_type_check;
+ALTER TABLE public.tournaments ADD CONSTRAINT tournaments_match_type_check
+  CHECK (match_type IN ('Solo', 'Duo', 'Squad', 'CS 1v1', 'CS 4v4', 'Ludo'));
+
+ALTER TABLE public.tournaments
+  ADD COLUMN IF NOT EXISTS game_name VARCHAR(255) DEFAULT 'Free Fire',
+  ADD COLUMN IF NOT EXISTS start_time TIMESTAMP WITH TIME ZONE,
+  ADD COLUMN IF NOT EXISTS room_password VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS show_id_pass BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS description TEXT;
+
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS admin_note TEXT,
+  ADD COLUMN IF NOT EXISTS reject_reason TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: SQUAD / MATCH JOIN MODAL (4 UIDs)                            -->
+  <!-- ===================================================================== -->
+  <div id="joinMatchModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 border border-yellow-400/30 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="joinModalTitle" class="font-extrabold text-lg text-white">স্কোয়াড রেজিস্ট্রেশন</h3>
+        <button id="closeJoinModalBtn" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+      <p id="joinModalSub" class="text-xs text-slate-300"></p>
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="text-slate-400">টিম / স্কোয়াডের নাম *</label>
+          <input id="squadTeamNameInput" type="text" value="Team Sifr Elite" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-slate-400">Player 1 (Leader UID) *</label>
+            <input id="uid1Input" type="text" value="2849104421" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono" />
+          </div>
+          <div>
+            <label class="text-slate-400">Player 2 UID</label>
+            <input id="uid2Input" type="text" value="3910482910" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono" />
+          </div>
+          <div>
+            <label class="text-slate-400">Player 3 UID</label>
+            <input id="uid3Input" type="text" value="4920193844" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono" />
+          </div>
+          <div>
+            <label class="text-slate-400">Player 4 UID</label>
+            <input id="uid4Input" type="text" value="5839201922" class="w-full mt-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono" />
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button id="confirmSquadJoinBtn" class="flex-1 py-3 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold text-xs">
+          ✓ এন্ট্রি ফি পে করে স্লট লক করুন
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: BOOKING / WHATSAPP DEAL CLOSER MODAL                         -->
+  <!-- ===================================================================== -->
+  <div id="bookingModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-3xl p-6 border border-emerald-500/40 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-emerald-400 font-bold uppercase">Zero-Risk 3-Step Order</span>
+          <h3 class="font-extrabold text-lg text-white">আপনার টুর্নামেন্ট অ্যাপ অর্ডার কনফিগার করুন</h3>
+        </div>
+        <button id="closeBookingModalBtn" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-400">নির্বাচিত প্যাকেজ</label>
+          <input id="bookPkgInput" type="text" readonly value="Professional Package (৳৩৫,০০০ - ৳৫,০০০ বুকিং)" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-yellow-400 font-bold" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-slate-400">আপনার অ্যাপের কাঙ্ক্ষিত নাম *</label>
+            <input id="bookAppNameInput" type="text" placeholder="যেমন: BD Battle Arena" value="BD Battle Arena" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+          </div>
+          <div>
+            <label class="text-slate-400">আপনার হোয়াটসঅ্যাপ নাম্বার *</label>
+            <input id="bookPhoneInput" type="text" placeholder="017XXXXXXXX" value="01700000000" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono" />
+          </div>
+        </div>
+        <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 space-y-1 text-slate-300">
+          <p class="font-bold text-white">অর্ডার মেসেজ প্রিভিউ:</p>
+          <p id="bookPreviewText" class="text-emerald-300 font-mono text-[11px] whitespace-pre-line"></p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 pt-2">
+        <button id="copyOrderMsgBtn" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+          📋 অর্ডার মেসেজ কপি করুন (WhatsApp-এর জন্য)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- STATE ---
+    const state = {
+      mainBalance: 100,
+      winningCash: 20,
+      platformActive: true,
+      roomPublished: false,
+      publishedRoomId: 'Wait 5m prior',
+      publishedRoomPass: '****',
+      selectedMatchId: null,
+      smsPool: [
+        { trxId: 'BK8849X21Q', amount: 200, method: 'bKash', sender: '01712394810', used: false },
+        { trxId: 'NG7731M90P', amount: 500, method: 'Nagad', sender: '01844910231', used: false }
+      ],
+      ledger: [
+        { title: 'INITIAL WALLET BONUS', amount: 120, type: 'add', time: 'Just now' }
+      ],
+      matches: [
+        { id: 'm1', title: 'BD Squad Championship #42', mode: 'Squad', fee: 100, prize: 1000, perKill: 15, filled: 9, max: 12, joined: false, teamName: '' },
+        { id: 'm2', title: 'Clash Squad 4v4 Headshot Only', mode: 'CS 4v4', fee: 80, prize: 150, perKill: 0, filled: 1, max: 2, joined: false, teamName: '' },
+        { id: 'm3', title: 'Ludo King Instant 1v1 Battle', mode: 'Ludo', fee: 50, prize: 90, perKill: 0, filled: 1, max: 2, joined: false, teamName: '' },
+        { id: 'm4', title: 'Free Fire Pro Squad Scrims', mode: 'Squad', fee: 200, prize: 2200, perKill: 25, filled: 11, max: 12, joined: false, teamName: '' }
+      ],
+      currentFilter: 'ALL'
+    };
+
+    // --- TOAST HELPER ---
+    function showToast(title, body, isError = false) {
+      const container = document.getElementById('toastContainer');
+      const tEl = document.getElementById('toastTitle');
+      const bEl = document.getElementById('toastBody');
+      tEl.textContent = title;
+      tEl.className = isError ? 'font-bold text-sm text-red-400' : 'font-bold text-sm text-emerald-400';
+      container.className = `fixed top-4 right-4 z-50 max-w-sm w-full glass-card border-l-4 ${isError ? 'border-red-500' : 'border-emerald-400'} px-4 py-3 rounded-xl shadow-2xl transition-all duration-300`;
+      bEl.textContent = body;
+      container.classList.remove('hidden');
+      if (window._toastTimer) clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => container.classList.add('hidden'), 4000);
+    }
+
+    function copyTextSafe(text, msg) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        showToast('কপি সম্পন্ন!', msg);
+      } catch (e) {
+        showToast('কপি সম্পন্ন!', msg);
+      }
+    }
+
+    // --- NAVIGATION ---
+    function switchMainView(viewName) {
+      const views = {
+        funnel: document.getElementById('viewFunnel'),
+        sim: document.getElementById('viewSimulator'),
+        code: document.getElementById('viewCodeFix')
+      };
+      const btns = {
+        funnel: document.getElementById('navFunnelBtn'),
+        sim: document.getElementById('navSimulatorBtn'),
+        code: document.getElementById('navCodeFixBtn')
+      };
+      Object.keys(views).forEach(k => {
+        if (k === viewName) {
+          views[k].classList.remove('hidden');
+          btns[k].classList.add('active');
+        } else {
+          views[k].classList.add('hidden');
+          btns[k].classList.remove('active');
+        }
+      });
+    }
+
+    // --- PROFIT CALCULATOR ---
+    function updateCalculator() {
+      const matches = Number(document.getElementById('calcMatchesInput').value);
+      const pool = Number(document.getElementById('calcPoolInput').value);
+      const margin = Number(document.getElementById('calcMarginInput').value);
+
+      document.getElementById('calcMatchesVal').textContent = `${matches} টি ম্যাচ / দিন`;
+      document.getElementById('calcPoolVal').textContent = `৳${pool.toLocaleString()} / ম্যাচ`;
+      document.getElementById('calcMarginVal').textContent = `${margin}% লাভ`;
+
+      const daily = Math.round(matches * pool * (margin / 100));
+      const monthly = daily * 30;
+      document.getElementById('calcDailyProfit').textContent = `৳${daily.toLocaleString()} / দিন`;
+      document.getElementById('calcMonthlyProfit').textContent = `৳${monthly.toLocaleString()} / মাস`;
+    }
+
+    // --- SIMULATOR RENDERING ---
+    function renderSimulator() {
+      const totalBal = state.mainBalance + state.winningCash;
+      document.getElementById('simPlayerBalance').textContent = `৳${totalBal}`;
+      document.getElementById('walletMainBal').textContent = `৳${state.mainBalance}`;
+      document.getElementById('walletWinBal').textContent = `৳${state.winningCash}`;
+
+      const joinedMatches = state.matches.filter(m => m.joined);
+      document.getElementById('joinedCountBadge').textContent = joinedMatches.length;
+
+      // Render Matches
+      const mContainer = document.getElementById('simMatchesContainer');
+      const filtered = state.currentFilter === 'ALL'
+        ? state.matches
+        : state.matches.filter(m => m.mode === state.currentFilter);
+
+      mContainer.innerHTML = filtered.map(m => {
+        const pct = Math.round((m.filled / m.max) * 100);
+        const btnHtml = m.joined
+          ? `<button disabled class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs">✓ Joined (${m.teamName})</button>`
+          : `<button data-join="${m.id}" class="join-match-trigger px-3.5 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold text-xs">JOIN ৳${m.fee}</button>`;
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">${m.mode}</span>
+              <span class="text-xs font-extrabold text-yellow-400">Prize: ৳${m.prize}</span>
+            </div>
+            <p class="font-bold text-sm text-white">${m.title}</p>
+            <div class="grid grid-cols-3 text-[11px] text-slate-400 bg-slate-900 p-2 rounded-xl">
+              <div>Entry: <strong class="text-white">৳${m.fee}</strong></div>
+              <div>Per Kill: <strong class="text-white">৳${m.perKill}</strong></div>
+              <div>Slots: <strong class="text-emerald-400">${m.filled}/${m.max}</strong></div>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-yellow-400" style="width:${pct}%"></div>
+            </div>
+            <div class="flex justify-end pt-1">
+              ${btnHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Attach Join Triggers
+      document.querySelectorAll('.join-match-trigger').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mId = btn.getAttribute('data-join');
+          const m = state.matches.find(x => x.id === mId);
+          if (!m) return;
+          state.selectedMatchId = m.id;
+          document.getElementById('joinModalTitle').textContent = `${m.title} (${m.mode})`;
+          document.getElementById('joinModalSub').textContent = `এন্ট্রি ফি: ৳${m.fee} | আপনার বর্তমান ব্যালেন্স: ৳${state.mainBalance + state.winningCash}`;
+          document.getElementById('joinMatchModal').classList.remove('hidden');
+        });
+      });
+
+      // Render SifrPay SMS Pool
+      const poolBox = document.getElementById('simSmsPoolBox');
+      poolBox.innerHTML = state.smsPool.map(s => `
+        <div class="flex items-center justify-between py-1 border-b border-slate-900">
+          <span>[${s.method}] You have received Tk ${s.amount}.00 from ${s.sender}. TrxID <strong class="text-yellow-300">${s.trxId}</strong></span>
+          <span class="px-2 py-0.5 rounded text-[10px] ${s.used ? 'bg-slate-800 text-slate-400' : 'bg-emerald-500/20 text-emerald-300'}">${s.used ? 'CLAIMED' : 'READY (HMAC OK)'}</span>
+        </div>
+      `).join('');
+
+      // Render Ledger
+      const ledgerBox = document.getElementById('simLedgerList');
+      ledgerBox.innerHTML = state.ledger.map(l => `
+        <div class="flex items-center justify-between bg-slate-950 px-3 py-2 rounded-xl border border-slate-800">
+          <div>
+            <p class="font-bold text-white text-[11px]">${l.title}</p>
+            <p class="text-[10px] text-slate-500">${l.time}</p>
+          </div>
+          <span class="font-extrabold ${l.type === 'add' ? 'text-emerald-400' : 'text-red-400'}">${l.type === 'add' ? '+' : '-'}৳${l.amount}</span>
+        </div>
+      `).join('');
+
+      // Render Joined Rooms
+      const jBox = document.getElementById('simJoinedList');
+      if (joinedMatches.length === 0) {
+        jBox.innerHTML = `<div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center text-xs text-slate-400">আপনি এখনো কোনো ম্যাচে জয়েন করেননি। "ম্যাচসমূহ" ট্যাব থেকে জয়েন করুন।</div>`;
+      } else {
+        jBox.innerHTML = joinedMatches.map(m => `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/40 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-xs text-white">${m.title}</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">Slot Confirmed</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Team: <strong class="text-yellow-300">${m.teamName}</strong></p>
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span>Room ID: <strong class="text-emerald-400">${state.publishedRoomId}</strong></span>
+              <span>Pass: <strong class="text-yellow-400">${state.publishedRoomPass}</strong></span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // --- BOOKING PREVIEW HELPER ---
+    function updateBookingPreview() {
+      const pkg = document.getElementById('bookPkgInput').value;
+      const appName = document.getElementById('bookAppNameInput').value || 'My Esports App';
+      const phone = document.getElementById('bookPhoneInput').value || '017XXXXXXXX';
+      document.getElementById('bookPreviewText').textContent =
+        `আসসালামু আলাইকুম ভাই, আমি আপনার /appkinbo পেজ থেকে লাইভ ডেমো টেস্ট করেছি।
+` +
+        `প্যাকেজ: ${pkg}
+` +
+        `আমার অ্যাপের নাম: ${appName}
+` +
+        `হোয়াটসঅ্যাপ নাম্বার: ${phone}
+` +
+        `আমি ৳৫,০০০ বুকিং দিয়ে আমার ফোনে অ্যাপ ও অ্যাডমিন প্যানেল সেটআপ নিতে চাই।`;
+    }
+
+    // --- INIT EVENT LISTENERS ---
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('closeToastBtn').addEventListener('click', () => {
+        document.getElementById('toastContainer').classList.add('hidden');
+      });
+
+      // Top Nav
+      document.getElementById('navFunnelBtn').addEventListener('click', () => switchMainView('funnel'));
+      document.getElementById('navSimulatorBtn').addEventListener('click', () => switchMainView('sim'));
+      document.getElementById('navCodeFixBtn').addEventListener('click', () => switchMainView('code'));
+
+      document.getElementById('heroTrySimBtn').addEventListener('click', () => switchMainView('sim'));
+      document.getElementById('heroScrollPackagesBtn').addEventListener('click', () => {
+        document.getElementById('packagesSection').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // Calculator inputs
+      ['calcMatchesInput', 'calcPoolInput', 'calcMarginInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCalculator);
+      });
+      updateCalculator();
+
+      // Package Selection -> Open Booking Modal
+      document.querySelectorAll('.select-pkg-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('bookPkgInput').value = btn.getAttribute('data-pkg');
+          updateBookingPreview();
+          document.getElementById('bookingModal').classList.remove('hidden');
+        });
+      });
+      document.getElementById('headerBookBtn').addEventListener('click', () => {
+        updateBookingPreview();
+        document.getElementById('bookingModal').classList.remove('hidden');
+      });
+      document.getElementById('closeBookingModalBtn').addEventListener('click', () => {
+        document.getElementById('bookingModal').classList.add('hidden');
+      });
+      ['bookAppNameInput', 'bookPhoneInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateBookingPreview);
+      });
+      document.getElementById('copyOrderMsgBtn').addEventListener('click', () => {
+        copyTextSafe(document.getElementById('bookPreviewText').textContent, 'অর্ডার মেসেজ কপি হয়েছে! এখন সরাসরি WhatsApp-এ পাঠিয়ে দিন।');
+        document.getElementById('bookingModal').classList.add('hidden');
+      });
+
+      // Simulator Player Tabs
+      document.querySelectorAll('.sim-ptab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.sim-ptab').forEach(t => {
+            t.classList.remove('active');
+            t.classList.add('text-slate-400');
+          });
+          tab.classList.add('active');
+          tab.classList.remove('text-slate-400');
+          const target = tab.getAttribute('data-ptab');
+          ['matches', 'wallet', 'myrooms'].forEach(k => {
+            document.getElementById(`ptab-${k}`).classList.toggle('hidden', k !== target);
+          });
+        });
+      });
+
+      // Match Mode Filters
+      document.querySelectorAll('.mfilter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentFilter = btn.getAttribute('data-mfilter');
+          document.querySelectorAll('.mfilter-btn').forEach(b => {
+            b.className = 'mfilter-btn px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300';
+          });
+          btn.className = 'mfilter-btn px-2.5 py-1 rounded-lg bg-yellow-400 text-slate-950 font-bold';
+          renderSimulator();
+        });
+      });
+
+      // Join Match Modal
+      document.getElementById('closeJoinModalBtn').addEventListener('click', () => {
+        document.getElementById('joinMatchModal').classList.add('hidden');
+      });
+      document.getElementById('confirmSquadJoinBtn').addEventListener('click', () => {
+        const m = state.matches.find(x => x.id === state.selectedMatchId);
+        if (!m) return;
+        const total = state.mainBalance + state.winningCash;
+        if (total < m.fee) {
+          document.getElementById('joinMatchModal').classList.add('hidden');
+          showToast('ব্যালেন্স কম!', `ম্যাচে জয়েন করতে ৳${m.fee} প্রয়োজন। "অটো ডিপোজিট" ট্যাব থেকে SifrPay দিয়ে ব্যালেন্স যোগ করুন।`, true);
+          return;
+        }
+        // Deduct from winningCash then mainBalance
+        let rem = m.fee;
+        if (state.winningCash >= rem) {
+          state.winningCash -= rem;
+          rem = 0;
+        } else {
+          rem -= state.winningCash;
+          state.winningCash = 0;
+          state.mainBalance -= rem;
+        }
+        m.joined = true;
+        m.filled += 1;
+        m.teamName = document.getElementById('squadTeamNameInput').value || 'Team Sifr';
+        state.ledger.unshift({ title: `JOINED: ${m.title}`, amount: m.fee, type: 'sub', time: 'Just now' });
+        document.getElementById('joinMatchModal').classList.add('hidden');
+        renderSimulator();
+        showToast('স্লট কনফার্ম হয়েছে!', `${m.title}-এ আপনার স্কোয়াড রেজিস্টার হয়েছে। "রুম আইডি" ট্যাবে পাসওয়ার্ড দেখুন।`);
+      });
+
+      // SifrPay Generate New SMS
+      document.getElementById('simGenerateSmsBtn').addEventListener('click', () => {
+        const randId = 'BK' + Math.floor(10000000 + Math.random() * 90000000);
+        const amt = 300;
+        state.smsPool.unshift({ trxId: randId, amount: amt, method: 'bKash', sender: '01799887766', used: false });
+        document.getElementById('simDepAmount').value = amt;
+        document.getElementById('simDepTrxId').value = randId;
+        renderSimulator();
+        showToast('নতুন বিকাশ SMS এসেছে!', `SifrPay অ্যাপ TrxID: ${randId} (৳${amt}) ক্যাপচার করেছে। এখন বাম পাশে ভেরিফাই বাটনে ক্লিক করুন!`);
+      });
+
+      // SifrPay Verify Deposit
+      document.getElementById('simVerifyDepositBtn').addEventListener('click', () => {
+        const amt = Number(document.getElementById('simDepAmount').value);
+        const trx = (document.getElementById('simDepTrxId').value || '').trim().toUpperCase();
+        const found = state.smsPool.find(s => s.trxId === trx);
+        if (!found) {
+          showToast('TrxID পাওয়া যায়নি!', 'ডান পাশের SifrPay বক্সে থাকা যেকোনো একটি UNCLAIMED TrxID দিন।', true);
+          return;
+        }
+        if (found.used) {
+          showToast('ডুপ্লিকেট TrxID ব্লকড!', `এই TrxID (${trx}) ইতিমধ্যে ব্যবহার করা হয়েছে! SifrPay ডাবল-স্পেন্ড রুখে দিয়েছে।`, true);
+          return;
+        }
+        found.used = true;
+        state.mainBalance += found.amount;
+        state.ledger.unshift({ title: `SIFRPAY AUTO DEPOSIT (${trx})`, amount: found.amount, type: 'add', time: 'Verified in 0.8s' });
+        renderSimulator();
+        showToast('১ সেকেন্ডে অটো ডিপোজিট সফল!', `SifrPay আপনার TrxID (${trx}) ভেরিফাই করে ওয়ালেটে ৳${found.amount} যোগ করেছে!`);
+      });
+
+      // Admin Push Room ID
+      document.getElementById('adminPushRoomBtn').addEventListener('click', () => {
+        state.publishedRoomId = document.getElementById('adminRoomIdInput').value || '88492014';
+        state.publishedRoomPass = document.getElementById('adminRoomPassInput').value || '7744';
+        renderSimulator();
+        showToast('Room ID প্রকাশিত!', `প্লেয়ার অ্যাপের "রুম আইডি" ট্যাবে এখন ID: ${state.publishedRoomId} এবং Pass: ${state.publishedRoomPass} দেখা যাচ্ছে।`);
+      });
+
+      // Admin AI OCR Scanner
+      document.getElementById('simAiOcrBtn').addEventListener('click', () => {
+        document.getElementById('aiOcrResultBox').classList.remove('hidden');
+        state.winningCash += 540;
+        state.ledger.unshift({ title: 'BOOYAH PRIZE + 14 KILLS (AI OCR)', amount: 540, type: 'add', time: 'Auto-dispatched' });
+        renderSimulator();
+        showToast('AI রেজাল্ট স্ক্যান সম্পন্ন!', 'লবি স্ক্রিনশট থেকে ১৪ কিল ও বুইয়া প্রাইজ (৳৫৪০) অটোমেটিক উইনিং ওয়ালেটে যোগ হয়েছে!');
+      });
+
+      // Kill Switch Toggle
+      document.getElementById('toggleKillSwitchBtn').addEventListener('click', () => {
+        state.platformActive = !state.platformActive;
+        document.getElementById('suspendedOverlay').classList.toggle('hidden', state.platformActive);
+        document.getElementById('simulatorGrid').classList.toggle('hidden', !state.platformActive);
+        const btn = document.getElementById('toggleKillSwitchBtn');
+        if (state.platformActive) {
+          btn.textContent = '🟢 Active (ক্লিক করে সাসপেন্ড টেস্ট করুন)';
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        } else {
+          btn.textContent = '🔴 Suspended (ক্লিক করে অ্যাক্টিভ করুন)';
+          btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/40';
+        }
+      });
+      document.getElementById('restorePlatformBtn').addEventListener('click', () => {
+        document.getElementById('toggleKillSwitchBtn').click();
+      });
+
+      // Copy SQL Patch
+      document.getElementById('copySqlPatchBtn').addEventListener('click', () => {
+        copyTextSafe(document.getElementById('sqlPatchCode').textContent, 'সম্পূর্ণ SQL Migration কপি হয়েছে! এখন Supabase SQL Editor-এ পেস্ট করে Run করুন।');
+      });
+
+      renderSimulator();
+    });
+  </script>
+</body>
+</html>

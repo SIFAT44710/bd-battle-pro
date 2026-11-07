@@ -1,0 +1,4123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ARENA X</title>
+
+    <!-- Icons and Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* --- CSS Styles (No changes needed here) --- */
+        :root {
+            --primary-bg: #0F172A;
+            /* Dark blue-gray */
+            --secondary-bg: #1E293B;
+            /* Slightly lighter blue-gray */
+            --card-bg: #1E293B;
+            --text-primary: #E2E8F0;
+            /* Light gray for primary text */
+            --text-secondary: #94A3B8;
+            /* Muted gray for secondary text */
+            --accent-color: #FACC15;
+            /* Yellow accent */
+            --accent-gradient: linear-gradient(to right, #FACC15, #FBBF24);
+            --primary-button-bg: #3B82F6;
+            /* Blue for primary actions */
+            --border-color: #334155;
+            /* Border color */
+            --bottom-nav-bg: #1E293B;
+            --success-color: #10B981;
+            /* Green for success */
+            --danger-color: #EF4444;
+            /* Red for danger/errors */
+            --warning-color: #F59E0B;
+            /* Orange for warnings */
+            --info-color: #3B82F6;
+            /* Blue for info */
+        }
+
+        /* ... (Rest of the CSS styles remain exactly the same) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            padding-top: 70px;
+            padding-bottom: 75px;
+            min-height: 100vh;
+            overscroll-behavior-y: contain;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #FBBF24;
+        }
+
+        .main-content {
+            padding: 15px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .custom-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-custom {
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 15px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color 0.2s ease, filter 0.2s ease;
+        }
+
+        .btn-custom-primary {
+            background-color: var(--primary-button-bg);
+            color: var(--text-primary);
+        }
+
+        .btn-custom-primary:hover {
+            background-color: #2563EB;
+        }
+
+        .btn-custom-secondary {
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-custom-secondary:hover {
+            background-color: #334155;
+        }
+
+        .btn-custom-accent {
+            background: var(--accent-gradient);
+            color: var(--primary-bg);
+            font-weight: 600;
+        }
+
+        .btn-custom-accent:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-custom-link {
+            background: none;
+            border: none;
+            color: var(--primary-button-bg);
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .text-accent {
+            color: var(--accent-color);
+        }
+
+        .text-success {
+            color: var(--success-color);
+        }
+
+        .text-danger {
+            color: var(--danger-color);
+        }
+
+        .text-warning {
+            color: var(--warning-color);
+        }
+
+        .form-control,
+        .form-select {
+            background-color: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: var(--primary-bg);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(250, 204, 21, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .list-group-item {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px;
+            font-size: 0.95rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-group-item i:first-child {
+            color: var(--accent-color);
+            margin-right: 15px;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .list-group-item .bi-chevron-right {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        #globalLoaderEl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .spinner-border {
+            color: var(--accent-color);
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .placeholder-glow .placeholder {
+            background-color: rgba(51, 65, 85, 0.5);
+            animation: placeholder-glow 2s ease-in-out infinite;
+        }
+
+        .placeholder {
+            background-color: rgba(51, 65, 85, 0.5);
+            border-radius: 4px;
+        }
+
+        @keyframes placeholder-glow {
+            0% {
+                background-color: rgba(51, 65, 85, 0.5);
+            }
+
+            50% {
+                background-color: rgba(51, 65, 85, 0.7);
+            }
+
+            100% {
+                background-color: rgba(51, 65, 85, 0.5);
+            }
+        }
+
+        .interactive-list-item {
+            cursor: pointer;
+        }
+
+        .referral-code {
+            font-family: monospace;
+            letter-spacing: 1px;
+            user-select: all;
+        }
+
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: var(--secondary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #fff;
+            object-fit: cover;
+            border: 1px solid var(--accent-color);
+        }
+
+        .header-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .header-title span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        .header-back-button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            margin-right: 5px;
+            display: none;
+            padding: 5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            position: relative;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -5px;
+            background-color: var(--danger-color);
+            color: white;
+            font-size: 0.6rem;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .wallet-chip {
+            background: var(--accent-gradient);
+            color: var(--primary-bg);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .wallet-chip i {
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+
+        .header-game-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-left: 10px;
+            display: none;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background-color: var(--bottom-nav-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: stretch;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            flex-grow: 1;
+            padding: 8px 0;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .nav-item i {
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .nav-item span {
+            font-size: 0.7rem;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+            background-color: rgba(250, 204, 21, 0.1);
+        }
+
+        .swiper-container#promotionSliderEl {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            --swiper-pagination-color: var(--accent-color);
+            --swiper-pagination-bullet-inactive-color: var(--text-secondary);
+            --swiper-pagination-bullet-size: 8px;
+        }
+
+        .swiper-slide {
+            background-color: var(--secondary-bg);
+            border-radius: 10px;
+        }
+
+        .swiper-slide img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .game-card {
+            text-align: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .game-card span {
+            display: block;
+            padding: 10px 5px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .tournament-tabs {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--secondary-bg);
+            padding: 5px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tab-item {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            flex-grow: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .tab-item.active {
+            background-color: var(--primary-button-bg);
+            color: var(--text-primary);
+        }
+
+        .tab-item i {
+            margin-right: 5px;
+        }
+
+        .tournament-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tournament-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tournament-card-tags span {
+            background-color: var(--primary-bg);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            border: 1px solid var(--border-color);
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+
+        .tournament-card-timer {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .tournament-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .tournament-card-title i {
+            color: var(--accent-color);
+        }
+
+        .tournament-card-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            border-top: 1px dashed var(--border-color);
+            border-bottom: 1px dashed var(--border-color);
+            padding: 10px 0;
+            margin: 10px 0;
+            font-size: 0.8rem;
+        }
+
+        .info-item {
+            text-align: center;
+            flex: 1;
+            padding: 0 5px;
+        }
+
+        .info-item span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+        }
+
+        .info-item strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .info-item .prize-icon {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .tournament-card-spots {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .tournament-card-spots span {
+            font-weight: 600;
+        }
+
+        .progress {
+            height: 6px;
+            background-color: var(--primary-bg);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background-color: var(--warning-color);
+            transition: width 0.3s ease;
+        }
+
+        .tournament-card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tournament-card-actions .btn-sm {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .tournament-card-actions .btn-join {
+            background: var(--accent-gradient);
+            color: var(--primary-bg);
+            font-weight: 600;
+            grid-column: 2 / 3;
+        }
+
+        .tournament-card-actions .btn-details {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            grid-column: 1 / 2;
+        }
+
+        .tournament-card-actions .btn-joined {
+            background-color: var(--success-color);
+            color: var(--text-primary);
+            opacity: 0.8;
+            grid-column: 2 / 3;
+        }
+
+        .tournament-card-actions .btn-disabled {
+            background-color: var(--secondary-bg);
+            opacity: 0.6;
+            cursor: not-allowed;
+            grid-column: 2 / 3;
+        }
+
+        .btn-idpass {
+            background: var(--accent-gradient);
+            color: var(--primary-bg);
+            border: none;
+            font-weight: 600;
+        }
+
+        .wallet-card {
+            background: linear-gradient(145deg, var(--secondary-bg), var(--primary-bg));
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .wallet-card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .balance-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .balance-item-label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .balance-item-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .balance-item-action {
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .balance-item-action .btn-custom-link {
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            padding: 5px;
+        }
+
+        .balance-item-action .btn-withdraw {
+            background-color: var(--primary-button-bg);
+            color: #fff;
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        #recentTransactionsListEl .custom-card {
+            background-color: var(--secondary-bg);
+        }
+
+        /* --- NEW: Styles for Transaction Status Badge --- */
+        .transaction-status {
+            font-weight: 600;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .transaction-status.pending {
+            color: var(--warning-color);
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+
+        .transaction-status.completed {
+            color: var(--success-color);
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .transaction-status.rejected {
+            color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* --- End of New Styles --- */
+
+
+        #earnings-section .custom-card {
+            text-align: center;
+        }
+
+        #earnings-section .display-4 {
+            font-size: 3rem;
+        }
+
+        #earnings-section p strong {
+            color: var(--text-primary);
+        }
+
+        .profile-header-card {
+            background: linear-gradient(145deg, var(--secondary-bg), var(--primary-bg));
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 2px solid var(--accent-color);
+            object-fit: cover;
+            background-color: var(--primary-bg);
+        }
+
+        .profile-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .profile-email {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item strong {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .stat-item span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .profile-links .list-group {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-links .form-switch .form-check-input {
+            background-color: var(--secondary-bg);
+            border-color: var(--border-color);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%28255, 255, 255, 0.25%29'/%3e%3c/svg%3e");
+        }
+
+        .profile-links .form-switch .form-check-input:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+        }
+
+        #login-section {
+            margin-top: 5vh;
+        }
+
+        #login-section .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        #login-section .btn-primary {
+            background-color: var(--primary-button-bg);
+            border: none;
+        }
+
+        #login-section .btn-link {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.9em;
+            padding: 5px 0;
+        }
+
+        #login-section .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        #login-section .btn-success {
+            background-color: var(--success-color);
+            border: none;
+        }
+
+        #login-section .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+        }
+
+        #login-section .form-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        #login-section .form-divider::before,
+        #login-section .form-divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        #login-section .form-divider::before {
+            left: 0;
+        }
+
+        #login-section .form-divider::after {
+            right: 0;
+        }
+
+        #login-section .form-divider span {
+            background-color: var(--card-bg);
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        #login-section .card-title {
+            color: var(--text-primary);
+        }
+
+        #googleSignInBtnMainEl {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        .modal-footer {
+            border-top-color: var(--border-color);
+        }
+
+        .btn-close-white {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .modal-body .phonepe-number {
+            color: var(--warning-color);
+            font-weight: bold;
+            user-select: text;
+        }
+
+        #matchDetailsModalBodyEl pre {
+            background-color: var(--primary-bg);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        #policyModalBodyEl {
+            line-height: 1.6;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        #idPasswordModalEl .copy-btn {
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        #policyModalBodyEl .copy-btn,
+        #policyModalBodyEl #shareReferralBtn {
+            padding: 4px 10px;
+            font-size: 0.9rem;
+        }
+
+        #policyModalBodyEl #shareReferralBtn i,
+        #policyModalBodyEl .copy-btn i {
+            margin-right: 5px;
+        }
+
+        #securityWarning {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            position: sticky;
+            top: 60px;
+            z-index: 999;
+            border-bottom: 1px solid #a51d1d;
+        }
+
+        #securityWarning a {
+            color: #ffdddd;
+            text-decoration: underline;
+        }
+
+        #securityWarning button {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 2px 8px;
+            margin-left: 15px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* --- Styles for Success Animation Modal --- */
+        #success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #success-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-animation-card {
+            background-color: var(--secondary-bg);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        #success-overlay.visible .success-animation-card {
+            transform: scale(1);
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+        }
+
+        .success-checkmark .check-icon {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            border-radius: 50%;
+            box-sizing: content-box;
+            border: 4px solid var(--success-color);
+        }
+
+        .success-checkmark .check-icon .icon-line {
+            height: 5px;
+            background-color: var(--success-color);
+            display: block;
+            border-radius: 2px;
+            position: absolute;
+            z-index: 10;
+        }
+
+        .success-checkmark .check-icon .line-tip {
+            top: 42px;
+            left: 14px;
+            width: 25px;
+            transform: rotate(45deg);
+            animation: icon-line-tip 0.75s;
+        }
+
+        .success-checkmark .check-icon .line-long {
+            top: 34px;
+            right: 8px;
+            width: 47px;
+            transform: rotate(-45deg);
+            animation: icon-line-long 0.75s;
+        }
+
+        .success-checkmark .check-icon .icon-circle {
+            top: -4px;
+            left: -4px;
+            z-index: 10;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+            box-sizing: content-box;
+            border: 4px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .success-checkmark .check-icon .icon-fix {
+            top: 8px;
+            width: 5px;
+            left: 26px;
+            z-index: 1;
+            height: 85px;
+            position: absolute;
+            transform: rotate(-45deg);
+            background-color: var(--secondary-bg);
+        }
+
+        @keyframes icon-line-tip {
+            0% {
+                width: 0;
+                left: 1px;
+                top: 19px;
+            }
+
+            54% {
+                width: 0;
+                left: 1px;
+                top: 19px;
+            }
+
+            70% {
+                width: 50px;
+                left: -8px;
+                top: 37px;
+            }
+
+            84% {
+                width: 17px;
+                left: 21px;
+                top: 48px;
+            }
+
+            100% {
+                width: 25px;
+                left: 14px;
+                top: 42px;
+            }
+        }
+
+        @keyframes icon-line-long {
+            0% {
+                width: 0;
+                right: 46px;
+                top: 54px;
+            }
+
+            65% {
+                width: 0;
+                right: 46px;
+                top: 54px;
+            }
+
+            84% {
+                width: 55px;
+                right: 0px;
+                top: 35px;
+            }
+
+            100% {
+                width: 47px;
+                right: 8px;
+                top: 34px;
+            }
+        }
+
+        /* --- CSS ADDED --- */
+        .custom-error-text {
+            color: var(--danger-color);
+            text-align: center;
+            margin-top: -5px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none;
+            /* শুরুতে লুকানো থাকবে */
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* --- END OF CSS ADDED --- */
+    </style>
+</head>
+
+<body>
+    <!-- Firebase Security Rules Warning -->
+    <div id="securityWarning" style="display: none;">
+        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Security Alert:</strong> Your database rules are
+        insecure (public). Anyone can read/write data.
+        <a href="https://firebase.google.com/docs/database/security" target="_blank" rel="noopener noreferrer">Learn how
+            to secure rules.</a>
+        <button onclick="this.parentElement.style.display='none'">Dismiss</button>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button class="header-back-button" id="headerBackBtnEl"><i class="bi bi-arrow-left"></i></button>
+            <img src="https://via.placeholder.com/40/FFFFFF/0F172A?text=G" alt="Logo" class="header-logo"
+                id="appLogoEl">
+            <div class="header-title" id="headerTitleContainerEl"> ARENA X
+            </div>
+            <div class="header-game-title" id="headerGameTitleEl">ARENA X</div>
+        </div>
+        <div class="header-right">
+
+            <button class="wallet-chip" id="headerWalletChipEl" style="display: none;"> <i
+                    class="bi bi-wallet-fill"></i> ৳<span id="headerChipBalanceEl">0</span> </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div id="globalLoaderEl">
+            <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+        </div>
+
+        <!-- Login Section -->
+        <section id="login-section" class="section">
+            <div class="container" style="max-width: 450px;">
+                <div class="card shadow-sm custom-card">
+                    <div class="card-body p-4">
+                        <!-- Login Form -->
+                        <form id="emailLoginForm">
+                            <h2 class="card-title text-center mb-4">Login</h2>
+                            <div class="mb-3"> <label for="loginEmailInputEl" class="form-label">Email</label> <input
+                                    type="email" class="form-control" id="loginEmailInputEl"
+                                    placeholder="name@example.com" required> </div>
+                            <div class="mb-3"> <label for="loginPasswordInputEl" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPasswordInputEl"
+                                    placeholder="Password" required>
+                            </div>
+
+                            <!-- HTML MODIFIED: New element for custom error message -->
+                            <p id="customLoginErrorEl" class="custom-error-text"></p>
+
+                            <div id="loginStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+                            <div class="d-grid gap-2 mb-3"> <!-- Google Login Button -->
+                                <div class="d-grid mt-3">
+                                    <button type="button" class="btn btn-light border" id="googleSignInBtnEl"
+                                        style="font-weight: 500;">
+                                        <i class="bi bi-google text-danger me-2"></i> Continue with Google
+                                    </button>
+                                </div><button type="button" class="btn btn-custom btn-custom-primary"
+                                    id="loginEmailBtnEl">Login</button>
+                                <button type="button" class="btn-custom-link btn-sm p-0 text-center d-block"
+                                    id="showSignupToggleBtnEl">Need an account? Sign Up</button> <a href="#"
+                                    id="forgotPasswordLinkEl" class="text-center small mt-2 d-block"
+                                    style="color: var(--text-secondary);">Forgot Password?</a>
+                            </div>
+                        </form>
+
+                        <!-- Signup Form (Initially Hidden) -->
+                        <form id="emailSignupForm" style="display: none;">
+                            <h2 class="card-title text-center mb-4">Sign Up</h2>
+                            <div class="mb-3"> <label for="signupEmailInputEl" class="form-label">Email</label> <input
+                                    type="email" class="form-control" id="signupEmailInputEl"
+                                    placeholder="name@example.com" required> </div>
+                            <div class="mb-3"> <label for="signupPasswordInputEl" class="form-label">Password (min 6
+                                    chars)</label> <input type="password" class="form-control"
+                                    id="signupPasswordInputEl" placeholder="Password" required minlength="6"> </div>
+                            <div class="mb-3"> <label for="signupConfirmPasswordInputEl" class="form-label">Confirm
+                                    Password</label> <input type="password" class="form-control"
+                                    id="signupConfirmPasswordInputEl" placeholder="Confirm Password" required> </div>
+                            <!-- *** REFERRAL CODE INPUT ADDED *** -->
+                            <div class="mb-3"> <label for="signupReferralCodeInputEl" class="form-label">Referral Code
+                                    (Optional)</label> <input type="text" class="form-control"
+                                    id="signupReferralCodeInputEl" placeholder="Enter referral code"> </div>
+                            <div id="signupStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+                            <div class="d-grid gap-2 mb-3"> <button type="button"
+                                    class="btn btn-custom btn-custom-accent" id="signupEmailBtnEl">Sign Up</button>
+                                <button type="button" class="btn-custom-link btn-sm p-0 text-center d-block"
+                                    id="showLoginToggleBtnEl">Already have account? Login</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Home Section -->
+        <section id="home-section" class="section">
+            <!-- Promotion Slider -->
+            <div class="swiper-container" id="promotionSliderEl">
+                <div class="swiper-wrapper placeholder-glow">
+                    <div class="swiper-slide"><span class="placeholder"
+                            style="display: block; width: 100%; height: 100%; border-radius: 10px;"></span></div>
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+
+            <!-- Esport Games -->
+            <h2 class="section-title">Esport Games</h2>
+            <div class="row g-3 mb-4 placeholder-glow" id="gamesListEl">
+                <!-- Placeholder Game Cards -->
+                <div class="col-6">
+                    <div class="game-card custom-card"><span class="placeholder d-block"
+                            style="height: 130px; border-top-left-radius: 8px; border-top-right-radius: 8px;"></span><span
+                            class="placeholder d-block mt-2 col-8 mx-auto" style="height: 20px;"></span></div>
+                </div>
+                <div class="col-6">
+                    <div class="game-card custom-card"><span class="placeholder d-block"
+                            style="height: 130px; border-top-left-radius: 8px; border-top-right-radius: 8px;"></span><span
+                            class="placeholder d-block mt-2 col-8 mx-auto" style="height: 20px;"></span></div>
+                </div>
+            </div>
+
+            <!-- My Contests -->
+            <h2 class="section-title"></h2>
+            <div id="myContestsListEl" class="placeholder-glow">
+                <!-- Placeholder Contest Card -->
+                <div class="tournament-card placeholder-glow mb-3"> <span class="placeholder col-6"
+                        style="height: 18px;"></span> <span class="placeholder col-12 mt-2"
+                        style="height: 24px;"></span> <span class="placeholder col-10 mt-2"
+                        style="height: 16px;"></span>
+                    <div class="d-flex justify-content-between mt-3"> <span class="placeholder col-4"
+                            style="height: 30px; border-radius: 6px;"></span> <span class="placeholder col-4"
+                            style="height: 30px; border-radius: 6px;"></span> </div>
+                </div>
+                <p id="noContestsMessageEl" class="text-secondary text-center" style="display: none;">You haven't joined
+                    any contests yet.</p>
+            </div>
+        </section>
+        <!-- Tournaments Section -->
+        <section id="tournaments-section" class="section">
+
+            <!-- 🔥 নতুন ট্যাব (Data Filter ভ্যালুগুলো খেয়াল কর) 🔥 -->
+            <div class="tournament-tabs d-flex justify-content-around bg-dark p-1 rounded mb-3">
+                <button class="tab-item active btn btn-sm btn-outline-warning border-0 flex-grow-1"
+                    data-filter="Solo">Solo</button>
+                <button class="tab-item btn btn-sm btn-outline-warning border-0 flex-grow-1"
+                    data-filter="Duo">Duo</button>
+                <button class="tab-item btn btn-sm btn-outline-warning border-0 flex-grow-1"
+                    data-filter="Squad">Squad</button>
+                <button class="tab-item btn btn-sm btn-outline-danger border-0 flex-grow-1"
+                    data-filter="Completed">Completed</button>
+            </div>
+
+            <!-- লিস্ট কন্টেইনার -->
+            <div id="tournamentsListContainerEl" class="mt-3 placeholder-glow">
+                <div class="tournament-card placeholder-glow mb-3">
+                    <span class="placeholder col-6" style="height: 18px;"></span>
+                    <span class="placeholder col-12 mt-2" style="height: 24px;"></span>
+                    <span class="placeholder col-10 mt-2" style="height: 16px;"></span>
+                    <div class="d-flex justify-content-between mt-3">
+                        <span class="placeholder col-4" style="height: 30px; border-radius: 6px;"></span>
+                        <span class="placeholder col-4" style="height: 30px; border-radius: 6px;"></span>
+                    </div>
+                </div>
+            </div>
+            <p id="noTournamentsMessageEl" class="text-secondary text-center mt-4" style="display: none;">No tournaments
+                found.</p>
+        </section>
+
+        <!-- Wallet Section -->
+        <section id="wallet-section" class="section">
+            <div class="wallet-card custom-card">
+                <h2 class="section-title mb-4">Wallet</h2>
+                <div class="balance-item placeholder-glow"> <span class="balance-item-label">Total Balance</span> <span
+                        class="balance-item-value" id="walletTotalBalanceEl"><span
+                            class="placeholder col-3"></span></span>
+
+                </div>
+                <div class="balance-item placeholder-glow"> <span class="balance-item-label">Winning Cash</span> <span
+                        class="balance-item-value" id="walletWinningCashEl"><span
+                            class="placeholder col-3"></span></span>
+                    <div class="balance-item-action"> <button class="btn-withdraw" id="withdrawBtnEl">Withdraw</button>
+                    </div>
+                </div>
+                <div class="balance-item placeholder-glow"> <span class="balance-item-label">Bonus Cash</span> <span
+                        class="balance-item-value" id="walletBonusCashEl"><span class="placeholder col-3"></span></span>
+                    <div class="balance-item-action" style="min-width: 100px;"></div>
+                </div>
+                <button class="btn btn-custom btn-custom-secondary w-100 mt-4" id="addAmountWalletBtnEl"> <i
+                        class="bi bi-plus-circle-fill me-2"></i>Add Amount </button>
+            </div>
+
+            <h3 class="section-title mt-4">Recent Transactions</h3>
+            <div id="recentTransactionsListEl" class="placeholder-glow">
+                <!-- Placeholder Item -->
+                <div class="custom-card p-2 mb-2 placeholder-glow">
+                    <div class="d-flex justify-content-between"> <span class="placeholder col-5"
+                            style="height: 16px;"></span> <span class="placeholder col-3" style="height: 16px;"></span>
+                    </div>
+                    <div class="small text-secondary mt-1"><span class="placeholder col-6" style="height: 14px;"></span>
+                    </div>
+                </div>
+                <!-- Message for loading or no transactions -->
+                <p class="text-secondary text-center mt-3" id="noTransactionsMessageEl" style="display: none;">Loading
+                    transactions...</p>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section id="earnings-section" class="section">
+            <h2 class="section-title">Leaderboard</h2>
+            <div class="custom-card text-center">
+                <p class="display-6">Upcoming</p>
+            </div>
+        </section>
+
+
+        <!-- Profile Section -->
+        <section id="profile-section" class="section">
+            <!-- Profile Header (Updated Design) -->
+            <div class="profile-header-card placeholder-glow">
+                <img src="https://via.placeholder.com/70" alt="Avatar" class="profile-avatar" id="profileAvatarEl">
+
+                <!-- ID Display -->
+                <div class="mt-2 mb-1">
+                    <span class="badge bg-dark border border-secondary text-warning p-2"
+                        style="font-size: 0.85rem; border-radius: 20px;">
+                        ID: <span id="profileUidEl" class="user-select-all">Loading...</span>
+                        <i class="bi bi-clipboard ms-2 copy-btn" data-target="#profileUidEl"
+                            style="cursor: pointer;"></i>
+                    </span>
+                </div>
+
+                <!-- Name & Email -->
+                <h3 class="profile-name" id="profileNameEl"><span class="placeholder col-6"></span></h3>
+                <p class="profile-email text-secondary small" id="profileEmailEl"><span
+                        class="placeholder col-8"></span></p>
+
+                <!-- Stats -->
+                <div class="profile-stats">
+
+                </div>
+            </div>
+
+            <!-- Profile Menu -->
+            <div class="profile-links">
+                <div class="list-group custom-card">
+                    <label
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center interactive-list-item">
+                        <span><i class="bi bi-bell-fill"></i> Notifications</span>
+                        <div class="form-check form-switch"> <input class="form-check-input" type="checkbox"
+                                role="switch" id="notificationSwitchEl" checked> </div>
+                    </label>
+
+                    <!-- Support Button -->
+                    <button
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center interactive-list-item"
+                        id="openSupportModalBtnEl">
+                        <span><i class="bi bi-headset"></i> Support & Contact</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+
+                    <!-- Referral Button (NEW) -->
+                    <button
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center interactive-list-item"
+                        id="openReferralBtnEl">
+                        <span><i class="bi bi-share-fill text-accent"></i> Refer & Earn</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+
+                    <!-- Logout Button -->
+                    <button
+                        class="list-group-item list-group-item-action text-danger d-flex justify-content-between align-items-center interactive-list-item"
+                        id="logoutProfileBtnEl">
+                        <span><i class="bi bi-box-arrow-right"></i> Logout</span><span></span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modals -->
+        <div class="modal fade" id="policyModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="policyModalTitleEl">Details</h5><button type="button"
+                            class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="policyModalBodyEl" style="min-height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addAmountModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-wallet2 me-2 text-accent"></i> Add Balance</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Step 1: Amount Input -->
+                        <div id="depositStep1">
+                            <h6 class="text-secondary mb-3">Step 1: Enter Amount</h6>
+                            <div class="mb-3">
+                                <label for="depositAmountInputEl" class="form-label">Amount to Deposit (৳)</label>
+                                <input type="number" class="form-control" id="depositAmountInputEl"
+                                    placeholder="e.g., 100" min="10">
+                            </div>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-custom btn-custom-accent" id="confirmDepositBtnEl">
+                                    <i class="bi bi-credit-card-fill"></i> Proceed to Pay
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Verification -->
+                        <div id="depositStep2" style="display: none;">
+                            <h6 class="text-secondary mb-3">Step 2: Verify Payment</h6>
+                            <p class="small text-secondary">
+                                After completing payment in the new tab, copy the <strong>Transaction ID</strong> and
+                                paste
+                                it below.
+                            </p>
+                            <div class="mb-3">
+                                <label for="transactionIdInputEl" class="form-label">Transaction ID</label>
+                                <input type="text" class="form-control" id="transactionIdInputEl"
+                                    placeholder="Enter transaction ID">
+                            </div>
+                            <ul class="list-unstyled small text-secondary mt-2">
+                                <li><i class="bi bi-check-circle-fill text-success"></i> Bkash / Nagad</li>
+                                <li><i class="bi bi-check-circle-fill text-success"></i> Agent not allowed
+                                </li>
+                                <li><i class="bi bi-check-circle-fill text-success"></i> Only TXID『 No Space 』</li>
+                            </ul>
+                            <div class="d-grid mt-3">
+                                <button type="button" class="btn btn-custom btn-custom-primary"
+                                    id="verifyTransactionBtnEl">
+                                    <i class="bi bi-patch-check-fill"></i> Verify Transaction
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Status Message Area -->
+                        <div id="depositStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="withdrawModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i> Withdraw Funds</h5><button
+                            type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-secondary">Withdrawable balance: <strong class="text-light"
+                                id="withdrawModalBalanceEl">৳0.00</strong></p>
+                        <div class="mb-3">
+                            <label for="withdrawAmountInputEl" class="form-label">Amount (Min ৳<span
+                                    id="minWithdrawAmountEl">50</span>)</label>
+                            <input type="number" class="form-control" id="withdrawAmountInputEl"
+                                placeholder="Enter amount">
+                        </div>
+                        <div class="mb-3">
+                            <label for="withdrawMethodSelectEl" class="form-label">Select Method</label>
+                            <select class="form-select" id="withdrawMethodSelectEl">
+                                <option value="Bkash" selected>Bkash</option>
+                                <option value="Nagad">Nagad</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="withdrawNumberInputEl" class="form-label">Enter Your 11-Digit Number</label>
+                            <input type="tel" class="form-control" id="withdrawNumberInputEl"
+                                placeholder="e.g., 01700000000" maxlength="11">
+                        </div>
+                        <div id="withdrawStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-custom btn-custom-secondary"
+                            data-bs-dismiss="modal">Cancel</button><button type="button"
+                            class="btn btn-custom btn-custom-primary" id="submitWithdrawRequestBtnEl">Submit
+                            Request</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="success-overlay">
+            <div class="success-animation-card">
+                <div class="success-checkmark">
+                    <div class="check-icon">
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
+                    </div>
+                </div>
+                <h4 class="text-primary-text mb-2">Request Received</h4>
+                <p class="text-secondary">Your withdrawal request has been received. <br>It will be completed within 24
+                    hours.</p>
+            </div>
+        </div>
+
+        <div class="modal fade" id="matchDetailsModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="matchDetailsModalTitleEl">Match Details</h5><button type="button"
+                            class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="matchDetailsModalBodyEl"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="idPasswordModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Room ID & Password</h5><button type="button"
+                            class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="small text-secondary">ID/Pass shown shortly before match start.</p>
+                        <div class="my-3 p-3" style="background: var(--primary-bg); border-radius: 8px;">
+                            <p class="mb-1">Room ID:</p>
+                            <h4 id="roomIdDisplayEl" class="text-accent referral-code placeholder-glow d-inline-block">
+                                <span class="placeholder col-6"></span>
+                            </h4><button class="btn btn-sm btn-outline-warning ms-2 copy-btn"
+                                data-target="#roomIdDisplayEl" title="Copy Room ID"><i
+                                    class="bi bi-clipboard"></i></button>
+                        </div>
+                        <div class="my-3 p-3" style="background: var(--primary-bg); border-radius: 8px;">
+                            <p class="mb-1">Password:</p>
+                            <h4 id="roomPasswordDisplayEl"
+                                class="text-accent referral-code placeholder-glow d-inline-block"><span
+                                    class="placeholder col-6"></span></h4><button
+                                class="btn btn-sm btn-outline-warning ms-2 copy-btn"
+                                data-target="#roomPasswordDisplayEl" title="Copy Password"><i
+                                    class="bi bi-clipboard"></i></button>
+                        </div>
+                        <p class="small text-warning"><i class="bi bi-exclamation-triangle"></i> Don't share
+                            ID/Password.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- *** NEW: In-Game Name Modal *** -->
+        <div class="modal fade" id="inGameNameModalEl" tabindex="-1" aria-labelledby="inGameNameModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="inGameNameModalLabel">Enter In-Game Name</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-secondary small">Please provide your correct Free Fire (FF) game name to join the
+                            match.</p>
+                        <div class="mb-3">
+                            <label for="inGameNameInputEl" class="form-label">Your Game Name</label>
+                            <input type="text" class="form-control" id="inGameNameInputEl"
+                                placeholder="e.g., YourProGamer" required>
+                        </div>
+                        <div id="inGameNameStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-custom btn-custom-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-custom btn-custom-accent" id="confirmJoinBtnEl">Confirm &
+                            Join</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Referral Modal -->
+        <div class="modal fade" id="referralModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-gift-fill text-accent"></i> Refer & Earn</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Referral Code Display -->
+                        <div class="text-center mb-4">
+                            <p class="text-secondary small">Share your code. When your friend withdraws money, you get
+                                <strong class="text-success">10% Commission</strong> automatically!
+                            </p>
+
+                            <div class="p-3 rounded border border-secondary bg-dark d-inline-block position-relative">
+                                <span class="h4 text-warning mb-0 user-select-all" id="myReferralCodeEl">LOADING</span>
+                                <i class="bi bi-clipboard ms-3 text-white copy-btn" data-target="#myReferralCodeEl"
+                                    style="cursor: pointer; font-size: 1.2rem;"></i>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-primary" id="shareReferralLinkBtn"><i
+                                        class="bi bi-share-fill"></i> Share Code</button>
+                            </div>
+                        </div>
+
+                        <!-- Referral Stats -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-dark border border-secondary text-center">
+                                    <h4 class="mb-0 text-white" id="totalReferredCountEl">0</h4>
+                                    <small class="text-secondary">Friends Joined</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-dark border border-secondary text-center">
+                                    <h4 class="mb-0 text-success">৳<span id="totalReferralEarningsEl">0</span></h4>
+                                    <small class="text-secondary">Total Earnings</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Referred History List -->
+                        <h6 class="border-bottom border-secondary pb-2 mb-2 text-accent">Referred Users History</h6>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush" id="referredUsersListEl">
+                                <li class="list-group-item bg-transparent text-center text-muted small">Loading
+                                    history...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Support Modal -->
+        <div class="modal fade" id="supportModalEl" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-headset text-accent"></i> Contact Support</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="text-secondary mb-4">Join our community or contact admin directly.</p>
+
+                        <div class="d-grid gap-3">
+                            <!-- Telegram Group -->
+                            <a href="#" target="_blank" id="btnTeleGroup" class="btn btn-lg btn-outline-info text-white"
+                                style="border-color: #0088cc; background: rgba(0,136,204,0.1); display: none;">
+                                <i class="bi bi-people-fill me-2"></i> Join Telegram Group
+                            </a>
+
+                            <!-- Telegram ID -->
+                            <a href="#" target="_blank" id="btnTeleID" class="btn btn-lg btn-outline-info text-white"
+                                style="border-color: #00aaff; background: rgba(0,170,255,0.1); display: none;">
+                                <i class="bi bi-telegram me-2"></i> Contact Admin (TG)
+                            </a>
+
+                            <!-- Facebook Page -->
+                            <a href="#" target="_blank" id="btnFbPage" class="btn btn-lg btn-outline-primary text-white"
+                                style="border-color: #1877F2; background: rgba(24,119,242,0.1); display: none;">
+                                <i class="bi bi-facebook me-2"></i> Official Facebook Page
+                            </a>
+                        </div>
+
+                        <p class="small text-secondary mt-4">We usually reply within 24 hours.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-section="home-section"><i
+                    class="bi bi-house-door-fill"></i><span>Home</span></button>
+            <button class="nav-item" data-section="wallet-section"><i
+                    class="bi bi-wallet-fill"></i><span>Wallet</span></button>
+            <button class="nav-item" data-section="earnings-section"><i
+                    class="bi bi-coin"></i><span>Leaderboard</span></button>
+            <button class="nav-item" data-section="profile-section"><i
+                    class="bi bi-person-fill"></i><span>Profile</span></button>
+        </nav>
+
+        <!-- JS Libraries -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+        <!-- Firebase SDK & App Logic -->
+        <script type="module">
+            // Firebase Imports
+            import {
+                initializeApp
+            } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+            import {
+                getDatabase,
+                ref,
+                get,
+                set,
+                update,
+                push,
+                query,
+                orderByChild,
+                equalTo,
+                onValue,
+                runTransaction,
+                off,
+                limitToLast,
+                serverTimestamp
+            } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"; // Added serverTimestamp
+            import {
+                getAuth,
+                GoogleAuthProvider,
+                signInWithPopup,
+                signOut,
+                onAuthStateChanged,
+                createUserWithEmailAndPassword,
+                signInWithEmailAndPassword,
+                sendPasswordResetEmail
+            } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+          const firebaseConfig = {
+  apiKey: "AIzaSyAKgByrGnOBWRiW3DjUNUHNyt6SwsWdmgQ",
+  authDomain: "uhuiyt-76a8e.firebaseapp.com",
+  databaseURL: "https://uhuiyt-76a8e-default-rtdb.firebaseio.com",
+  projectId: "uhuiyt-76a8e",
+  storageBucket: "uhuiyt-76a8e.firebasestorage.app",
+  messagingSenderId: "673426262753",
+  appId: "1:673426262753:web:66c7b5cbf3db3acd5705a0",
+  measurementId: "G-P619XX3ZPV"
+};
+            // Initialize Firebase
+            let app, db, auth;
+            try {
+                if (firebaseConfig.apiKey.startsWith("AIzaSy") || firebaseConfig.projectId === "ff-host") {
+                    console.warn("Firebase config using placeholder values. Replace them with your actual project details.");
+                }
+                app = initializeApp(firebaseConfig);
+                db = getDatabase(app);
+                auth = getAuth(app);
+                console.log("Firebase Initialized");
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.body.innerHTML = `<div class="alert alert-danger m-5 position-fixed top-0 start-0 end-0" style="z-index: 10000;">Critical Error: Could not connect. Check Firebase config & console. Error: ${error.message}</div>`;
+            }
+
+            // --- DOM Elements Cache ---
+            const getElement = (id) => document.getElementById(id);
+            const querySel = (selector) => document.querySelector(selector);
+            const querySelAll = (selector) => document.querySelectorAll(selector);
+            const elements = {
+                sections: querySelAll('.section'),
+                bottomNavItems: querySelAll('.bottom-nav .nav-item'),
+                globalLoader: getElement('globalLoaderEl'),
+                headerBackBtn: getElement('headerBackBtnEl'),
+                googleSignInBtn: document.getElementById('googleSignInBtnEl'),
+                headerTitleContainer: getElement('headerTitleContainerEl'),
+                headerGameTitle: getElement('headerGameTitleEl'),
+                headerWalletChip: getElement('headerWalletChipEl'),
+                headerChipBalance: getElement('headerChipBalanceEl'),
+                headerUserGreeting: getElement('headerUserGreetingEl'),
+                appLogo: getElement('appLogoEl'),
+                notificationBtn: getElement('notificationBtnEl'),
+                notificationBadge: querySel('.notification-badge'),
+                loginSection: getElement('login-section'),
+                emailLoginForm: getElement('emailLoginForm'),
+                loginEmailInput: getElement('loginEmailInputEl'),
+                loginPasswordInput: getElement('loginPasswordInputEl'),
+                loginEmailBtn: getElement('loginEmailBtnEl'),
+                showSignupToggleBtn: getElement('showSignupToggleBtnEl'),
+                loginStatusMessage: getElement('loginStatusMessageEl'),
+                customLoginError: getElement('customLoginErrorEl'), // JAVASCRIPT MODIFIED: Added new element
+                forgotPasswordLink: getElement('forgotPasswordLinkEl'),
+                emailSignupForm: getElement('emailSignupForm'),
+                signupEmailInput: getElement('signupEmailInputEl'),
+                signupPasswordInput: getElement('signupPasswordInputEl'),
+                signupConfirmPasswordInput: getElement('signupConfirmPasswordInputEl'),
+                signupReferralCodeInput: getElement('signupReferralCodeInputEl'),
+                signupEmailBtn: getElement('signupEmailBtnEl'),
+                showLoginToggleBtn: getElement('showLoginToggleBtnEl'),
+                signupStatusMessage: getElement('signupStatusMessageEl'),
+                homeSection: getElement('home-section'),
+                promotionSlider: getElement('promotionSliderEl'),
+                gamesList: getElement('gamesListEl'),
+                myContestsList: getElement('myContestsListEl'),
+                noContestsMessage: getElement('noContestsMessageEl'),
+                tournamentsSection: getElement('tournaments-section'),
+                tournamentsListContainer: getElement('tournamentsListContainerEl'),
+                noTournamentsMessage: getElement('noTournamentsMessageEl'),
+                tournamentTabs: querySelAll('.tournament-tabs .tab-item'),
+                walletSection: getElement('wallet-section'),
+                walletTotalBalance: getElement('walletTotalBalanceEl'),
+                walletWinningCash: getElement('walletWinningCashEl'),
+                walletBonusCash: getElement('walletBonusCashEl'),
+                allTransactionsBtn: getElement('allTransactionsBtnEl'),
+                withdrawBtn: getElement('withdrawBtnEl'),
+                addAmountWalletBtn: getElement('addAmountWalletBtnEl'),
+                recentTransactionsList: getElement('recentTransactionsListEl'),
+                noTransactionsMessage: getElement('noTransactionsMessageEl'),
+                earningsSection: getElement('earnings-section'),
+                earningsTotal: getElement('earningsTotalEl'),
+                earningsReferral: getElement('earningsReferralEl'),
+                viewEarningsHistoryBtn: getElement('viewEarningsHistoryBtn'),
+                profileSection: getElement('profile-section'),
+                profileAvatar: getElement('profileAvatarEl'),
+                profileName: getElement('profileNameEl'),
+                profileEmail: getElement('profileEmailEl'),
+                profileTotalMatches: getElement('profileTotalMatchesEl'),
+                profileWonMatches: getElement('profileWonMatchesEl'),
+                profileTotalEarnings: getElement('profileTotalEarningsEl'),
+                profileTotalWithdrawnEl: getElement('profileTotalWithdrawnEl'), // <-- MODIFIED: Added this line
+                logoutProfileBtn: getElement('logoutProfileBtnEl'),
+                openSupportModalBtn: getElement('openSupportModalBtnEl'),
+                supportModalInstance: getElement('supportModalEl') ? new bootstrap.Modal(getElement('supportModalEl')) : null,
+                btnTeleGroup: getElement('btnTeleGroup'),
+                btnTeleID: getElement('btnTeleID'),
+                btnFbPage: getElement('btnFbPage'),
+                policyLinks: querySelAll('.profile-links a[data-policy], .profile-links button[data-policy]'),
+                notificationSwitch: getElement('notificationSwitchEl'),
+                policyModalInstance: getElement('policyModalEl') ? new bootstrap.Modal(getElement('policyModalEl')) : null,
+                policyModalTitle: getElement('policyModalTitleEl'),
+                policyModalBody: getElement('policyModalBodyEl'),
+                addAmountModalInstance: getElement('addAmountModalEl') ? new bootstrap.Modal(getElement('addAmountModalEl')) : null,
+                depositStep1: getElement('depositStep1'),
+                depositStep2: getElement('depositStep2'),
+                depositAmountInput: getElement('depositAmountInputEl'),
+                confirmDepositBtn: getElement('confirmDepositBtnEl'),
+                transactionIdInput: getElement('transactionIdInputEl'),
+                verifyTransactionBtn: getElement('verifyTransactionBtnEl'),
+                depositStatusMessage: getElement('depositStatusMessageEl'),
+                withdrawModalInstance: getElement('withdrawModalEl') ? new bootstrap.Modal(getElement('withdrawModalEl')) : null,
+                withdrawModalBalance: getElement('withdrawModalBalanceEl'),
+                withdrawAmountInput: getElement('withdrawAmountInputEl'),
+                minWithdrawAmount: getElement('minWithdrawAmountEl'),
+                withdrawMethodSelect: getElement('withdrawMethodSelectEl'),
+                withdrawNumberInput: getElement('withdrawNumberInputEl'),
+                withdrawStatusMessage: getElement('withdrawStatusMessageEl'),
+                submitWithdrawRequestBtn: getElement('submitWithdrawRequestBtnEl'),
+                successOverlay: getElement('success-overlay'),
+                matchDetailsModalInstance: getElement('matchDetailsModalEl') ? new bootstrap.Modal(getElement('matchDetailsModalEl')) : null,
+                matchDetailsModalTitle: getElement('matchDetailsModalTitleEl'),
+                matchDetailsModalBody: getElement('matchDetailsModalBodyEl'),
+                idPasswordModalInstance: getElement('idPasswordModalEl') ? new bootstrap.Modal(getElement('idPasswordModalEl')) : null,
+                roomIdDisplay: getElement('roomIdDisplayEl'),
+                roomPasswordDisplay: getElement('roomPasswordDisplayEl'),
+                securityWarning: getElement('securityWarning'),
+                // New Elements for In-Game Name Modal
+                inGameNameModalInstance: getElement('inGameNameModalEl') ? new bootstrap.Modal(getElement('inGameNameModalEl')) : null,
+                inGameNameInput: getElement('inGameNameInputEl'),
+                inGameNameStatusMessage: getElement('inGameNameStatusMessageEl'),
+                confirmJoinBtn: getElement('confirmJoinBtnEl'),
+                profileUid: getElement('profileUidEl'),
+                openReferralBtn: getElement('openReferralBtnEl'),
+                referralModalInstance: getElement('referralModalEl') ? new bootstrap.Modal(getElement('referralModalEl')) : null,
+                myReferralCode: getElement('myReferralCodeEl'),
+                totalReferredCount: getElement('totalReferredCountEl'),
+                totalReferralEarnings: getElement('totalReferralEarningsEl'),
+                referredUsersList: getElement('referredUsersListEl'),
+                shareReferralLinkBtn: getElement('shareReferralLinkBtn'),
+            };
+
+            // --- App State ---
+            let currentUser = null;
+            let userProfile = {};
+            let currentSectionId = 'login-section';
+            let dbListeners = {};
+            let swiperInstance;
+            let currentTournamentGameId = null;
+            let appSettings = {};
+            let validReferrerUid = null;
+            let depositAmount = 0;
+
+            // --- Theme Management ---
+            const defaultTheme = {
+                '--primary-bg': '#0F172A',
+                '--secondary-bg': '#1E293B',
+                '--card-bg': '#1E293B',
+                '--text-primary': '#E2E8F0',
+                '--text-secondary': '#94A3B8',
+                '--accent-color': '#FACC15',
+                '--accent-gradient': 'linear-gradient(to right, #FACC15, #FBBF24)',
+                '--primary-button-bg': '#3B82F6',
+                '--border-color': '#334155',
+                '--bottom-nav-bg': '#1E293B',
+                '--success-color': '#10B981',
+                '--danger-color': '#EF4444',
+                '--warning-color': '#F59E0B',
+                '--info-color': '#3B82F6'
+            };
+
+            function applyTheme(theme) {
+                const root = document.documentElement;
+                if (theme && typeof theme === 'object') {
+                    console.log("Applying custom theme:", theme);
+                    for (const property in defaultTheme) {
+                        if (theme[property]) {
+                            root.style.setProperty(property, theme[property]);
+                        } else {
+                            root.style.removeProperty(property);
+                        }
+                    }
+                } else {
+                    console.log("Resetting to default theme.");
+                    for (const property in defaultTheme) {
+                        root.style.removeProperty(property);
+                    }
+                }
+            }
+
+            // --- Utility Functions ---
+            const showLoader = (show) => {
+                if (elements.globalLoader) elements.globalLoader.style.display = show ? 'flex' : 'none';
+            };
+
+            function showStatusMessage(element, message, type = 'danger', autohide = true) {
+                if (!element) return;
+                element.innerHTML = message;
+                element.className = `alert alert-${type} mt-3`;
+                element.style.display = 'block';
+                element.setAttribute('role', 'alert');
+                if (autohide) {
+                    setTimeout(() => {
+                        if (element.innerHTML === message) element.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            function clearStatusMessage(element) {
+                if (!element) return;
+                element.style.display = 'none';
+                element.innerHTML = '';
+                element.removeAttribute('role');
+            }
+
+            function copyToClipboard(targetSelector) {
+                if (!targetSelector) {
+                    alert('Copy target not defined.');
+                    return;
+                }
+                const targetElement = querySel(targetSelector);
+                if (!targetElement) {
+                    alert('Element to copy from not found.');
+                    return;
+                }
+                const textToCopy = targetElement.textContent;
+                if (!textToCopy || textToCopy === 'N/A' || textToCopy.includes('placeholder')) {
+                    alert('Nothing to copy.');
+                    return;
+                }
+                navigator.clipboard.writeText(textToCopy).then(() => alert('Copied!')).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy.');
+                });
+            }
+
+            function shareReferral(code) {
+                if (!navigator.share) {
+                    alert('Web Share not supported. Copy the code manually.');
+                    return;
+                }
+                if (!code || code === 'N/A') {
+                    alert('Referral code not available.');
+                    return;
+                }
+                navigator.share({
+                    title: 'Join Me on Gaming Tournament!',
+                    text: `Join using my referral code: ${code} & get rewards! App: ${window.location.origin}`,
+                    url: window.location.origin
+                }).catch((error) => console.log('Error sharing', error));
+            }
+
+            function generateReferralCode(length = 8) {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+                return result;
+            }
+
+            function getTimeRemaining(startTime) {
+                if (!startTime) return 'TBA';
+                const now = Date.now();
+                const diff = startTime - now;
+                if (diff <= 0) return 'Starting Soon';
+                const days = Math.floor(diff / 86400000);
+                const hours = Math.floor((diff % 86400000) / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                let o = '';
+                if (days > 0) o += `${days}d `;
+                if (hours > 0 || days > 0) o += `${hours}h `;
+                o += `${minutes}m`;
+                return o.trim() || 'Now';
+            }
+            const removePlaceholders = (parentElement) => {
+                if (!parentElement) return;
+                parentElement.classList.remove('placeholder-glow');
+                parentElement.querySelectorAll('.placeholder').forEach(el => el.remove());
+            };
+
+            // --- UI Functions ---
+            function showSection(sectionId) {
+                if (!auth || !sectionId || !elements.sections) {
+                    console.error("Cannot show section", sectionId);
+                    return;
+                }
+                const targetSection = getElement(sectionId);
+                if (!targetSection) {
+                    console.error(`Section element "${sectionId}" not found.`);
+                    showSection(currentUser ? 'home-section' : 'login-section');
+                    return;
+                }
+                const protectedSections = ['home-section', 'wallet-section', 'earnings-section', 'profile-section', 'tournaments-section'];
+                const isLoggedIn = !!currentUser;
+                if (protectedSections.includes(sectionId) && !isLoggedIn) {
+                    showSection('login-section');
+                    return;
+                }
+                if (sectionId === 'login-section' && isLoggedIn) {
+                    showSection('home-section');
+                    return;
+                }
+                elements.sections.forEach(sec => sec.classList.remove('active'));
+                targetSection.classList.add('active');
+                currentSectionId = sectionId;
+                updateHeaderForSection(sectionId);
+                elements.bottomNavItems.forEach(item => item.classList.toggle('active', item.dataset.section === sectionId));
+                console.log(`Loading data for section: ${sectionId}`);
+                switch (sectionId) {
+                    case 'home-section':
+                        loadHomePageData();
+                        break;
+                    case 'wallet-section':
+                        loadWalletData();
+                        loadRecentTransactions(); // <-- এই লাইনটি যোগ করা হয়েছে
+                        break;
+                    case 'profile-section':
+                        loadProfileData();
+                        break;
+                    case 'earnings-section':
+                        loadEarningsData();
+                        break;
+                    case 'tournaments-section':
+                        if (currentTournamentGameId) {
+                            const activeTab = querySel('.tournament-tabs .tab-item.active')?.dataset.status || 'upcoming';
+                            filterTournaments(currentTournamentGameId, activeTab);
+                        } else {
+                            elements.tournamentsListContainer.innerHTML = '<p class="text-secondary text-center mt-4">Select a game from Home page first.</p>';
+                        }
+                        break;
+                }
+                if (sectionId === 'login-section') {
+                    toggleLoginForm(true);
+                }
+                window.scrollTo(0, 0);
+            }
+
+            function updateHeaderForSection(sectionId) {
+                const showBackButton = (sectionId === 'tournaments-section');
+                const defaultTitleVisible = !showBackButton;
+                const gameTitleVisible = showBackButton;
+                if (elements.headerBackBtn) elements.headerBackBtn.style.display = showBackButton ? 'inline-block' : 'none';
+                if (elements.headerTitleContainer) elements.headerTitleContainer.style.display = defaultTitleVisible ? 'flex' : 'none';
+                if (elements.headerGameTitle) elements.headerGameTitle.style.display = gameTitleVisible ? 'block' : 'none';
+                if (gameTitleVisible && currentTournamentGameId && elements.headerGameTitle) {
+                    const gameName = appSettings?.games?.[currentTournamentGameId]?.name || `Game`;
+                    elements.headerGameTitle.textContent = gameName;
+                } else if (defaultTitleVisible && elements.headerUserGreeting) {
+                    const nameToShow = userProfile?.displayName?.split(' ')[0] || (currentUser ? currentUser.email?.split('@')[0] : 'Guest') || 'Guest';
+                    elements.headerUserGreeting.textContent = nameToShow;
+                }
+            }
+
+            function updateGlobalUI(isLoggedIn) {
+                if (elements.headerWalletChip) {
+                    elements.headerWalletChip.style.display = isLoggedIn ? 'flex' : 'none';
+                    if (isLoggedIn) elements.headerWalletChip.onclick = () => showSection('wallet-section');
+                    else elements.headerWalletChip.onclick = null;
+                }
+                if (!isLoggedIn && elements.headerUserGreeting) elements.headerUserGreeting.textContent = 'Guest';
+                if (!isLoggedIn && elements.headerChipBalance) elements.headerChipBalance.textContent = '0';
+                elements.bottomNavItems.forEach(item => {
+                    const section = item.dataset.section;
+                    item.style.display = (section === 'home-section' || isLoggedIn) ? 'flex' : 'none';
+                });
+            }
+
+            function populateUserInfo(user, profile) {
+                if (!user || !profile) return;
+                const displayName = profile.displayName || user.displayName || user.email?.split('@')[0] || 'User';
+                const photoURL = profile.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0F172A&color=E2E8F0&bold=true&size=70`;
+                const balance = (profile.balance || 0);
+                const winningCash = (profile.winningCash || 0);
+                const bonusCash = (profile.bonusCash || 0);
+                const totalEarnings = (profile.totalEarnings || 0);
+                const referralEarnings = (profile.referralEarnings || 0);
+                const totalMatches = profile.totalMatches || 0;
+                const wonMatches = profile.wonMatches || 0;
+                const totalWithdrawn = profile.totalWithdrawn || 0; // <-- MODIFIED: Added this line
+                const formatCurrency = (amount) => `৳${amount.toFixed(2)}`;
+                // UID Display
+                // UID Display (আইডি নাম্বার দেখাবে)
+                if (elements.profileUid) {
+                    // যদি userAppId থাকে তবে সেটা দেখাবে, নাহলে পুরানো UID দেখাবে
+                    elements.profileUid.textContent = profile.userAppId || user.uid;
+                }
+                if (elements.headerUserGreeting) elements.headerUserGreeting.textContent = displayName.split(' ')[0];
+                if (elements.headerChipBalance) elements.headerChipBalance.textContent = Math.floor(balance);
+                if (elements.walletTotalBalance) {
+                    elements.walletTotalBalance.textContent = formatCurrency(balance);
+                    removePlaceholders(elements.walletTotalBalance.closest('.placeholder-glow'));
+                }
+                if (elements.walletWinningCash) {
+                    elements.walletWinningCash.textContent = formatCurrency(winningCash);
+                    removePlaceholders(elements.walletWinningCash.closest('.placeholder-glow'));
+                }
+                if (elements.walletBonusCash) {
+                    elements.walletBonusCash.textContent = formatCurrency(bonusCash);
+                    removePlaceholders(elements.walletBonusCash.closest('.placeholder-glow'));
+                }
+                if (elements.withdrawModalBalance) elements.withdrawModalBalance.textContent = formatCurrency(winningCash);
+                if (elements.profileAvatar) elements.profileAvatar.src = photoURL;
+                if (elements.profileName) {
+                    elements.profileName.textContent = displayName;
+                    removePlaceholders(elements.profileName.closest('.placeholder-glow'));
+                }
+                if (elements.profileEmail) {
+                    elements.profileEmail.textContent = user.email || 'N/A';
+                    removePlaceholders(elements.profileEmail.closest('.placeholder-glow'));
+                }
+                if (elements.profileTotalMatches) {
+                    elements.profileTotalMatches.textContent = totalMatches;
+                    removePlaceholders(elements.profileTotalMatches.closest('.placeholder-glow'));
+                }
+                if (elements.profileWonMatches) {
+                    elements.profileWonMatches.textContent = wonMatches;
+                    removePlaceholders(elements.profileWonMatches.closest('.placeholder-glow'));
+                }
+                if (elements.profileTotalEarnings) {
+                    elements.profileTotalEarnings.textContent = formatCurrency(totalEarnings);
+                    removePlaceholders(elements.profileTotalEarnings.closest('.placeholder-glow'));
+                }
+                // MODIFIED: Added this block to populate the new element
+                if (elements.profileTotalWithdrawnEl) {
+                    elements.profileTotalWithdrawnEl.textContent = formatCurrency(totalWithdrawn);
+                    removePlaceholders(elements.profileTotalWithdrawnEl.closest('.placeholder-glow'));
+                }
+                if (elements.earningsTotal) {
+                    elements.earningsTotal.textContent = formatCurrency(totalEarnings);
+                    removePlaceholders(elements.earningsTotal.closest('.placeholder-glow'));
+                }
+                if (elements.earningsReferral) {
+                    elements.earningsReferral.textContent = formatCurrency(referralEarnings);
+                    removePlaceholders(elements.earningsReferral.closest('.placeholder-glow'));
+                }
+                if (elements.modalUserEmail) elements.modalUserEmail.textContent = user.email || 'N/A';
+            }
+
+            function toggleLoginForm(showLogin) {
+                if (!elements.emailLoginForm || !elements.emailSignupForm) return;
+                clearStatusMessage(elements.loginStatusMessage);
+                clearStatusMessage(elements.signupStatusMessage);
+                if (elements.customLoginError) elements.customLoginError.style.display = 'none'; // Hide custom error on toggle
+                elements.emailLoginForm.style.display = showLogin ? 'block' : 'none';
+                elements.emailSignupForm.style.display = showLogin ? 'none' : 'block';
+                elements.emailLoginForm.reset();
+                elements.emailSignupForm.reset();
+            }
+
+            // --- Sign Up Function (Fixed Logic) ---
+            // --- Sign Up Function (Admin Code Bonus Logic) ---
+            async function signUpWithEmail() {
+                if (!auth) return;
+                const em = elements.signupEmailInput.value.trim();
+                const pw = elements.signupPasswordInput.value;
+                const cpw = elements.signupConfirmPasswordInput.value;
+                const refCode = elements.signupReferralCodeInput.value.trim();
+
+                // 🔥 আপনার স্পেশাল অ্যাডমিন কোড এখানে সেট করুন 🔥
+                const MY_ADMIN_CODE = "ARENAX ";
+
+                if (!em || !pw || !cpw) {
+                    showStatusMessage(elements.signupStatusMessage, 'Fill required fields.', 'warning');
+                    return;
+                }
+                if (pw !== cpw) {
+                    showStatusMessage(elements.signupStatusMessage, 'Passwords don\'t match.', 'warning');
+                    return;
+                }
+                if (pw.length < 6) {
+                    showStatusMessage(elements.signupStatusMessage, 'Password min 6 chars.', 'warning');
+                    return;
+                }
+
+                showLoader(true);
+                clearStatusMessage(elements.signupStatusMessage);
+                let validReferrerUid = null;
+
+                try {
+                    // ১. আগে অথেনটিকেশন তৈরি (User Create)
+                    const userCredential = await createUserWithEmailAndPassword(auth, em, pw);
+                    const user = userCredential.user;
+                    const uid = user.uid;
+
+                    // ২. বোনাস এবং রেফারেল চেক লজিক
+                    let initialBalance = 0;
+                    let initialBonus = 0;
+
+                    if (refCode) {
+                        if (refCode === MY_ADMIN_CODE) {
+                            // যদি আপনার কোড হয়, ১০ টাকা বোনাস পাবে
+                            initialBalance = 10;
+                            initialBonus = 10;
+                        } else {
+                            // অন্য কারো কোড হলে, ডাটাবেস চেক করে রেফারার খুঁজবে
+                            try {
+                                const usersRef = ref(db, 'users');
+                                const q = query(usersRef, orderByChild('referralCode'), equalTo(refCode));
+                                const snapshot = await get(q);
+                                if (snapshot.exists()) {
+                                    const referrerData = snapshot.val();
+                                    validReferrerUid = Object.keys(referrerData)[0];
+                                }
+                            } catch (err) {
+                                console.log("Referral check failed:", err);
+                            }
+                        }
+                    }
+
+                    // ৩. ৬ ডিজিটের অ্যাপ আইডি জেনারেট
+                    const randomAppId = Math.floor(100000 + Math.random() * 900000);
+
+                    // ৪. ডাটাবেসে সেভ করার ডাটা সাজানো
+                    const userData = {
+                        uid: uid,
+                        userAppId: randomAppId,
+                        email: em,
+                        displayName: em.split('@')[0],
+
+                        // এখানে ব্যালেন্স সেট হচ্ছে
+                        balance: initialBalance,
+                        winningCash: 0,
+                        bonusCash: initialBonus,
+
+                        totalMatches: 0,
+                        wonMatches: 0,
+                        totalEarnings: 0,
+                        referralEarnings: 0,
+                        createdAt: serverTimestamp(),
+                        referralCode: generateReferralCode(),
+                        isAdmin: false,
+                        ...(validReferrerUid && { referredBy: validReferrerUid }) // অন্য রেফার হলে লিংক হবে
+                    };
+
+                    // ৫. ডাটাবেসে সেভ করা
+                    await set(ref(db, `users/${uid}`), userData);
+
+                    // ৬. যদি ১০ টাকা বোনাস পায়, তবে ট্রানজেকশন রেকর্ড হবে
+                    if (initialBalance > 0) {
+                        const txKey = push(ref(db, `transactions/${uid}`)).key;
+                        await update(ref(db), {
+                            [`transactions/${uid}/${txKey}`]: {
+                                type: 'signup_bonus',
+                                amount: initialBalance,
+                                description: `Promo Code Bonus: ${refCode}`,
+                                timestamp: serverTimestamp(),
+                                status: 'completed'
+                            }
+                        });
+                    }
+
+                    // ৭. অন্য কেউ রেফার করলে তাকে ফিউচার কমিশনের জন্য সেট রাখা (টাকা এখন পাবে না)
+                    // (অ্যাডমিন প্যানেল থেকে সেট করা ১০% কমিশন পরে পাবে যখন এই ইউজার উইথড্র করবে)
+
+                    showStatusMessage(elements.signupStatusMessage, 'Account created successfully!', 'success');
+
+                } catch (e) {
+                    console.error("Signup Error:", e);
+                    let m = e.message;
+                    if (e.code === 'auth/email-already-in-use') m = "Email already registered.";
+                    showStatusMessage(elements.signupStatusMessage, m, 'danger');
+                } finally {
+                    showLoader(false);
+                }
+            }
+
+            // JAVASCRIPT MODIFIED: This entire function is updated for the new error message
+            async function loginWithEmail() {
+                if (!auth) return;
+                const em = elements.loginEmailInput.value.trim();
+                const pw = elements.loginPasswordInput.value;
+
+                // আগের সব মেসেজ মুছে দিন
+                clearStatusMessage(elements.loginStatusMessage);
+                if (elements.customLoginError) {
+                    elements.customLoginError.style.display = 'none';
+                }
+
+                if (!em || !pw) {
+                    if (elements.customLoginError) {
+                        elements.customLoginError.textContent = 'দয়া করে ইমেইল এবং পাসওয়ার্ড দিন।';
+                        elements.customLoginError.style.display = 'block';
+                    }
+                    return;
+                }
+
+                showLoader(true);
+
+                try {
+                    await signInWithEmailAndPassword(auth, em, pw);
+                    if (elements.customLoginError) {
+                        elements.customLoginError.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Login Error:", e.code);
+
+
+                    if (e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials' || e.code === 'auth/wrong-password') {
+                        if (elements.customLoginError) {
+                            elements.customLoginError.textContent = 'Check your password and try again.';
+                            elements.customLoginError.style.display = 'block';
+                            elements.customLoginError.classList.add('shake-animation');
+
+
+                            setTimeout(() => {
+                                elements.customLoginError.classList.remove('shake-animation');
+                            }, 500);
+                        }
+                    } else {
+
+                        let m = 'Login failed.';
+                        switch (e.code) {
+                            case 'auth/invalid-email':
+                                m = 'Invalid email format.';
+                                break;
+                            case 'auth/too-many-requests':
+                                m = 'Too many attempts. Reset password or wait.';
+                                break;
+                            case 'auth/network-request-failed':
+                                m = 'Network error. Please check your connection.';
+                                break;
+                            case 'auth/user-disabled':
+                                m = 'This account has been disabled.';
+                                break;
+                            default:
+                                m = `An unknown error occurred.`;
+                        }
+                        showStatusMessage(elements.loginStatusMessage, m, 'danger');
+                    }
+                } finally {
+                    showLoader(false);
+                }
+            }
+            // --- Google Login Function ---
+            async function handleGoogleLogin() {
+                if (!auth) return;
+                const provider = new GoogleAuthProvider();
+
+                try {
+                    showLoader(true);
+                    // পপআপ ওপেন হবে
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+
+                    console.log("Google Login Success:", user.uid);
+
+                    // নোট: Google দিয়ে লগইন করলে handleAuthStateChange ফাংশনটি
+                    // অটোমেটিক ডাটাবেসে প্রোফাইল চেক করবে বা নতুন প্রোফাইল খুলবে।
+
+                } catch (error) {
+                    console.error("Google Login Error:", error);
+                    let msg = "Google Login Failed.";
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        msg = "Login cancelled.";
+                    } else if (error.code === 'auth/network-request-failed') {
+                        msg = "Network error. Check connection.";
+                    }
+                    showStatusMessage(elements.loginStatusMessage, msg, 'danger');
+                } finally {
+                    showLoader(false);
+                }
+            }
+            async function resetPassword() {
+                if (!auth) return;
+                const em = elements.loginEmailInput.value.trim();
+                if (!em) {
+                    showStatusMessage(elements.loginStatusMessage, 'Enter email for password reset.', 'warning');
+                    return;
+                }
+                showLoader(true);
+                clearStatusMessage(elements.loginStatusMessage);
+                try {
+                    await sendPasswordResetEmail(auth, em);
+                    showStatusMessage(elements.loginStatusMessage, 'Password reset email sent! Check inbox/spam.', 'success', false);
+                } catch (e) {
+                    console.error("Reset Pass Error:", e);
+                    let m = `Failed to send email.`;
+                    switch (e.code) {
+                        case 'auth/user-not-found':
+                        case 'auth/invalid-email':
+                            m = 'Email not found.';
+                            break;
+                        case 'auth/network-request-failed':
+                            m = 'Network error.';
+                            break;
+                        default:
+                            m = `Error: ${e.message}`;
+                    }
+                    showStatusMessage(elements.loginStatusMessage, m, 'danger');
+                } finally {
+                    showLoader(false);
+                }
+            }
+            async function logoutUser() {
+                if (!auth) return;
+                try {
+                    showLoader(true);
+                    await signOut(auth);
+                } catch (e) {
+                    console.error("Sign Out Error:", e);
+                    alert(`Logout failed: ${e.message}`);
+                    showLoader(false);
+                }
+            }
+
+            // === প্রথম ফাংশনটি এখানে ===
+            function handleWithdrawClick() {
+                if (!currentUser || !elements.withdrawModalInstance) return;
+                const wc = userProfile.winningCash || 0;
+                const minW = appSettings?.minWithdraw || 50;
+                elements.minWithdrawAmount.textContent = minW;
+                elements.withdrawModalBalance.textContent = `৳${wc.toFixed(2)}`;
+                elements.withdrawAmountInput.value = '';
+                elements.withdrawAmountInput.min = minW;
+                elements.withdrawMethodSelect.selectedIndex = 0;
+                elements.withdrawNumberInput.value = '';
+                clearStatusMessage(elements.withdrawStatusMessage);
+                elements.withdrawModalInstance.show();
+            }
+
+            // === দ্বিতীয় ফাংশনটি এখানে ===
+            async function handleAuthStateChange(user) {
+                if (!auth || !db) {
+                    console.error("Firebase not ready in auth change");
+                    showLoader(false);
+                    return;
+                }
+                showLoader(true);
+                detachAllDbListeners();
+                currentUser = user;
+                const localReferrerUid = validReferrerUid;
+                validReferrerUid = null;
+
+                if (user) {
+                    console.log("Auth State: Logged In", user.uid);
+                    const userRef = ref(db, 'users/' + user.uid);
+                    try {
+                        const snapshot = await get(userRef);
+                        if (snapshot.exists()) {
+                            userProfile = snapshot.val();
+                            const updates = {};
+                            if (user.displayName && (!userProfile.displayName || userProfile.displayName !== user.displayName)) updates.displayName = user.displayName;
+                            if (user.email && !userProfile.email) updates.email = user.email;
+                            if (Object.keys(updates).length > 0) {
+                                await update(userRef, updates);
+                                userProfile = {
+                                    ...userProfile,
+                                    ...updates
+                                };
+                            }
+                        } else {
+                            console.log("New user, creating profile...");
+                            const newUserProfile = {
+                                uid: user.uid,
+                                displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                                email: user.email || null,
+                                photoURL: user.photoURL || null,
+                                balance: appSettings.newUserBalance || 0,
+                                winningCash: 0,
+                                bonusCash: appSettings.newUserBonus || 0,
+                                totalMatches: 0,
+                                wonMatches: 0,
+                                totalEarnings: 0,
+                                referralEarnings: 0,
+                                createdAt: Date.now(),
+                                referralCode: generateReferralCode(),
+                                joinedTournaments: {},
+                                isAdmin: false,
+                                ...(localReferrerUid && {
+                                    referredBy: localReferrerUid
+                                })
+                            };
+                            await set(userRef, newUserProfile);
+                            userProfile = newUserProfile;
+
+                            if (newUserProfile.bonusCash > 0) {
+                                await recordTransaction(user.uid, 'signup_bonus', newUserProfile.bonusCash, `Welcome Bonus`);
+                            }
+
+                            if (localReferrerUid && appSettings.referralBonus > 0) {
+                                console.log(`Awarding referral bonus of ${appSettings.referralBonus} to referrer: ${localReferrerUid}`);
+                                const referrerRef = ref(db, `users/${localReferrerUid}`);
+                                try {
+                                    const referrerUpdateResult = await runTransaction(referrerRef, (referrerData) => {
+                                        if (referrerData) {
+                                            referrerData.balance = (referrerData.balance || 0) + appSettings.referralBonus;
+                                            referrerData.bonusCash = (referrerData.bonusCash || 0) + appSettings.referralBonus;
+                                            referrerData.referralEarnings = (referrerData.referralEarnings || 0) + appSettings.referralBonus;
+                                        }
+                                        return referrerData;
+                                    });
+
+                                    if (referrerUpdateResult.committed) {
+                                        await recordTransaction(localReferrerUid, 'referral_bonus', appSettings.referralBonus, `Referral Bonus from ${newUserProfile.displayName || newUserProfile.email}`);
+                                        console.log("Referrer bonus awarded successfully.");
+                                    } else {
+                                        console.error("Referrer bonus transaction aborted.");
+                                    }
+                                } catch (referrerError) {
+                                    console.error("Error awarding referrer bonus:", referrerError);
+                                }
+                            }
+                        }
+                        populateUserInfo(user, userProfile);
+                        setupRealtimeListeners(user.uid);
+                        updateGlobalUI(true);
+                        const targetSection = (currentSectionId === 'login-section' || !getElement(currentSectionId)) ? 'home-section' : currentSectionId;
+                        showSection(targetSection);
+                    } catch (error) {
+                        console.error("Profile handling error:", error);
+                        alert("Error loading profile. Logging out. " + error.message);
+                        try {
+                            await logoutUser();
+                        } catch (logoutErr) { }
+                    }
+                } else {
+                    console.log("Auth State: Logged Out");
+                    currentUser = null;
+                    userProfile = {};
+                    updateGlobalUI(false);
+                    showSection('login-section');
+                }
+                showLoader(false);
+            }
+
+            // --- Database Interaction Functions ---
+            function loadAppSettings() {
+                console.log("Attaching listener for App Settings...");
+                const settingsRef = ref(db, 'settings');
+
+                if (dbListeners['settings']) {
+                    off(settingsRef, 'value', dbListeners['settings'].func);
+                    delete dbListeners['settings'];
+                }
+
+                const settingsListener = onValue(settingsRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        appSettings = snapshot.val() || {};
+                        console.log("App Settings Updated (Real-time):", appSettings);
+                        applyTheme(appSettings.theme || null);
+                        if (appSettings.logoUrl && elements.appLogo) elements.appLogo.src = appSettings.logoUrl;
+                        if (appSettings.minWithdraw && elements.minWithdrawAmount) elements.minWithdrawAmount.textContent = appSettings.minWithdraw;
+                    } else {
+                        console.warn("App Settings not found in database! Using defaults.");
+                        appSettings = {};
+                        applyTheme(null);
+                    }
+                }, (error) => {
+                    console.error("Settings listener failed", error);
+                    appSettings = {};
+                    applyTheme(null);
+                });
+
+                dbListeners['settings'] = {
+                    path: 'settings',
+                    func: settingsListener
+                };
+            }
+
+            function loadHomePageData() {
+                console.log("Loading Home Page Data...");
+                if (!currentUser) {
+                    console.log("User not logged in, skipping home data load.");
+                    if (elements.promotionSlider?.querySelector('.swiper-wrapper')) elements.promotionSlider.querySelector('.swiper-wrapper').innerHTML = '';
+                    if (elements.gamesList) elements.gamesList.innerHTML = '';
+                    if (elements.myContestsList) elements.myContestsList.innerHTML = '<p class="text-secondary text-center">Login to view contests.</p>';
+                    return;
+                }
+                loadPromotions();
+                loadGames();
+                loadMyContests();
+            }
+
+            async function loadPromotions() {
+                console.log("Loading Promotions...");
+                if (!elements.promotionSlider) return;
+                const sliderWrapper = elements.promotionSlider.querySelector('.swiper-wrapper');
+                if (!sliderWrapper) return;
+                sliderWrapper.classList.add('placeholder-glow');
+                sliderWrapper.innerHTML = `<div class="swiper-slide"><span class="placeholder" style="height: 100%; border-radius: 10px; display: block; width: 100%;"></span></div>`;
+
+                const promoRef = ref(db, 'promotions');
+                try {
+                    const snapshot = await get(promoRef);
+                    const promotions = snapshot.val() || {};
+                    const activePromotions = Object.values(promotions).filter(p => p.imageUrl);
+                    console.log(`Found ${activePromotions.length} active promotions.`);
+
+                    removePlaceholders(elements.promotionSlider);
+                    sliderWrapper.innerHTML = '';
+
+                    if (activePromotions.length > 0) {
+                        elements.promotionSlider.style.display = 'block';
+                        activePromotions.forEach(promo => {
+                            const slide = document.createElement('div');
+                            slide.className = 'swiper-slide';
+                            slide.innerHTML = promo.link ? `<a href="${promo.link}" target="_blank"><img src="${promo.imageUrl}" alt="Promo"></a>` : `<img src="${promo.imageUrl}" alt="Promo">`;
+                            sliderWrapper.appendChild(slide);
+                        });
+                        if (swiperInstance) swiperInstance.destroy(true, true);
+                        swiperInstance = new Swiper(elements.promotionSlider, {
+                            loop: activePromotions.length > 1,
+                            autoplay: {
+                                delay: 3500,
+                                disableOnInteraction: false
+                            },
+                            pagination: {
+                                el: '.swiper-pagination',
+                                clickable: true
+                            },
+                            slidesPerView: 1
+                        });
+                    } else {
+                        elements.promotionSlider.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Promo load failed:", e);
+                    removePlaceholders(elements.promotionSlider);
+                    sliderWrapper.innerHTML = '<p class="text-danger text-center small p-3">Could not load promotions.</p>';
+                    elements.promotionSlider.style.display = 'block';
+                }
+            }
+
+            async function loadGames() {
+                console.log("Loading Games...");
+                if (!elements.gamesList) return;
+                elements.gamesList.classList.add('placeholder-glow');
+                elements.gamesList.innerHTML = `<div class="col-6"><div class="game-card custom-card"><span class="placeholder d-block" style="height: 130px;"></span><span class="placeholder d-block mt-2 col-8 mx-auto" style="height: 20px;"></span></div></div> <div class="col-6"><div class="game-card custom-card"><span class="placeholder d-block" style="height: 130px;"></span><span class="placeholder d-block mt-2 col-8 mx-auto" style="height: 20px;"></span></div></div>`;
+
+                const gamesRef = ref(db, 'games');
+                try {
+                    const snapshot = await get(gamesRef);
+                    const games = snapshot.val() || {};
+                    const activeGames = Object.entries(games)
+                        .filter(([, game]) => game.imageUrl && game.name)
+                        .sort(([, gameA], [, gameB]) => (gameA.order || 0) - (gameB.order || 0));
+                    console.log(`Found ${activeGames.length} active games.`);
+
+                    removePlaceholders(elements.gamesList);
+                    elements.gamesList.innerHTML = '';
+
+                    if (activeGames.length > 0) {
+                        if (!appSettings.games) appSettings.games = {};
+                        activeGames.forEach(([gameId, game]) => {
+                            appSettings.games[gameId] = {
+                                name: game.name
+                            };
+                            const col = document.createElement('div');
+                            col.className = 'col-6';
+                            col.innerHTML = `<div class="game-card custom-card" data-game-id="${gameId}" data-game-name="${game.name}"><img src="${game.imageUrl}" alt="${game.name}"><span>${game.name}</span></div>`;
+                            col.querySelector('.game-card').addEventListener('click', () => {
+                                currentTournamentGameId = gameId;
+                                loadTournamentsForGame(gameId, game.name);
+                            });
+                            elements.gamesList.appendChild(col);
+                        });
+                    } else {
+                        elements.gamesList.innerHTML = '<p class="text-secondary text-center col-12">No games available.</p>';
+                    }
+                } catch (e) {
+                    console.error("Games load failed:", e);
+                    removePlaceholders(elements.gamesList);
+                    elements.gamesList.innerHTML = '<p class="text-danger text-center col-12">Could not load games.</p>';
+                }
+            }
+
+            // Game Card Click Handler (Updated)
+            function loadTournamentsForGame(gameId, gameName) {
+                console.log(`Loading tournaments for game: ${gameName} (ID: ${gameId})`);
+
+                if (!elements.tournamentsSection) return;
+
+                currentTournamentGameId = gameId; // গ্লোবাল ভেরিয়েবল সেট করা
+
+                // ১. সব ট্যাব থেকে active ক্লাস সরানো
+                elements.tournamentTabs.forEach(t => t.classList.remove('active'));
+
+                // ২. 'Solo' ট্যাবটাকে active করা (কারণ শুরুতে আমরা Solo দেখাবো)
+                const soloTab = document.querySelector('.tournament-tabs .tab-item[data-filter="Solo"]');
+                if (soloTab) soloTab.classList.add('active');
+
+                // ৩. সেকশন শো করা
+                showSection('tournaments-section');
+
+                // ৪. টাইটেল আপডেট করা
+                if (elements.headerGameTitle) {
+                    elements.headerGameTitle.textContent = gameName;
+                }
+
+                // ৫. 🔥 আসল ফিক্স: 'upcoming' এর বদলে 'Solo' দিয়ে ফিল্টার কল করা 🔥
+                filterTournaments(gameId, 'Solo');
+            }
+
+            async function filterTournaments(gameId, filterVal) {
+                console.log(`Filtering for Game: ${gameId}, Filter: ${filterVal}`);
+
+                if (!elements.tournamentsListContainer) return;
+
+                // লোডিং এনিমেশন
+                elements.tournamentsListContainer.innerHTML = '';
+                elements.tournamentsListContainer.classList.add('placeholder-glow');
+                elements.tournamentsListContainer.innerHTML = `<div class="tournament-card placeholder-glow mb-3"><span class="placeholder col-6"></span><span class="placeholder col-12 mt-2"></span><span class="placeholder col-10 mt-2"></span><div class="d-flex justify-content-between mt-3"><span class="placeholder col-4 h-30"></span><span class="placeholder col-4 h-30"></span></div></div>`;
+                elements.noTournamentsMessage.style.display = 'none';
+
+                try {
+                    const tQuery = query(ref(db, 'tournaments'), orderByChild('gameId'), equalTo(gameId));
+                    const s = await get(tQuery);
+                    const allT = s.val() || {};
+
+                    // --- 🔥 আসল ফিল্টারিং লজিক 🔥 ---
+                    const fT = Object.entries(allT).filter(([, t]) => {
+
+                        // ১. যদি "Completed" ট্যাবে ক্লিক করে
+                        if (filterVal === 'Completed') {
+                            return t.status === 'Completed' || t.status === 'Result' || t.status === 'result';
+                        }
+
+                        // ২. যদি Solo, Duo বা Squad ট্যাবে ক্লিক করে
+                        // তাহলে ডাটাবেসের status এর সাথে ট্যাবের নাম মিলতে হবে
+                        // অ্যাডমিনে আমরা Status হিসেবেই Solo/Duo/Squad সেভ করছি
+                        else {
+                            return t.status === filterVal;
+                        }
+
+                    }).sort(([, tA], [, tB]) => (tA.startTime || 0) - (tB.startTime || 0));
+
+                    // --- রেন্ডারিং ---
+                    removePlaceholders(elements.tournamentsListContainer);
+                    elements.tournamentsListContainer.innerHTML = '';
+
+                    if (fT.length > 0) {
+                        fT.forEach(([tId, t]) => {
+                            // কার্ড জেনারেট করার সময় matchType হিসেবে status পাঠিয়ে দিচ্ছি
+                            // যাতে জয়েন করার সময় বুঝতে পারে এটা Solo/Duo/Squad
+                            t.matchType = t.status;
+                            const card = createTournamentCardElement(tId, t);
+                            elements.tournamentsListContainer.appendChild(card);
+                        });
+                    } else {
+                        elements.noTournamentsMessage.style.display = 'block';
+                        elements.noTournamentsMessage.textContent = `No ${filterVal} matches found.`;
+                    }
+
+                } catch (e) {
+                    console.error(`Filter failed:`, e);
+                    removePlaceholders(elements.tournamentsListContainer);
+                    elements.tournamentsListContainer.innerHTML = '<p class="text-danger text-center mt-4">Error loading data.</p>';
+                }
+            }
+            function createTournamentCardElement(tId, t) {
+                const card = document.createElement('div');
+                card.className = 'tournament-card';
+                card.dataset.tournamentId = tId;
+
+                // ডাটা রেডি করা
+                const eFee = t.entryFee || 0;
+                const pkPrize = t.perKillPrize || 0;
+                const pPool = t.prizePool || 0;
+                const sTime = t.startTime ? new Date(t.startTime) : null;
+                const sTimeLoc = sTime ? sTime.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'TBA';
+
+                const regP = t.registeredPlayers || {};
+                const regC = Object.keys(regP).length;
+                const maxP = t.maxPlayers || 0;
+                const spotsL = maxP > 0 ? Math.max(0, maxP - regC) : Infinity;
+
+                // স্ট্যাটাস চেক
+                const isF = maxP > 0 && spotsL <= 0; // Full?
+                const isJ = currentUser && userProfile?.joinedTournaments?.[tId]; // Joined?
+
+                // 🔥 আসল লজিক: Status টাই হলো Match Type (Solo/Duo/Squad)
+                const matchType = t.status;
+
+                // কিন্তু ইউজার জয়েন করতে পারবে কি না, সেটা চেক করা
+                // যদি Status হয় 'Solo', 'Duo' বা 'Squad' -> তারমানে Upcoming/Open
+                const canJ = !isJ && !isF && (matchType === 'Solo' || matchType === 'Duo' || matchType === 'Squad');
+
+                // টাইমার টেক্সট
+                let timerTxt = matchType; // ডিফল্ট Solo/Duo/Squad দেখাবে
+                if (sTime) {
+                    const now = Date.now();
+                    if (now > sTime) timerTxt = "Running/Ended";
+                    else timerTxt = getTimeRemaining(t.startTime);
+                }
+
+                // Spots Text এর জায়গায় Slots Text (User Request)
+                let spotsTxt = 'Unlimited Slots';
+                let progP = 0;
+                if (maxP > 0) {
+                    // 🔥 এই লাইনে "Spots" এর বদলে "Slots" করে দিলাম
+                    spotsTxt = `<span class="${spotsL <= 5 ? 'text-danger' : 'text-accent'}">${spotsL}</span> Slots Left (${regC}/${maxP})`;
+                    progP = Math.min(100, (regC / maxP) * 100);
+                }
+
+                // বাটন লজিক
+                let actBtn = '';
+                let idPassBtn = '';
+
+                if (isJ) {
+                    // ১. অলরেডি জয়েন করা
+                    actBtn = `<button class="btn btn-custom btn-sm btn-joined" disabled><i class="bi bi-check-circle-fill"></i> Joined</button>`;
+
+                    // আইডি পাসওয়ার্ড বাটন (ম্যাচ শুরুর ১৫ মিনিট আগে)
+                    if (sTime && Date.now() > sTime.getTime() - 900000 && t.showIdPass) {
+                        idPassBtn = `<button class="btn btn-custom btn-idpass w-100 mt-2 btn-sm" data-tournament-id="${tId}"><i class="bi bi-key-fill"></i> View ID & Pass</button>`;
+                    }
+                } else if (canJ) {
+                    // ২. জয়েন করা যাবে (এখানেই match-type পাঠানো হচ্ছে)
+                    actBtn = `<button class="btn btn-custom btn-sm btn-custom-accent btn-join" data-tournament-id="${tId}" data-fee="${eFee}" data-match-type="${matchType}">৳${eFee} Join</button>`;
+                } else {
+                    // ৩. ফুল বা কমপ্লিটেড
+                    let statusText = (matchType === 'Completed' || matchType === 'Result') ? 'Ended' : 'Full';
+                    actBtn = `<button class="btn btn-custom btn-sm btn-disabled" disabled>${statusText}</button>`;
+                }
+
+                // HTML তৈরি
+                card.innerHTML = `
+        <div class="tournament-card-header">
+            <div class="tournament-card-tags">
+                ${t.tags ? (Array.isArray(t.tags) ? t.tags.map(tag => `<span>${tag}</span>`).join('') : `<span>${t.tags}</span>`) : ''}
+                <span class="bg-primary border-primary text-white">${matchType}</span>
+            </div>
+            <div class="tournament-card-timer">${timerTxt}</div>
+        </div>
+        
+        <h3 class="tournament-card-title">
+            <i class="bi bi-controller text-accent"></i> ${t.name || 'Tournament'}
+        </h3>
+        <p class="small text-secondary mb-2"><i class="bi bi-calendar-event"></i> ${sTimeLoc}</p>
+        
+        <div class="tournament-card-info">
+            <div class="info-item"><span>Prize</span><strong>৳${pPool}</strong></div>
+            <div class="info-item"><span>Per Kill</span><strong>৳${pkPrize}</strong></div>
+            <div class="info-item"><span>Entry</span><strong class="${eFee > 0 ? 'text-info' : 'text-success'}">${eFee > 0 ? `৳${eFee}` : 'Free'}</strong></div>
+        </div>
+        
+        <div class="tournament-card-spots">
+            ${spotsTxt}
+            ${maxP > 0 ? `<div class="progress mt-1" style="height: 6px;"><div class="progress-bar bg-warning" role="progressbar" style="width: ${progP}%"></div></div>` : ''}
+        </div>
+        
+        <div class="tournament-card-actions">
+            <button class="btn btn-custom btn-custom-secondary btn-sm btn-details" data-tournament-id="${tId}">Details</button>
+            ${actBtn}
+        </div>
+        ${idPassBtn}
+    `;
+
+                // ইভেন্ট লিসেনার যোগ করা (যাতে বাটনগুলো কাজ করে)
+                const jBtn = card.querySelector('.btn-join');
+                if (jBtn) jBtn.addEventListener('click', handleJoinTournamentClick);
+
+                const dBtn = card.querySelector('.btn-details');
+                if (dBtn) dBtn.addEventListener('click', handleMatchDetailsClick);
+
+                const ipBtn = card.querySelector('.btn-idpass');
+                if (ipBtn) ipBtn.addEventListener('click', handleIdPasswordClick);
+
+                return card;
+            }
+            async function loadMyContests() {
+                console.log("Loading My Contests...");
+                if (!currentUser || !elements.myContestsList) {
+                    if (elements.myContestsList) removePlaceholders(elements.myContestsList);
+                    if (elements.myContestsList) elements.myContestsList.innerHTML = '';
+                    if (elements.noContestsMessage) elements.noContestsMessage.style.display = 'block';
+                    return;
+                }
+                const joinedIds = Object.keys(userProfile.joinedTournaments || {});
+                elements.myContestsList.classList.add('placeholder-glow');
+                elements.myContestsList.innerHTML = `<div class="tournament-card placeholder-glow mb-3"><span class="placeholder col-6"></span><span class="placeholder col-12 mt-2"></span><span class="placeholder col-10 mt-2"></span><div class="d-flex justify-content-between mt-3"><span class="placeholder col-4 h-30"></span><span class="placeholder col-4 h-30"></span></div></div>`;
+                if (elements.noContestsMessage) elements.noContestsMessage.style.display = 'none';
+                if (joinedIds.length === 0) {
+                    removePlaceholders(elements.myContestsList);
+                    elements.myContestsList.innerHTML = '';
+                    if (elements.noContestsMessage) elements.noContestsMessage.style.display = 'block';
+                    console.log("No joined contests found for user.");
+                    return;
+                }
+                console.log(`Found ${joinedIds.length} joined contest IDs.`);
+                try {
+                    const contestPromises = joinedIds.map(id => get(ref(db, `tournaments/${id}`)));
+                    const snapshots = await Promise.all(contestPromises);
+                    removePlaceholders(elements.myContestsList);
+                    elements.myContestsList.innerHTML = '';
+                    const contestCards = [];
+                    snapshots.forEach((snapshot, index) => {
+                        if (snapshot.exists()) {
+                            const t = snapshot.val();
+                            if (t.status === 'upcoming' || t.status === 'ongoing') {
+                                const tId = joinedIds[index];
+                                contestCards.push({
+                                    startTime: t.startTime || 0,
+                                    card: createTournamentCardElement(tId, t)
+                                });
+                            }
+                        } else {
+                            console.warn(`Joined tournament ${joinedIds[index]} not found in tournaments node.`);
+                        }
+                    });
+                    contestCards.sort((a, b) => a.startTime - b.startTime);
+                    if (contestCards.length > 0) {
+                        contestCards.forEach(item => elements.myContestsList.appendChild(item.card));
+                    } else if (elements.noContestsMessage) {
+                        elements.noContestsMessage.style.display = 'block';
+                        elements.noContestsMessage.textContent = "No upcoming/ongoing joined contests.";
+                    }
+                } catch (e) {
+                    console.error("My contests load failed:", e);
+                    removePlaceholders(elements.myContestsList);
+                    elements.myContestsList.innerHTML = '<p class="text-danger tc">Could not load contests.</p>';
+                }
+            }
+
+            function loadWalletData() {
+                console.log("Loading Wallet Data...");
+                if (!currentUser) return;
+            }
+
+            function loadProfileData() {
+                console.log("Loading Profile Data...");
+                if (!currentUser) return;
+                if (userProfile?.displayName) {
+                    removePlaceholders(elements.profileName?.closest('.placeholder-glow'));
+                    removePlaceholders(elements.profileEmail?.closest('.placeholder-glow'));
+                    removePlaceholders(elements.profileTotalMatches?.closest('.placeholder-glow'));
+                    removePlaceholders(elements.profileWonMatches?.closest('.placeholder-glow'));
+                    removePlaceholders(elements.profileTotalEarnings?.closest('.placeholder-glow'));
+                    removePlaceholders(elements.profileTotalWithdrawnEl?.closest('.placeholder-glow'));
+                }
+            }
+
+            function loadEarningsData() {
+                console.log("Loading Leaderboard Data (Previously Earnings)...");
+                if (!currentUser) return;
+                // This function is now simplified as the complex UI is removed.
+                // We can keep it in case we add leaderboard logic later.
+            }
+
+            async function recordTransaction(userId, type, amount, description, details = {}) {
+                if (!userId) return;
+                const transactionRef = ref(db, `transactions/${userId}`);
+                const newTransactionRef = push(transactionRef);
+
+                const newTransaction = {
+                    id: newTransactionRef.key,
+                    type,
+                    amount,
+                    description,
+                    timestamp: serverTimestamp(),
+                    ...details
+                };
+
+                try {
+                    await set(newTransactionRef, newTransaction);
+                    console.log(`Transaction recorded: ${type}, Amount: ${amount}`);
+                    return newTransactionRef.key;
+                } catch (e) {
+                    console.error("Transaction record failed:", e);
+                    return null;
+                }
+            }
+
+            async function loadRecentTransactions() {
+                console.log("Loading Recent Transactions...");
+                if (!currentUser || !elements.recentTransactionsList) return;
+                const limit = 15;
+                elements.recentTransactionsList.innerHTML = '';
+                elements.recentTransactionsList.classList.add('placeholder-glow');
+                for (let i = 0; i < 3; i++) {
+                    elements.recentTransactionsList.innerHTML += `<div class="custom-card p-2 mb-2 placeholder-glow"><div class="d-flex justify-content-between"><span class="placeholder col-5"></span><span class="placeholder col-3"></span></div><div class="small text-secondary mt-1"><span class="placeholder col-6"></span></div></div>`;
+                }
+                if (elements.noTransactionsMessage) {
+                    elements.noTransactionsMessage.style.display = 'block';
+                    elements.noTransactionsMessage.textContent = 'Loading transactions...';
+                }
+
+                try {
+                    const transRef = query(ref(db, `transactions/${currentUser.uid}`), orderByChild('timestamp'), limitToLast(limit));
+                    const s = await get(transRef);
+                    const transactions = s.val() || {};
+                    const sortedT = Object.values(transactions).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    console.log(`Found ${sortedT.length} recent transactions.`);
+
+                    removePlaceholders(elements.recentTransactionsList);
+                    elements.recentTransactionsList.innerHTML = '';
+
+                    if (sortedT.length > 0) {
+                        if (elements.noTransactionsMessage) elements.noTransactionsMessage.style.display = 'none';
+                        sortedT.forEach(t => {
+                            const item = document.createElement('div');
+                            item.className = 'custom-card p-3 mb-2';
+
+                            const isCredit = t.amount > 0;
+                            const amountColor = t.type.includes('refund') ? 'text-success' : (t.type.includes('reject') ? 'text-success' : (isCredit ? 'text-success' : 'text-danger'));
+                            const amount = `${t.amount >= 0 ? '+' : '-'}৳${Math.abs(t.amount || 0).toFixed(2)}`;
+                            const time = t.timestamp ? new Date(t.timestamp).toLocaleString([], {
+                                dateStyle: 'short',
+                                timeStyle: 'short'
+                            }) : 'N/A';
+
+                            let statusBadge = '';
+                            if (t.status) {
+                                const status = t.status.toLowerCase();
+                                statusBadge = `<span class="transaction-status ${status}">${t.status}</span>`;
+                            }
+
+                            item.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">${t.description || t.type || 'Transaction'}</div>
+                                    <div class="small text-secondary">${time}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold ${amountColor}">${amount}</div>
+                                    ${statusBadge ? `<div class="mt-1">${statusBadge}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                            elements.recentTransactionsList.appendChild(item);
+                        });
+                    } else if (elements.noTransactionsMessage) {
+                        elements.noTransactionsMessage.style.display = 'block';
+                        elements.noTransactionsMessage.textContent = 'No recent transactions.';
+                    }
+                } catch (e) {
+                    console.error("Transactions load failed:", e);
+                    removePlaceholders(elements.recentTransactionsList);
+                    elements.recentTransactionsList.innerHTML = '<p class="text-danger text-center">Could not load transactions.</p>';
+                    if (elements.noTransactionsMessage) elements.noTransactionsMessage.style.display = 'none';
+                }
+            }
+
+            // User Panel: Join Button Click Handler
+            // User Panel: Join Button Click Handler (Fully Corrected)
+            async function handleJoinTournamentClick(event) {
+                // ১. ইউজার লগইন করা আছে কিনা চেক
+                if (!currentUser) {
+                    alert("Please login first.");
+                    showSection('login-section');
+                    return;
+                }
+
+                // ২. বাটন থেকে ডাটা নেওয়া
+                const btn = event.currentTarget;
+                const tId = btn.dataset.tournamentId;
+                const fee = btn.dataset.fee;
+                // 🔥 বাটন থেকে Match Type নেওয়া হচ্ছে (Solo/Duo/Squad)
+                const matchType = btn.dataset.matchType || 'Solo';
+
+                // ৩. মডালের এলিমেন্টগুলো ধরা
+                const modalTitle = document.getElementById('inGameNameModalLabel');
+                const modalBody = document.querySelector('#inGameNameModalEl .modal-body');
+                const confirmBtn = document.getElementById('confirmJoinBtnEl');
+
+                // ৪. কনফার্ম বাটনে ডাটা সেট করে রাখা (যাতে পরের ধাপে পাওয়া যায়)
+                confirmBtn.dataset.tournamentId = tId;
+                confirmBtn.dataset.fee = fee;
+                confirmBtn.dataset.matchType = matchType;
+
+                // ৫. মডাল টাইটেল আপডেট করা
+                modalTitle.textContent = `Join ${matchType} Match (Fee: ৳${fee})`;
+
+                // ৬. 🔥 ডাইনামিক ফর্ম তৈরি (লজিক অনুযায়ী)
+                let formHTML = '';
+
+                if (matchType === 'Solo') {
+                    formHTML = `
+            <div class="mb-3">
+                <label class="form-label">In-Game Name</label>
+                <input type="text" class="form-control" id="joinPlayerName1" placeholder="Enter your game name">
+            </div>
+        `;
+                } else if (matchType === 'Duo') {
+                    formHTML = `
+            <div class="mb-3">
+                <label class="form-label text-warning">Team Name</label>
+                <input type="text" class="form-control" id="joinTeamName" placeholder="e.g. Team Cobra">
+            </div>
+            <div class="row g-2">
+                <div class="col-6"><label class="small text-secondary">Leader</label><input type="text" class="form-control" id="joinPlayerName1" placeholder="Player 1 Name"></div>
+                <div class="col-6"><label class="small text-secondary">Player 2</label><input type="text" class="form-control" id="joinPlayerName2" placeholder="Player 2 Name"></div>
+            </div>
+        `;
+                } else if (matchType === 'Squad') {
+                    formHTML = `
+            <div class="mb-3">
+                <label class="form-label text-warning">Team Name</label>
+                <input type="text" class="form-control" id="joinTeamName" placeholder="e.g. Team Cobra">
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><input type="text" class="form-control" id="joinPlayerName1" placeholder="Player 1 (Leader)"></div>
+                <div class="col-6"><input type="text" class="form-control" id="joinPlayerName2" placeholder="Player 2 Name"></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6"><input type="text" class="form-control" id="joinPlayerName3" placeholder="Player 3 Name"></div>
+                <div class="col-6"><input type="text" class="form-control" id="joinPlayerName4" placeholder="Player 4 Name"></div>
+            </div>
+        `;
+                }
+
+                // ৭. মডাল বডিতে ফর্ম ইনজেক্ট করা (স্ট্যাটাস মেসেজ ডিভ সহ)
+                modalBody.innerHTML = `
+        <p class="text-secondary small mb-3">Fee will be deducted from your wallet.</p>
+        <div id="dynamicJoinForm">${formHTML}</div>
+        <div id="inGameNameStatusMessageEl" class="alert mt-3" style="display: none;"></div>
+    `;
+
+                // ৮. মডাল শো করা
+                if (elements.inGameNameModalInstance) {
+                    elements.inGameNameModalInstance.show();
+                } else {
+                    // ফলব্যাক (যদি ইনস্ট্যান্স না থাকে)
+                    const myModal = new bootstrap.Modal(document.getElementById('inGameNameModalEl'));
+                    myModal.show();
+                }
+            }
+
+            // --- Modal Handlers ---
+            function handleConfirmDeposit() {
+                clearStatusMessage(elements.depositStatusMessage);
+                const amount = parseFloat(elements.depositAmountInput.value);
+
+                if (isNaN(amount) || amount <= 0) {
+                    showStatusMessage(elements.depositStatusMessage, 'Please enter a valid amount.', 'warning');
+                    return;
+                }
+
+                depositAmount = amount;
+                const paymentUrl = appSettings.paymentGatewayUrl || 'https://www.google.com';
+                const urlWithParams = `${paymentUrl}?amount=${amount}&user=${currentUser?.uid || 'guest'}`;
+
+                console.log(`Redirecting to payment URL: ${urlWithParams}`);
+                window.open(urlWithParams, '_blank');
+
+                elements.depositStep1.style.display = 'none';
+                elements.depositStep2.style.display = 'block';
+                showStatusMessage(elements.depositStatusMessage, 'Complete payment in the new tab, then verify here.', 'info', false);
+            }
+            async function handleVerifyTransaction() {
+                clearStatusMessage(elements.depositStatusMessage);
+                const btn = elements.verifyTransactionBtn;
+                const txId = elements.transactionIdInput.value.trim();
+                const amountToAdd = depositAmount;
+
+                // ১. খালি ইনপুট চেক
+                if (!txId) {
+                    showStatusMessage(elements.depositStatusMessage, '⚠️ Transaction ID দিতে হবে।', 'warning');
+                    return;
+                }
+
+                // ২. ফরম্যাট চেক (শুধুমাত্র বড় হাতের অক্ষর A-Z এবং সংখ্যা 0-9)
+                const trxRegex = /^[A-Z0-9]+$/;
+                if (!trxRegex.test(txId)) {
+                    showStatusMessage(elements.depositStatusMessage,
+                        '❌ <strong>ভুল ফরম্যাট!</strong><br>Transaction ID তে শুধুমাত্র <strong>বড় হাতের ইংরেজি অক্ষর (A-Z)</strong> এবং <strong>সংখ্যা (0-9)</strong> থাকতে পারবে।<br>উদাহরণ: 9H7K3M2P (কোনো স্পেস বা ছোট হাতের অক্ষর দিবেন না)।',
+                        'danger', false);
+                    return;
+                }
+
+                if (!amountToAdd || amountToAdd <= 0) {
+                    showStatusMessage(elements.depositStatusMessage, '⚠️ টাকার পরিমাণ সঠিক নয়। আবার চেষ্টা করুন।', 'warning');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
+
+                try {
+                    // ৩. ডুপ্লিকেট চেক (আগে ব্যবহার হয়েছে কিনা)
+                    const txIdRef = ref(db, `verifiedTransactionIds/${txId}`);
+                    const snapshot = await get(txIdRef);
+
+                    if (snapshot.exists()) {
+                        throw new Error("⛔ <strong>ডুপ্লিকেট আইডি!</strong><br>এই Transaction ID টি আগেই ব্যবহার করা হয়ে গেছে।");
+                    }
+
+                    // ৪. পেন্ডিং চেক (অলরেডি রিকোয়েস্ট পাঠানো আছে কিনা)
+                    const requestsRef = ref(db, `depositRequests/${currentUser.uid}`);
+                    const pendingSnapshot = await get(requestsRef);
+
+                    if (pendingSnapshot.exists()) {
+                        const requests = pendingSnapshot.val();
+                        const isPending = Object.values(requests).some(req => req.transactionId === txId);
+                        if (isPending) {
+                            throw new Error("⏳ <strong>অপেক্ষা করুন!</strong><br>এই Transaction ID দিয়ে আপনি অলরেডি একটি রিকোয়েস্ট পাঠিয়েছেন।");
+                        }
+                    }
+
+                    // সব ঠিক থাকলে ডাটাবেসে পাঠানো
+                    const requestRef = push(ref(db, `depositRequests/${currentUser.uid}`));
+
+                    const depositRequestData = {
+                        requestId: requestRef.key,
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        userName: userProfile.displayName || 'N/A',
+                        amount: amountToAdd,
+                        transactionId: txId,
+                        timestamp: serverTimestamp(),
+                        status: 'pending'
+                    };
+
+                    await set(requestRef, depositRequestData);
+
+                    showStatusMessage(elements.depositStatusMessage,
+                        '✅ <strong>সফল হয়েছে!</strong><br>আপনার ডিপোজিট রিকোয়েস্ট জমা নেওয়া হয়েছে। অ্যাডমিন চেক করে শীঘ্রই ব্যালেন্স অ্যাড করে দিবেন।',
+                        'success', false);
+
+                    depositAmount = 0;
+                    elements.transactionIdInput.value = '';
+
+                    setTimeout(() => {
+                        elements.addAmountModalInstance?.hide();
+                        clearStatusMessage(elements.depositStatusMessage);
+                    }, 3000);
+
+                } catch (error) {
+                    console.error("Deposit request failed:", error);
+                    showStatusMessage(elements.depositStatusMessage, `${error.message}`, 'danger', false);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-patch-check-fill"></i> Verify Transaction';
+                }
+            }
+
+            async function submitWithdrawRequestHandler() {
+                if (!currentUser) return;
+                const btn = elements.submitWithdrawRequestBtn;
+
+                const amt = parseFloat(elements.withdrawAmountInput.value);
+                const method = elements.withdrawMethodSelect.value;
+                const number = elements.withdrawNumberInput.value.trim();
+                const wc = userProfile.winningCash || 0;
+                const minW = appSettings?.minWithdraw || 50;
+
+                clearStatusMessage(elements.withdrawStatusMessage);
+
+                const phoneRegex = /^(01)[3-9]\d{8}$/;
+                if (!phoneRegex.test(number)) {
+                    showStatusMessage(elements.withdrawStatusMessage, 'Please enter a valid 11-digit Bangladeshi number.', 'warning');
+                    return;
+                }
+                if (isNaN(amt) || amt <= 0) {
+                    showStatusMessage(elements.withdrawStatusMessage, 'Invalid amount.', 'warning');
+                    return;
+                }
+                if (amt < minW) {
+                    showStatusMessage(elements.withdrawStatusMessage, `Min withdraw ৳${minW}.`, 'warning');
+                    return;
+                }
+                if (amt > wc) {
+                    showStatusMessage(elements.withdrawStatusMessage, 'Insufficient winning balance.', 'warning');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+                const userRef = ref(db, `users/${currentUser.uid}`);
+                let balanceTransactionResult;
+
+                try {
+                    balanceTransactionResult = await runTransaction(userRef, (profile) => {
+                        if (profile) {
+                            if ((profile.winningCash || 0) < amt) {
+                                return;
+                            }
+                            profile.winningCash -= amt;
+                        }
+                        return profile;
+                    });
+
+                    if (!balanceTransactionResult.committed) {
+                        throw new Error('Insufficient winning balance or transaction conflict. Please try again.');
+                    }
+                    console.log("Winning cash deducted successfully via transaction.");
+
+                    const transactionDetails = {
+                        type: 'withdrawal',
+                        amount: -amt,
+                        description: `Withdrawal to ${method} (${number})`,
+                        status: 'pending'
+                    };
+                    const transactionId = await recordTransaction(currentUser.uid, transactionDetails.type, transactionDetails.amount, transactionDetails.description, {
+                        status: transactionDetails.status
+                    });
+
+                    if (!transactionId) {
+                        throw new Error("Failed to create a transaction record.");
+                    }
+
+                    const withdrawalRef = push(ref(db, 'withdrawals/' + currentUser.uid));
+                    const withdrawalData = {
+                        withdrawalId: withdrawalRef.key,
+                        userId: currentUser.uid,
+                        userName: userProfile.displayName || currentUser.email,
+                        account: number,
+                        amount: amt,
+                        method: method,
+                        timestamp: serverTimestamp(),
+                        status: 'pending',
+                        transactionId: transactionId
+                    };
+
+                    await set(withdrawalRef, withdrawalData);
+
+                    console.log("Withdrawal request created for admin panel:", withdrawalRef.key);
+
+                    elements.withdrawModalInstance.hide();
+                    showSuccessAnimation();
+
+                } catch (e) {
+                    console.error("Withdrawal failed:", e);
+                    showStatusMessage(elements.withdrawStatusMessage, `Error: ${e.message}`, 'danger');
+
+                    if (balanceTransactionResult && balanceTransactionResult.committed) {
+                        console.error("CRITICAL: Balance deducted but request logging failed. Refunding...");
+                        await runTransaction(userRef, (profile) => {
+                            if (profile) {
+                                profile.winningCash += amt;
+                            }
+                            return profile;
+                        });
+                        await recordTransaction(currentUser.uid, 'withdrawal_failed_refund', amt, 'Refund for failed request', {
+                            status: 'Completed'
+                        });
+                        showStatusMessage(elements.withdrawStatusMessage, 'An error occurred, but your balance has been restored. Please try again.', 'danger', false);
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Submit Request';
+                }
+            }
+
+
+            function showSuccessAnimation() {
+                if (!elements.successOverlay) return;
+                elements.successOverlay.classList.add('visible');
+                setTimeout(() => {
+                    elements.successOverlay.classList.remove('visible');
+                }, 4000);
+            }
+
+            // User Panel: Match Details Modal (Fixed for Undefined Name Issue)
+            async function handleMatchDetailsClick(event) {
+                if (!elements.matchDetailsModalInstance) return;
+                const tId = event.currentTarget.dataset.tournamentId;
+                if (!tId) return;
+
+                elements.matchDetailsModalTitle.textContent = 'Loading...';
+                elements.matchDetailsModalBody.innerHTML = '<div class="text-center p-5"><div class="spinner-border spinner-border-sm text-warning"></div></div>';
+                elements.matchDetailsModalInstance.show();
+
+                try {
+                    const tRef = ref(db, `tournaments/${tId}`);
+                    const s = await get(tRef);
+                    if (s.exists()) {
+                        const t = s.val();
+                        const gName = appSettings.games?.[t.gameId]?.name || t.gameId || 'Game';
+                        const sTimeLoc = t.startTime ? new Date(t.startTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'TBA';
+                        const matchType = t.status || 'Solo'; // Status কেই Match Type হিসেবে ধরা হচ্ছে
+
+                        // --- Registered List Logic ---
+                        const regData = t.registeredPlayers || {};
+                        const totalJoined = Object.keys(regData).length;
+                        let listHTML = '';
+
+                        if (totalJoined > 0) {
+                            let rows = '';
+                            let count = 1;
+
+                            Object.values(regData).forEach(reg => {
+                                let displayContent = '';
+
+                                // 🔥 লজিক ফিক্স: চেক করা হচ্ছে এটা টিম নাকি সোলো
+                                if (reg.teamName) {
+                                    // Duo বা Squad হলে
+                                    let pNames = reg.players ? Object.values(reg.players).join(', ') : '';
+                                    displayContent = `
+                            <strong class="text-warning">${reg.teamName}</strong><br>
+                            <small class="text-secondary" style="font-size:0.75rem">${pNames}</small>
+                        `;
+                                } else {
+                                    // Solo হলে (যদি inGameName না থাকে, ফলব্যাক দেখাবে)
+                                    displayContent = `<span class="text-info fw-bold">${reg.inGameName || 'Name Hidden'}</span>`;
+                                }
+
+                                rows += `<tr><td>${count}</td><td>${displayContent}</td></tr>`;
+                                count++;
+                            });
+
+                            listHTML = `
+                    <h6 class="text-accent mt-3 border-bottom pb-1">Participants (${totalJoined})</h6>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-dark table-sm table-striped" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th>${matchType === 'Solo' ? 'Player Name' : 'Team Info'}</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+                        } else {
+                            listHTML = `<p class="text-center text-secondary mt-3 small">No players joined yet.</p>`;
+                        }
+                        // -----------------------------
+
+                        const desc = t.description || 'Standard rules apply.';
+                        const fmtDesc = desc.replace(/\n/g, '<br>');
+
+                        elements.matchDetailsModalTitle.textContent = t.name || 'Match Details';
+                        elements.matchDetailsModalBody.innerHTML = `
+                <div class="row g-2 small mb-3">
+                    <div class="col-6"><strong>Type:</strong> ${matchType}</div>
+                    <div class="col-6"><strong>Map:</strong> ${t.tags ? t.tags[0] : 'N/A'}</div>
+                    <div class="col-6"><strong>Entry:</strong> ৳${t.entryFee}</div>
+                    <div class="col-6"><strong>Prize:</strong> ৳${t.prizePool}</div>
+                    <div class="col-12"><strong>Time:</strong> ${sTimeLoc}</div>
+                </div>
+                <hr class="my-2">
+                ${listHTML}
+                <hr class="my-2">
+                <h6>Rules:</h6>
+                <div style="white-space: pre-wrap; line-height: 1.4; font-size: 0.85rem; color: #ccc;">${fmtDesc}</div> `;
+
+                    } else {
+                        elements.matchDetailsModalBody.innerHTML = '<p class="text-danger">Details not found.</p>';
+                    }
+                } catch (e) {
+                    console.error("Details load failed:", e);
+                    elements.matchDetailsModalBody.innerHTML = '<p class="text-danger">Error loading details.</p>';
+                }
+            }
+            async function handleIdPasswordClick(event) {
+                if (!elements.idPasswordModalInstance) return;
+                const tId = event.currentTarget.dataset.tournamentId;
+                if (!tId) return;
+
+                console.log("--- Checking ID/Pass ---");
+                console.log("Tournament ID (tId):", tId);
+                console.log("Current User UID:", currentUser?.uid);
+
+                if (!currentUser || !userProfile?.joinedTournaments?.[tId]) {
+                    console.warn("Client-side check failed: User not logged in or tId not found in userProfile.joinedTournaments");
+                    alert("Join the tournament first or refresh the page.");
+                    return;
+                }
+
+                elements.roomIdDisplay.innerHTML = '<span class="placeholder col-6"></span>';
+                elements.roomPasswordDisplay.innerHTML = '<span class="placeholder col-6"></span>';
+                elements.idPasswordModalInstance.show();
+                try {
+                    const tournamentRef = ref(db, `tournaments/${tId}`);
+                    console.log("Fetching from path:", `tournaments/${tId}`);
+                    const s = await get(tournamentRef);
+                    console.log("Snapshot exists?", s.exists(), "Snapshot value:", s.val());
+
+                    removePlaceholders(elements.roomIdDisplay.closest('.placeholder-glow'));
+                    removePlaceholders(elements.roomPasswordDisplay.closest('.placeholder-glow'));
+
+                    if (s.exists()) {
+                        const tournamentData = s.val();
+                        if (tournamentData.showIdPass) {
+                            elements.roomIdDisplay.textContent = tournamentData.roomId || 'Not updated yet';
+                            elements.roomPasswordDisplay.textContent = tournamentData.roomPassword || 'Not updated yet';
+                        } else {
+                            elements.roomIdDisplay.textContent = 'Hidden by Admin';
+                            elements.roomPasswordDisplay.textContent = 'Hidden by Admin';
+                        }
+                    } else {
+                        elements.roomIdDisplay.textContent = 'Not Found';
+                        elements.roomPasswordDisplay.textContent = 'Not Found';
+                    }
+                } catch (e) {
+                    console.error("ID/Pass fetch error:", e);
+                    removePlaceholders(elements.roomIdDisplay.closest('.placeholder-glow'));
+                    removePlaceholders(elements.roomPasswordDisplay.closest('.placeholder-glow'));
+                    elements.roomIdDisplay.textContent = 'Error';
+                    elements.roomPasswordDisplay.textContent = 'Error';
+                    alert("Error loading ID/Password. Check permissions or network.");
+                }
+            }
+
+            async function handlePolicyClick(event) {
+                console.log("Policy link clicked");
+                if (!elements.policyModalInstance) {
+                    console.error("Policy modal instance not found");
+                    return;
+                }
+                event.preventDefault();
+                const target = event.currentTarget;
+                const policyType = target.dataset.policy;
+                console.log("Policy type requested:", policyType);
+                if (!policyType) return;
+
+                let title = '',
+                    contentRefPath = '',
+                    modalBodyContent = '<div class="text-center p-5"><div class="spinner-border spinner-border-sm"></div></div>';
+                elements.policyModalBody.innerHTML = modalBodyContent;
+
+                switch (policyType) {
+                    case 'privacy':
+                        title = 'Privacy Policy';
+                        modalBodyContent = appSettings.policyPrivacy || 'Content not available.';
+                        break;
+                    case 'terms':
+                        title = 'Terms and Conditions';
+                        modalBodyContent = appSettings.policyTerms || 'Content not available.';
+                        break;
+                    case 'refund':
+                        title = 'Refund and Cancellation';
+                        modalBodyContent = appSettings.policyRefund || 'Content not available.';
+                        break;
+                    case 'fairPlay':
+                        title = 'Fair Play Policy';
+                        modalBodyContent = appSettings.policyFairPlay || 'Content not available.';
+                        break;
+                    case 'refer':
+                        title = 'Refer & Earn';
+                        if (!currentUser) {
+                            alert("Login to view referral.");
+                            return;
+                        }
+                        const refCode = userProfile.referralCode || 'N/A';
+                        const refBonus = appSettings?.referralBonus || 0;
+                        const refDesc = appSettings?.referralDescription || `Get ৳${refBonus} when your friend joins using your code.`;
+                        modalBodyContent = `<div class="text-center"><h4>Refer Friends!</h4><p class="text-secondary">Share code & earn!</p><div class="my-4 p-3" style="background: var(--primary-bg); border-radius: 8px;"><p class="small text-secondary mb-1">Your Code:</p><h3 class="text-accent referral-code" id="referralCodeDisplay">${refCode}</h3><div class="mt-3"><button class="btn btn-sm btn-custom btn-custom-secondary me-2 copy-btn" data-target="#referralCodeDisplay"><i class="bi bi-clipboard"></i> Copy</button><button class="btn btn-sm btn-custom btn-custom-secondary" id="shareReferralBtn"><i class="bi bi-share-fill"></i> Share</button></div></div><p class="mt-3 small text-secondary">${refDesc}</p></div>`;
+                        break;
+                    default:
+                        title = 'Info';
+                        console.warn("Unknown policy:", policyType);
+                        modalBodyContent = '<p>Content unavailable.</p>';
+                }
+
+                elements.policyModalTitle.textContent = title;
+                if (typeof modalBodyContent === 'string' && policyType !== 'refer') {
+                    elements.policyModalBody.innerHTML = modalBodyContent.replace(/\n/g, '<br>');
+                } else {
+                    elements.policyModalBody.innerHTML = modalBodyContent;
+                }
+                console.log("Showing policy modal for:", policyType);
+                elements.policyModalInstance.show();
+            }
+
+            function setupRealtimeListeners(uid) {
+                if (!uid || !db || !currentUser) return;
+                detachAllDbListeners();
+
+                console.log("Setting up realtime listener for User Profile:", uid);
+                const userProfileRef = ref(db, `users/${uid}`);
+                const userProfileListener = onValue(userProfileRef, (snapshot) => {
+                    if (currentUser && currentUser.uid === uid) {
+                        if (snapshot.exists()) {
+                            console.log("Realtime: User Profile Update Received");
+                            userProfile = snapshot.val();
+                            populateUserInfo(currentUser, userProfile);
+                            if (currentSectionId === 'home-section') loadMyContests();
+                        } else {
+                            console.warn("User data deleted from DB for:", uid);
+                            alert("Your account data seems to be missing. Logging out for safety.");
+                            logoutUser();
+                        }
+                    } else {
+                        off(userProfileRef, 'value', userProfileListener);
+                    }
+                }, (error) => console.error("Listener error (user profile):", error));
+                dbListeners['userProfile'] = {
+                    path: `users/${uid}`,
+                    func: userProfileListener
+                };
+
+                console.log("Setting up realtime listener for User Transactions:", uid);
+                const transactionsRef = ref(db, `transactions/${uid}`);
+                const transactionsListener = onValue(transactionsRef, (snapshot) => {
+                    if (currentUser && currentUser.uid === uid) {
+                        console.log("Realtime: Transactions Update Received");
+                        if (currentSectionId === 'wallet-section') {
+                            loadRecentTransactions();
+                        }
+                    } else {
+                        off(transactionsRef, 'value', transactionsListener);
+                    }
+                }, (error) => console.error("Listener error (transactions):", error));
+                dbListeners['transactions'] = {
+                    path: `transactions/${uid}`,
+                    func: transactionsListener
+                };
+            }
+
+            function detachAllDbListeners() {
+                console.log("Detaching all Firebase listeners:", Object.keys(dbListeners));
+                let count = 0;
+                for (const key in dbListeners) {
+                    try {
+                        const {
+                            path,
+                            func
+                        } = dbListeners[key];
+                        if (path && func) {
+                            off(ref(db, path), 'value', func);
+                            count++;
+                        }
+                    } catch (e) {
+                        console.error(`Failed to detach listener for ${key}:`, e);
+                    }
+                }
+                dbListeners = {};
+                console.log(`Detached ${count} listeners.`);
+            }
+
+            async function checkSecurityRules() {
+                console.log("Checking security rules...");
+                try {
+                    if (!currentUser) {
+                        console.log("Security rule check skipped for anonymous user (rely on console).");
+                    } else if (elements.securityWarning) {
+                        elements.securityWarning.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.log("Security rule check result (expected failure if secure):", error.message);
+                    if (elements.securityWarning) elements.securityWarning.style.display = 'none';
+                }
+            }
+
+            // --- Event Listeners Initialization ---
+            function initializeEventListeners() {
+                if (!elements) return;
+                console.log("Initializing listeners...");
+                elements.bottomNavItems?.forEach(item => item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSection(item.dataset.section);
+                }));
+                elements.headerBackBtn?.addEventListener('click', () => showSection('home-section'));
+                // --- Tab Switching Logic (Updated) ---
+                // ১. সব ট্যাব বাটনগুলো ধরলাম (নতুন করে সিলেক্ট করা হচ্ছে)
+                const tabButtons = document.querySelectorAll('.tournament-tabs .tab-item');
+
+                // ২. প্রতিটা বাটনে ক্লিক ইভেন্ট দিলাম
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+
+                        // ৩. সব বাটন থেকে 'active' ক্লাস সরিয়ে দিলাম
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+
+                        // ৪. যেটায় ক্লিক করেছিস, সেটাতে 'active' ক্লাস দিলাম
+                        e.currentTarget.classList.add('active');
+
+                        // ৫. ডাটা ফিল্টার (Solo, Duo, Squad, Completed) নিলাম
+                        const filterVal = e.currentTarget.dataset.filter;
+
+                        // ৬. যদি কোনো গেম সিলেক্ট করা থাকে, তাহলে ফিল্টার কল করলাম
+                        if (currentTournamentGameId) {
+                            filterTournaments(currentTournamentGameId, filterVal);
+                        }
+                    });
+                });
+                elements.loginEmailBtn?.addEventListener('click', loginWithEmail);
+                elements.signupEmailBtn?.addEventListener('click', signUpWithEmail);
+
+                elements.googleSignInBtn?.addEventListener('click', handleGoogleLogin);
+                elements.showSignupToggleBtn?.addEventListener('click', () => toggleLoginForm(false));
+                elements.showLoginToggleBtn?.addEventListener('click', () => toggleLoginForm(true));
+                elements.forgotPasswordLink?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    resetPassword();
+                });
+                elements.logoutProfileBtn?.addEventListener('click', logoutUser);
+                elements.policyLinks?.forEach(link => link.addEventListener('click', handlePolicyClick));
+                elements.notificationSwitch?.addEventListener('change', (e) => {
+                    console.log("Notification toggle:", e.target.checked);
+                });
+                elements.withdrawBtn?.addEventListener('click', handleWithdrawClick);
+                elements.addAmountWalletBtn?.addEventListener('click', () => {
+                    if (currentUser && elements.addAmountModalInstance) {
+                        elements.depositStep1.style.display = 'block';
+                        elements.depositStep2.style.display = 'none';
+                        elements.depositAmountInput.value = '';
+                        elements.transactionIdInput.value = '';
+                        clearStatusMessage(elements.depositStatusMessage);
+                        elements.addAmountModalInstance.show();
+                    } else if (!currentUser) {
+                        alert("Login first.");
+                        showSection('login-section');
+                    }
+                });
+                elements.confirmDepositBtn?.addEventListener('click', handleConfirmDeposit);
+                elements.verifyTransactionBtn?.addEventListener('click', handleVerifyTransaction);
+                elements.submitWithdrawRequestBtn?.addEventListener('click', submitWithdrawRequestHandler);
+                elements.notificationBtn?.addEventListener('click', () => alert('Notifications coming soon!'));
+                elements.allTransactionsBtn?.addEventListener('click', () => alert('Transaction history page coming soon!'));
+                elements.viewEarningsHistoryBtn?.addEventListener('click', () => alert('Earnings history coming soon!'));
+                // --- Referral Button Logic ---
+                elements.openReferralBtn?.addEventListener('click', () => {
+                    loadReferralDetails(); // ডেটা লোড হবে
+                    elements.referralModalInstance?.show(); // মোডাল ওপেন হবে
+                });
+
+                // --- Share Button Logic ---
+                elements.shareReferralLinkBtn?.addEventListener('click', () => {
+                    const code = userProfile.referralCode;
+                    if (code) shareReferral(code);
+                });
+                // --- Support Button Logic ---
+                elements.openSupportModalBtn?.addEventListener('click', () => {
+                    // ডাটাবেস থেকে নতুন নাম অনুযায়ী লিংক নেওয়া
+                    const tGroup = appSettings.linkTeleGroup;
+                    const tID = appSettings.linkTeleID;
+                    const fbPage = appSettings.linkFbPage;
+
+                    // ১. টেলিগ্রাম গ্রুপ বাটন
+                    if (elements.btnTeleGroup) {
+                        if (tGroup) {
+                            elements.btnTeleGroup.href = tGroup;
+                            elements.btnTeleGroup.style.display = 'block';
+                        } else {
+                            elements.btnTeleGroup.style.display = 'none';
+                        }
+                    }
+
+                    // ২. টেলিগ্রাম আইডি বাটন (Admin Contact)
+                    if (elements.btnTeleID) {
+                        if (tID) {
+                            elements.btnTeleID.href = tID;
+                            elements.btnTeleID.style.display = 'block';
+                        } else {
+                            elements.btnTeleID.style.display = 'none';
+                        }
+                    }
+
+                    // ৩. ফেসবুক পেজ বাটন
+                    if (elements.btnFbPage) {
+                        if (fbPage) {
+                            elements.btnFbPage.href = fbPage;
+                            elements.btnFbPage.style.display = 'block';
+                        } else {
+                            elements.btnFbPage.style.display = 'none';
+                        }
+                    }
+
+                    // মোডাল ওপেন করা
+                    elements.supportModalInstance?.show();
+                });
+                // Confirm Join Button Listener
+                elements.confirmJoinBtn?.addEventListener('click', processTournamentJoin);
+                console.log("Listeners initialized.");
+            }
+            // --- Tournament Join Function ---
+            // User Panel: Process Join (Confirm Button)
+            async function processTournamentJoin() {
+                const btn = document.getElementById('confirmJoinBtnEl');
+                const tId = btn.dataset.tournamentId;
+                const fee = parseFloat(btn.dataset.fee || 0);
+                const matchType = btn.dataset.matchType || 'Solo';
+                // স্ট্যাটাস মেসেজ এলিমেন্ট নতুন করে ধরতে হবে কারণ আমরা HTML রিপ্লেস করেছি
+                const statusEl = document.getElementById('inGameNameStatusMessageEl');
+
+                // ইনপুট ভ্যালু নেওয়া
+                const teamNameInput = document.getElementById('joinTeamName');
+                const p1 = document.getElementById('joinPlayerName1');
+                const p2 = document.getElementById('joinPlayerName2');
+                const p3 = document.getElementById('joinPlayerName3');
+                const p4 = document.getElementById('joinPlayerName4');
+
+                if (!tId) return;
+
+                // --- ১. ভ্যালিডেশন লজিক ---
+                let registrationData = {};
+
+                if (matchType === 'Solo') {
+                    if (!p1 || !p1.value.trim()) {
+                        showStatusMessage(statusEl, 'Please enter your Game Name.', 'warning'); return;
+                    }
+                    registrationData = {
+                        inGameName: p1.value.trim(),
+                        joinedAt: serverTimestamp()
+                    };
+                } else {
+                    // Duo or Squad
+                    if (!teamNameInput || !teamNameInput.value.trim()) {
+                        showStatusMessage(statusEl, 'Team Name is required.', 'warning'); return;
+                    }
+                    if (!p1 || !p1.value.trim()) {
+                        showStatusMessage(statusEl, 'Player 1 (Leader) name required.', 'warning'); return;
+                    }
+                    if (matchType === 'Duo' && (!p2 || !p2.value.trim())) {
+                        showStatusMessage(statusEl, 'Player 2 name required for Duo.', 'warning'); return;
+                    }
+
+                    // প্লেয়ার লিস্ট বানানো
+                    let playersObj = {
+                        p1: p1.value.trim()
+                    };
+                    if (p2 && p2.value.trim()) playersObj.p2 = p2.value.trim();
+                    if (p3 && p3.value.trim()) playersObj.p3 = p3.value.trim();
+                    if (p4 && p4.value.trim()) playersObj.p4 = p4.value.trim();
+
+                    registrationData = {
+                        teamName: teamNameInput.value.trim(),
+                        players: playersObj,
+                        leaderUid: currentUser.uid, // যে টাকা দিচ্ছে
+                        joinedAt: serverTimestamp()
+                    };
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+                clearStatusMessage(statusEl);
+
+                const uRef = ref(db, `users/${currentUser.uid}`);
+
+                try {
+                    // ২. ব্যালেন্স চেক এবং টাকা কাটা (Transaction)
+                    await runTransaction(uRef, (profileData) => {
+                        if (!profileData) throw "User profile missing.";
+                        if ((profileData.winningCash + profileData.balance) < fee) throw "Insufficient balance (Check Main + Winning).";
+                        if (profileData.joinedTournaments?.[tId]) throw "You have already joined this match.";
+
+                        // টাকা কাটার লজিক (আগে উইনিং ক্যাশ, পরে মেইন ব্যালেন্স - অথবা তোর লজিক অনুযায়ী শুধু মেইন ব্যালেন্স)
+                        // এখানে আমি সহজ লজিক দিচ্ছি: মেইন ব্যালেন্স থেকে কাটা
+                        let currentBal = profileData.balance || 0;
+                        if (currentBal < fee) throw "Insufficient Main Balance. Add money.";
+
+                        profileData.balance = currentBal - fee;
+
+                        if (!profileData.joinedTournaments) profileData.joinedTournaments = {};
+                        profileData.joinedTournaments[tId] = true;
+                        return profileData;
+                    });
+
+                    // ৩. টুর্নামেন্টে রেজিস্টার্ড প্লেয়ার হিসেবে সেভ করা
+                    const updates = {};
+                    // Unique ID হিসেবে ইউজারের UID ব্যবহার করা হচ্ছে (Solo) বা লিডারের UID (Squad)
+                    updates[`tournaments/${tId}/registeredPlayers/${currentUser.uid}`] = registrationData;
+                    await update(ref(db), updates);
+
+                    // ৪. ট্রানজেকশন হিস্টোরি সেভ
+                    await recordTransaction(currentUser.uid, 'tournament_join', -fee, `Joined ${matchType} Match`, { tournamentId: tId });
+
+                    elements.inGameNameModalInstance.hide();
+                    alert(`Successfully joined ${matchType} match!`);
+
+                    // রিফ্রেশ
+                    if (currentSectionId === 'tournaments-section' && currentTournamentGameId) {
+                        const activeTab = document.querySelector('.tournament-tabs .tab-item.active')?.dataset.status || 'upcoming';
+                        filterTournaments(currentTournamentGameId, activeTab);
+                    }
+                    // ওয়ালেট ব্যালেন্স আপডেট (UI)
+                    loadWalletData();
+
+                } catch (e) {
+                    console.error("Join failed:", e);
+                    let msg = e.message || e;
+                    if (typeof msg !== 'string') msg = "Unknown error occurred.";
+                    showStatusMessage(statusEl, `Failed: ${msg}`, 'danger', false);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Confirm & Join';
+                }
+            }
+
+            // --- Load Referral Data Function ---
+            async function loadReferralDetails() {
+                if (!currentUser || !userProfile) return;
+
+                if (elements.myReferralCode) {
+                    elements.myReferralCode.textContent = userProfile.referralCode || 'Generate Code First';
+                }
+                if (elements.totalReferralEarnings) {
+                    elements.totalReferralEarnings.textContent = (userProfile.referralEarnings || 0).toFixed(2);
+                }
+                if (elements.referredUsersList) {
+                    elements.referredUsersList.innerHTML = '<li class="list-group-item bg-transparent text-center text-secondary">Loading history...</li>';
+                }
+
+                try {
+                    const usersRef = ref(db, 'users');
+                    const q = query(usersRef, orderByChild('referredBy'), equalTo(currentUser.uid));
+                    const snapshot = await get(q);
+
+                    let count = 0;
+                    let listHtml = '';
+
+                    if (snapshot.exists()) {
+                        snapshot.forEach(child => {
+                            count++;
+                            const u = child.val();
+                            listHtml += `
+                            <li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold text-info">${u.displayName || 'User'}</span>
+                                    <br><small class="text-secondary" style="font-size: 0.75rem;">UID: ${u.uid}</small>
+                                </div>
+                                <span class="badge bg-secondary">${new Date(u.createdAt).toLocaleDateString()}</span>
+                            </li>
+                        `;
+                        });
+                    }
+
+                    if (elements.totalReferredCount) elements.totalReferredCount.textContent = count;
+
+                    if (elements.referredUsersList) {
+                        elements.referredUsersList.innerHTML = count > 0 ? listHtml : '<li class="list-group-item bg-transparent text-center text-muted">No one joined yet. Share your code!</li>';
+                    }
+
+                } catch (error) {
+                    console.error("Referral load error:", error);
+                    if (elements.referredUsersList) elements.referredUsersList.innerHTML = '<li class="list-group-item text-danger text-center">Error loading data.</li>';
+                }
+            }
+            // --- App Initialization ---
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log("DOM Loaded. Init App...");
+                if (typeof initializeApp !== 'function' || !auth || !db) {
+                    console.error("Firebase SDK failed/not ready. Cannot proceed.");
+                    return;
+                }
+                showLoader(true);
+                initializeEventListeners();
+                updateGlobalUI(false);
+                loadAppSettings();
+                onAuthStateChanged(auth, handleAuthStateChange);
+
+            });
+        </script>
+<script>
+    // রাইট ক্লিক বন্ধ করা
+    document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+    });
+
+    // কিবোর্ড শর্টকাট (F12, Ctrl+Shift+I, Ctrl+U) বন্ধ করা
+    document.onkeydown = function (e) {
+        // F12
+        if (event.keyCode == 123) {
+            return false;
+        }
+        // Ctrl+Shift+I (Inspect)
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+            return false;
+        }
+        // Ctrl+Shift+J (Console)
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+            return false;
+        }
+    };
+</script>
+</body>
+
+</html>

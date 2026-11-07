@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF Squad Arena — ১২ টিমের ফ্রি ফায়ার স্কোয়াড টুর্নামেন্ট ও লাইভ পয়েন্ট টেবিল</title>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Firebase JS SDK (Optional CDN for Real-time Cloud Sync) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation -->
+  <header class="navbar">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-badge">FF</div>
+        <div class="brand-text">
+          <h1>SQUAD <span>ARENA</span></h1>
+          <span class="brand-tag">১২ টিম স্কোয়াড প্ল্যাটফর্ম</span>
+        </div>
+      </a>
+
+      <div class="nav-links">
+        <a href="#standings" class="nav-btn nav-btn-ghost">পয়েন্ট টেবিল</a>
+        <a href="#slots" class="nav-btn nav-btn-ghost">১২টি স্লট</a>
+        <a href="register.html" class="nav-btn nav-btn-primary">+ রেজিস্ট্রেশন</a>
+        <a href="admin.html" class="nav-btn nav-btn-admin">এডমিন প্যানেল</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- 1. Hero Section -->
+    <section class="hero-banner">
+      <div class="hero-card">
+        <div class="hero-pill">
+          <span>👑</span>
+          <span>Official FFWS Points System • 12 Teams / 48 Players</span>
+        </div>
+
+        <h2 class="hero-title" id="tournamentTitle">
+          Free Fire Daily Squad Masters — 12 Teams
+        </h2>
+
+        <p class="hero-desc" id="tournamentRules">
+          মোবাইল অনলি টুর্নামেন্ট। ফেসবুক ও হোয়াটসঅ্যাপ গ্রুপের ১২ টিমের লাইভ স্কোয়াড টুর্নামেন্ট ও অটোমেটিক পয়েন্ট টেবিল।
+        </p>
+
+        <!-- Stats Counter Row -->
+        <div class="hero-stats-row">
+          <div class="stat-box">
+            <span class="val" id="registeredTeamsCount">8 / 12</span>
+            <span class="lbl">কনফার্মড স্কোয়াড</span>
+          </div>
+          <div class="stat-box highlight">
+            <span class="val" id="totalPrizePool">৳১,০০০</span>
+            <span class="lbl">প্রাইজ পুল</span>
+          </div>
+          <div class="stat-box">
+            <span class="val" id="totalMatchesCount">৩ Matches</span>
+            <span class="lbl">সিরিজ ফরম্যাট</span>
+          </div>
+          <div class="stat-box">
+            <span class="val" style="color: var(--secondary);">FFWS Rule</span>
+            <span class="lbl">বুয়াহ = ১২ PTS + ১/কিল</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Room ID & Password Vault Banner -->
+    <section class="vault-banner" id="roomVaultSection">
+      <div class="vault-info">
+        <div class="vault-icon">🔑</div>
+        <div class="vault-text">
+          <h3>কাস্টম রুম আইডি ও পাসওয়ার্ড</h3>
+          <p>ম্যাচ: <span id="vaultMap">Bermuda</span> • সময়: <span id="vaultTime">9:00 PM</span></p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="vault-creds">
+          <span style="color: var(--text-muted);">ROOM:</span>
+          <strong id="vaultRoomId" style="color: #fff;">FF-SQUAD-88219</strong>
+          <button class="copy-btn" onclick="copyVaultText('id')">কপি</button>
+        </div>
+
+        <div class="vault-creds">
+          <span style="color: var(--text-muted);">PASS:</span>
+          <strong id="vaultRoomPass" style="color: #fff;">squad2026</strong>
+          <button class="copy-btn" onclick="copyVaultText('pass')">কপি</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Points Table & Standings Section -->
+    <section id="standings">
+      <div class="section-header">
+        <div class="section-title">
+          <span>📊 লাইভ পয়েন্ট টেবিল</span>
+          <span class="badge">Official FFWS</span>
+        </div>
+        <button onclick="shareToWhatsApp()" class="nav-btn" style="background: rgba(37, 211, 102, 0.15); color: #25D366; border: 1px solid rgba(37, 211, 102, 0.3);">
+          <span>📲 WA/FB গ্রুপে শেয়ার</span>
+        </button>
+      </div>
+
+      <!-- Match Series Tabs -->
+      <div class="tabs-row" id="matchTabs">
+        <!-- Injected via app.js (Overall Standings, Match 1, Match 2, Match 3...) -->
+      </div>
+
+      <p id="activeTabTitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">
+        Overall Tournament Standings (Total Points)
+      </p>
+
+      <!-- Table Component -->
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="points-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">র‍্যাঙ্ক</th>
+                <th>টিমের নাম ও লিডার</th>
+                <th>ম্যাচ</th>
+                <th>বুয়াহ (Booyah)</th>
+                <th>কিল পয়েন্ট</th>
+                <th>প্লেসমেন্ট পয়েন্ট</th>
+                <th>টোটাল পয়েন্ট</th>
+              </tr>
+            </thead>
+            <tbody id="pointsTableBody">
+              <!-- Dynamically populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 1-Click WhatsApp / Messenger Share Action Box -->
+      <div class="share-action-card">
+        <div class="share-info">
+          <h3>📋 হোয়াটসঅ্যাপ বা মেসেঞ্জার গ্রুপে রেজাল্ট পোস্ট করবেন?</h3>
+          <p>এক ক্লিকে ফুল পয়েন্ট টেবিল ইমোজি টেক্সট ফরম্যাটে কপি হয়ে যাবে। সরাসরি ফেসবুক বা হোয়াটসঅ্যাপ গ্রুপে পেস্ট করুন!</p>
+        </div>
+        <button class="btn-whatsapp" onclick="shareToWhatsApp()">
+          <span>📋 কপি পয়েন্ট টেবিল (WhatsApp/FB)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. 12-Slot Squad Seating Grid -->
+    <section id="slots" style="margin-top: 36px;">
+      <div class="section-header">
+        <div class="section-title">
+          <span>🛡️ ১২টি টিম ও ৪৮ প্লেয়ার স্লট লিস্ট</span>
+          <span class="badge" style="background: var(--secondary);">১-১২ স্লট</span>
+        </div>
+        <a href="register.html" class="nav-btn nav-btn-primary">
+          + খালি স্লট বুক করুন
+        </a>
+      </div>
+
+      <div class="slots-grid" id="slotsGrid">
+        <!-- Dynamically rendered by app.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>
+        <strong>FF SQUAD ARENA</strong> — ফ্রি ফায়ার ১২ টিমের লাইভ স্কোয়াড টুর্নামেন্ট ও অটো পয়েন্ট টেবিল।
+      </p>
+      <p style="margin-top: 6px; font-size: 11px;">
+        Designed & Architected with pure HTML, CSS, JS & Firebase • Powered by <span>Sifat Bin Shahjahan</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div id="toastNotice" class="toast-notice"></div>
+
+  <!-- Scripts -->
+  <script src="js/points-engine.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

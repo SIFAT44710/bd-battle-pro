@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Room | SIFR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for Cinematic Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; color: #fff; font-family: 'Inter', sans-serif; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(234, 179, 8, 0.3); box-shadow: 0 0 30px rgba(234, 179, 8, 0.1); }
+        .neon-text-yellow { text-shadow: 0 0 10px #eab308, 0 0 20px #eab308; }
+        .pulse-btn { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div id="canvas-container"></div> <!-- 3D Sparks Container (Yellow hue for pending) -->
+
+    <div class="glass-card w-full max-w-md p-8 rounded-2xl relative z-10 m-4 text-center">
+        
+        <div class="w-20 h-20 mx-auto bg-yellow-500/20 rounded-full flex items-center justify-center mb-6 border border-yellow-500/50">
+            <i class="fas fa-hourglass-half text-3xl text-yellow-400"></i>
+        </div>
+
+        <h1 class="text-2xl font-bold text-yellow-400 neon-text-yellow tracking-wider mb-2">STATUS: PENDING</h1>
+        <p class="text-gray-300 text-sm mb-6">Your empire <span id="domainDisplay" class="font-bold text-white">...</span> is in the queue.</p>
+        
+        <div class="bg-black/50 border border-gray-700 rounded-lg p-4 mb-6 text-left">
+            <h3 class="text-xs text-gray-400 uppercase tracking-wider mb-2"><i class="fas fa-info-circle mr-1"></i> Next Steps:</h3>
+            <ol class="text-sm text-gray-300 space-y-2 list-decimal list-inside">
+                <li>Click the WhatsApp button below.</li>
+                <li>Send the pre-filled message to the CEO.</li>
+                <li>Pay the subscription fee securely.</li>
+                <li>Your platform goes LIVE instantly.</li>
+            </ol>
+        </div>
+
+        <button id="waBtn" class="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-bold uppercase tracking-wider rounded-lg transition-all pulse-btn flex items-center justify-center gap-2">
+            <i class="fab fa-whatsapp text-xl"></i> Message Admin on WhatsApp
+        </button>
+
+        <p class="text-center text-xs text-gray-500 mt-6"><i class="fas fa-lock mr-1"></i> End-to-end encrypted process</p>
+    </div>
+
+    <!-- 3D Sparks Logic (Yellow Tint) -->
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 300;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        const material = new THREE.PointsMaterial({
+            size: 0.02,
+            color: 0xeab308, // Yellow for pending
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, material);
+        scene.add(particlesMesh);
+        camera.position.z = 3;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.0005;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+
+    <script type="module">
+        import { supabase } from './lib/supabaseClient.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Get subdomain from previous step
+            const sub = sessionStorage.getItem('pendingDomain') || 'your-domain';
+            document.getElementById('domainDisplay').textContent = `${sub}.sifr.com`;
+
+            // Fetch WhatsApp number from system settings (mocking for now, falling back to a default)
+            let waNumber = "8801700000000"; 
+            try {
+                // In a real scenario, fetch this from public system_settings
+                // const { data } = await supabase.from('system_settings').select('setting_value').eq('setting_key', 'whatsapp_number').single();
+                // waNumber = data.setting_value;
+            } catch(e) {}
+
+            const message = encodeURIComponent(`Hello Admin, I joined SIFR. My domain is: ${sub}. Activate me!`);
+            
+            document.getElementById('waBtn').addEventListener('click', () => {
+                window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>

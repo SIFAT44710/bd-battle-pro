@@ -1,174 +1,77 @@
-# BD Battle Pro — Fresh Demo Build V1
-> **Subtitle:** Powered by Sifr Esports  
+# FF Squad Arena — ফ্রি ফায়ার ১২ টিমের স্কোয়াড টুর্নামেন্ট ও লাইভ পয়েন্ট টেবিল
+
 > **Author & Lead Architect:** Sifat Bin Shahjahan  
-> **Target Game:** Garena Free Fire & Free Fire MAX (Bangladesh Competitive Community)  
-> **Primary Currency:** Bangladeshi Taka (৳ / BDT) Strictly  
-> **Status:** Production-Ready Demo Build (Clean & Completely Separate Repository)  
+> **Architecture:** Pure HTML5 + CSS3 + Vanilla JavaScript + Firebase & LocalStorage  
+> **Tournament Format:** 12 Squads / 48 Players (Full Custom Room Capacity)  
+> **Point System:** Official FFWS Points System (#1=12, #2=9, #3=8 ... + 1 pt/kill)  
+> **Status:** Ultra-Lightweight, Production Ready, Zero Node.js Bloat  
 
 ---
 
-## 1. Project Overview
+## ১. ওভারভিউ (Overview)
 
-**BD Battle Pro** is a modern, full-stack tournament operating platform tailored specifically for Bangladeshi Free Fire community tournament organizers and competitive players.
+**FF Squad Arena** হলো বাংলাদেশের ফেসবুক গ্রুপ, হোয়াটসঅ্যাপ ও মেসেঞ্জার গ্রুপে আয়োজিত ফ্রি ফায়ার স্কোয়াড টুর্নামেন্ট পরিচালনার জন্য একটি আল্ট্রা-লাইটওয়েট এবং সুপার-ফাস্ট প্ল্যাটফর্ম।
 
-It eliminates traditional operational bottlenecks:
-1. **Password Leakage & Slot Hijacking:** Solved via a **15-Minute Time-Gated Room Vault (`RoomVault`)** that releases credentials only to verified registered participants strictly within 15 minutes of match start.
-2. **Double-Booking & Slot Chaos:** Solved via an **Atomic PostgreSQL Transaction & Slot Allocator** with row locks (`SELECT ... FOR UPDATE`), assigning specific 1–48 slots without race conditions.
-3. **Manual Scoreboard Audits:** Built with an **IGN-First Identity Model** that mirrors Free Fire post-game end screens.
-4. **Transparent Ledger Settlements:** Instant demo BDT (৳) balances with an immutable transaction ledger.
+ভারী কোনো ফ্রেমওয়ার্ক বা নোড মডিউল ছাড়াই এটি পিওর HTML, CSS ও জাভাস্ক্রিপ্ট দিয়ে তৈরি, যার ফলে যেকোনো ব্রাউজারে ডাবল-ক্লিক করলেই সাথে সাথে কোনো ল্যাগ ছাড়া ওপেন হয় এবং মোবাইল ফোনে সুপার স্মুথ চলে।
 
 ---
 
-## 2. Technology Stack
+## ২. মূল ফিচারসমূহ (Core Features)
 
-- **Framework:** Next.js 15+ App Router
-- **Runtime:** Node.js v22+
-- **Frontend Engine:** React 19
-- **Type Safety:** TypeScript 5 (Strict Mode)
-- **Styling:** Tailwind CSS (Dark Obsidian Esports Theme `#090D16` / `#111827`)
-- **Icons:** Lucide React
-- **Database & Auth:** Supabase PostgreSQL with Row Level Security (RLS) & RPC functions
-- **Deployment Compatibility:** Vercel Production Build verified
+1. **১২টি টিম ও ৪৮ প্লেয়ার স্লট গ্রিড:**
+   - কাস্টম রুমের সর্বোচ্চ ১২টি স্কোয়াড স্লট (স্লট ১ থেকে ১২)।
+   - প্রতিটি টিমে ৪ জন প্লেয়ার (ক্যাপ্টেন/প্লেয়ার ১, প্লেয়ার ২, প্লেয়ার ৩, প্লেয়ার ৪) তাদের গেমের IGN ও নিউমেরিক Free Fire UID সহ।
+2. **ডাইনামিক সিরিজ (১ থেকে ৬ ম্যাচ):**
+   - অর্গানাইজার প্রয়োজন অনুযায়ী ১ থেকে ৬ টা ম্যাচ যতখুশি অ্যাড করতে পারবে (Bermuda, Purgatory, Kalahari, Alpine ইত্যাদি)।
+   - প্রতিটি ম্যাচের আলাদা রেজাল্ট এন্ট্রি এবং সার্বিক লিডারবোর্ড।
+3. **অফিশিয়াল FFWS পয়েন্ট সিস্টেম:**
+   - ১ম (Booyah): ১২ পয়েন্ট
+   - ২য়: ৯ পয়েন্ট
+   - ৩য়: ৮ পয়েন্ট
+   - ৪র্থ: ৭ পয়েন্ট
+   - ৫ম: ৬ পয়েন্ট
+   - ৬ষ্ঠ: ৫ পয়েন্ট
+   - ৭ম: ৪ পয়েন্ট
+   - ৮ম: ৩ পয়েন্ট
+   - ৯ম: ২ পয়েন্ট
+   - ১০ম: ১ পয়েন্ট
+   - ১১-১২শ: ০ পয়েন্ট
+   - প্রতি কিলে: ১ পয়েন্ট
+   - অফিশিয়াল টাই-ব্রেকার অ্যালগরিদম (পয়েন্ট সমান হলে বুয়াহ, প্লেসমেন্ট পয়েন্ট এবং কিল বিবেচনায় র‍্যাঙ্কিং)।
+4. **হাইব্রিড রেজিস্ট্রেশন:**
+   - **সেলফ-রেজিস্ট্রেশন (`register.html`):** টিম ক্যাপ্টেনরা খালি স্লট সিলেক্ট করে ৪ জনের নাম ও ইউআইডি দিয়ে নিজে রেজিস্টার করতে পারবে।
+   - **এডমিন ডিরেক্ট এন্ট্রি (`admin.html`):** হোয়াটসঅ্যাপ বা মেসেঞ্জারে পাওয়া টিম লিস্ট দেখে এডমিন নিজেই যেকোনো স্লটে নাম টাইপ করে সেভ করতে পারবে।
+5. **১-ক্লিক WhatsApp ও Facebook গ্রুপ টেক্সট শেয়ারিং:**
+   - এক ক্লিকে সম্পূর্ণ পয়েন্ট টেবিল সুন্দর ইমোজি ফরম্যাটে কপি হয়ে যাবে। সরাসরি ফেসবুক বা হোয়াটসঅ্যাপ গ্রুপে পেস্ট করে টুর্নামেন্ট রেজাল্ট জানানো যাবে।
+6. **রুম আইডি ও পাসওয়ার্ড ভল্ট:**
+   - অর্গানাইজার প্রতিটি ম্যাচের রুম আইডি ও পাসওয়ার্ড সেট করতে পারবে।
+7. **ফায়ারবেস + লোকালস্টোরেজ ডুয়াল ইঞ্জিন:**
+   - ফায়ারবেস কনফিগারেশন যোগ করলে অটোমেটিক রিয়েল-টাইম ক্লাউড সিঙ্ক হবে।
+   - ফায়ারবেস ছাড়াও অফলাইনে বা লোকালি তাৎক্ষণিকভাবে ব্রাউজারেই ১০০% কাজ করবে।
 
 ---
 
-## 3. Design System & Aesthetics
+## ৩. ফাইল স্ট্রাকচার (File Structure)
 
-- **Esports Dark Obsidian Theme:**
-  - Background Canvas: `#090D16`
-  - Card Surface: `#111827`
-  - Elevated Surface: `#1F2937`
-  - Card Borders: `#1F2937` / `#374151`
-  - Primary Emerald Accent: `#10B981` (Prize pools, registration confirmations, active indicators)
-  - Secondary Orange Accent: `#F97316` (Per-kill bounties, hot matches, live banners)
-- **Typography:**
-  - English / Latin: `Plus Jakarta Sans`
-  - Bengali / Numbers: `Hind Siliguri`
-- **Mobile-First Responsive Layout:**
-  - Fixed mobile bottom navigation (`MobileNav.tsx`)
-  - Dynamic viewport height (`100dvh`)
-  - High-touch tournament cards and slot seating grids
-
----
-
-## 4. Architectural Overview
-
-```mermaid
-flowchart TD
-    subgraph Client["Player & Admin Client (Next.js 15)"]
-        UI1[Home Lobby & Tournament Listing]
-        UI2[Tournament Details & 48-Slot Grid]
-        UI3[15-Minute Room Vault]
-        UI4[Admin Command Center]
-    end
-
-    subgraph StateEngine["Demo Simulator & API Layer"]
-        CTX[DemoContext Reactive Engine]
-        API1[/api/tournaments - Public Listing without Room Passwords]
-        API2[/api/tournaments/:id/join - Atomic Slot Validation]
-        API3[/api/tournaments/:id/room - 15m Time Gate Authorization]
-    end
-
-    subgraph Database["Supabase PostgreSQL (Independent Schema)"]
-        T1[(profiles - IGN & UID)]
-        T2[(tournaments - Match Type, Map, Rules)]
-        T3[(participants - Slot 1..48 Seating)]
-        T4[(demo_transactions - BDT Ledger)]
-        T5[(match_results - Kills & Prizes)]
-        RPC[join_tournament FOR UPDATE RPC]
-    end
-
-    UI1 --> CTX
-    UI2 --> API2 --> RPC
-    UI3 --> API3
-    UI4 --> API1
-    CTX --> Database
+```
+D:\skill\bd-battle-pro\
+├── index.html            # লাইভ লবি, পয়েন্ট টেবিল, ১২টি স্লট ও রুম আইডি
+├── register.html         # টিম ক্যাপ্টেনদের জন্য স্লট বুকিং ও স্কোয়াড রেজিস্ট্রেশন
+├── admin.html            # অর্গানাইজার কন্ট্রোল প্যানেল (ম্যাচ স্কোর এন্ট্রি ও টিম ম্যানেজমেন্ট)
+├── css/
+│   └── style.css         # আল্ট্রা-লাইটওয়েট রেসপনসিভ ডার্ক থিম
+└── js/
+    ├── points-engine.js  # অফিশিয়াল FFWS পয়েন্ট ক্যালকুলেটর ও WA টেক্সট ফরম্যাটার
+    ├── firebase-config.js# ফায়ারবেস ইঞ্জিন ও লোকালস্টোরেজ ফলব্যাক
+    └── app.js            # ইউআই রেন্ডারিং ও ইন্টারএক্টিভ লজিক
 ```
 
 ---
 
-## 5. Quick Start & Setup Instructions
+## ৪. কীভাবে ব্যবহার করবেন (Quick Start)
 
-### Prerequisites
-- Node.js 18.18+ or 20+ (Node v22 recommended)
-- npm 9+ or 10+
-
-### Step 1: Install Dependencies
-```powershell
-Set-Location "D:\skill\bd-battle-pro"
-npm install
-```
-
-### Step 2: Configure Environment Variables
-Copy `.env.example` to `.env.local`:
-```powershell
-Copy-Item .env.example .env.local
-```
-
-Default configuration for zero-config Demo Mode:
-```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_DEMO_MODE=true
-NEXT_PUBLIC_DEFAULT_CURRENCY=BDT
-```
-
-### Step 3: Run Development Server
-```powershell
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Step 4: Run Type Check & Production Build
-```powershell
-npx tsc --noEmit
-npm run lint
-npm run build
-```
-
----
-
-## 6. Pre-Configured Demo Accounts & Testing Personas
-
-BD Battle Pro comes pre-configured with 3 testing personas accessible via the top **Demo Mode Switcher Bar**:
-
-| Persona | Role | Free Fire IGN | FF UID | Balance | Purpose |
-|:---|:---|:---|:---|:---|:---|
-| **Tanvir Ahmed** | Pro Player | `亗TANVIR亗` | `2948201948` | `৳650` | Pre-registered in Tournament #1 (which starts in 10 mins). Tests instant Room Vault unlock! |
-| **Rakib Hassan** | Challenger Player | `RAKIB_OP` | `3184920491` | `৳300` | Unregistered in Tournament #2. Tests live slot deduction, duplicate check, and 15m countdown lock! |
-| **Sifat Bin Shahjahan** | Organizer Admin | `SIFR_FOUNDER` | `1000000001` | `৳50,000` | Full Organizer access to `/admin` to create matches, set room credentials, view UIDs, and publish results. |
-
----
-
-## 7. Supabase Database Migration (Fresh Project Setup)
-
-To connect BD Battle Pro to a real Supabase project:
-1. Create a brand new project at [supabase.com](https://supabase.com).
-2. Go to the **SQL Editor** in your Supabase dashboard.
-3. Open `supabase/migrations/20261104_init_bd_battle_pro.sql` and run the entire script.
-4. Copy your project URL and anon key from **Project Settings → API**.
-5. Paste them into `.env.local`:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://<your-ref>.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh...
-   SUPABASE_SERVICE_ROLE_KEY=eyJh...
-   NEXT_PUBLIC_DEMO_MODE=false
-   ```
-
----
-
-## 8. Vercel Deployment Guide
-
-1. Push this separate project to GitHub:
-   ```powershell
-   git init
-   git add .
-   git commit -m "feat: initial release of BD Battle Pro v1 demo"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/bd-battle-pro.git
-   git push -u origin main
-   ```
-2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-3. In **Environment Variables**, add:
-   - `NEXT_PUBLIC_DEMO_MODE=true`
-   - `NEXT_PUBLIC_DEFAULT_CURRENCY=BDT`
-4. Click **Deploy**. Vercel will automatically run `npm run build` with zero errors!
+কোনো ইনস্টলেশন বা কমান্ড রান করার প্রয়োজন নেই!
+1. সরাসরি ব্রাউজারে `index.html` ফাইলটি ডাবল ক্লিক করে ওপেন করুন।
+2. অথবা যেকোনো লোকাল সার্ভার (যেমন VS Code Live Server) দিয়ে রান করুন।
+3. এডমিন প্যানেলের জন্য `admin.html`-এ যান এবং ম্যাচের স্কোর এন্ট্রি করুন।
+4. ফায়ারবেস কানেক্ট করতে চাইলে `js/firebase-config.js` ফাইলে আপনার Firebase API কী বসিয়ে দিন।

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>এডমিন কমান্ড সেন্টার — FF Squad Arena</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation -->
+  <header class="navbar">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-badge">FF</div>
+        <div class="brand-text">
+          <h1>SQUAD <span>ADMIN</span></h1>
+          <span class="brand-tag">টুর্নামেন্ট অর্গানাইজার হাব</span>
+        </div>
+      </a>
+
+      <div class="nav-links">
+        <a href="index.html" class="nav-btn nav-btn-ghost">← লাইভ লবি ও পয়েন্ট টেবিল</a>
+        <button onclick="window.tourneyStorage.resetToDefault(); alert('ডেমো ডেটা রিসেট হয়েছে!'); location.reload();" class="nav-btn nav-btn-ghost" style="color: #EF4444;">
+          🔄 রিসেট ডেটা
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 48px;">
+    
+    <!-- Header Notice -->
+    <div style="background: rgba(0, 163, 255, 0.08); border: 1px solid rgba(0, 163, 255, 0.25); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 800; color: #fff;">⚙️ অর্গানাইজার কমান্ড সেন্টার</h3>
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          ম্যাচের রেজাল্ট ইনপুট দিন, নতুন ম্যাচ যোগ করুন এবং হোয়াটসঅ্যাপে পোস্ট করার জন্য স্ট্যান্ডিংস কপি করুন।
+        </p>
+      </div>
+      <button onclick="shareToWhatsApp()" class="btn-whatsapp">
+        📋 হোয়াটসঅ্যাপ রিপোর্ট কপি করুন
+      </button>
+    </div>
+
+    <!-- 1. Room Credentials Controller -->
+    <div class="table-card" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px;">🔑 কাস্টম রুম আইডি ও পাসওয়ার্ড এডিটর</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <div>
+          <label class="form-label">ম্যাচ ম্যাপ</label>
+          <input type="text" id="adminMap" class="form-control" placeholder="Bermuda">
+        </div>
+        <div>
+          <label class="form-label">ম্যাচ টাইম</label>
+          <input type="text" id="adminTime" class="form-control" placeholder="9:00 PM">
+        </div>
+        <div>
+          <label class="form-label">Free Fire Room ID</label>
+          <input type="text" id="adminRoomId" class="form-control" placeholder="FF-SQUAD-XXXX">
+        </div>
+        <div>
+          <label class="form-label">Room Password</label>
+          <input type="text" id="adminRoomPass" class="form-control" placeholder="Pass123">
+        </div>
+      </div>
+      <div style="margin-top: 14px; text-align: right;">
+        <button onclick="saveRoomCredentials()" class="nav-btn nav-btn-primary">
+          ✓ রুম ক্রেডেনশিয়াল আপডেট করুন
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Match Results Entry & Point Calculator -->
+    <div class="table-card" style="padding: 20px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800;">🎯 ম্যাচের রেজাল্ট এন্ট্রি (র‍্যাঙ্ক ও কিল ইনপুট)</h3>
+          <p style="font-size: 12px; color: var(--text-secondary);">
+            যেকোনো ম্যাচের প্লেসমেন্ট ও কিল বসান, অফিশিয়াল FFWS পয়েন্ট অটোমেটিক ক্যালকুলেট হবে।
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">ম্যাচ সিলেক্ট করুন:</label>
+          <select id="matchSelector" class="form-control" style="width: auto;" onchange="loadMatchScores(this.value)">
+            <!-- Matches populated dynamically -->
+          </select>
+          <button onclick="addNewMatch()" class="nav-btn nav-btn-admin">
+            + নতুন ম্যাচ যোগ করুন
+          </button>
+        </div>
+      </div>
+
+      <!-- Match Score Entry Table -->
+      <div class="table-responsive">
+        <table class="points-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">স্লট</th>
+              <th>স্কোয়াড / টিমের নাম</th>
+              <th style="width: 140px;">প্লেসমেন্ট র‍্যাঙ্ক (১-১২) *</th>
+              <th style="width: 140px;">কিল সংখ্যা (Kills) *</th>
+              <th style="width: 120px;">হিসেবকৃত পয়েন্ট</th>
+            </tr>
+          </thead>
+          <tbody id="matchScoreTableBody">
+            <!-- 12 teams populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button onclick="saveMatchScores()" class="nav-btn nav-btn-primary" style="padding: 10px 20px; font-size: 14px;">
+          💾 এই ম্যাচের পয়েন্ট সেভ ও আপডেট করুন
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Direct Team Manager (Organizer Manual Entry) -->
+    <div class="table-card" style="padding: 20px;">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 4px;">👥 ১২টি টিমের তথ্য ও স্লট ম্যানেজার</h3>
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+        ফেসবুক বা হোয়াটসঅ্যাপ থেকে আসা টিমের নাম সরাসরি এখানে এডিট করতে পারবেন।
+      </p>
+
+      <div class="table-responsive">
+        <table class="points-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">স্লট</th>
+              <th>টিমের নাম</th>
+              <th>ক্যাপ্টেনের নাম</th>
+              <th>ক্যাপ্টেনের হোয়াটসঅ্যাপ</th>
+              <th>স্ট্যাটাস</th>
+              <th style="width: 100px;">একশন</th>
+            </tr>
+          </thead>
+          <tbody id="teamsManagerTableBody">
+            <!-- 12 slots populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="toastNotice" class="toast-notice"></div>
+
+  <script src="js/points-engine.js"></script>
+  <script src="js/firebase-config.js"></script>
+  
+  <script>
+    let activeMatchId = 'match-1';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.tourneyStorage.subscribe((data) => {
+        if (!data) return;
+        renderAdmin(data);
+      });
+    });
+
+    function renderAdmin(data) {
+      // 1. Fill Room Editor
+      if (data.roomCredentials) {
+        document.getElementById('adminMap').value = data.roomCredentials.map || 'Bermuda';
+        document.getElementById('adminTime').value = data.roomCredentials.matchTime || '9:00 PM';
+        document.getElementById('adminRoomId').value = data.roomCredentials.roomId || '';
+        document.getElementById('adminRoomPass').value = data.roomCredentials.roomPassword || '';
+      }
+
+      // 2. Populate Match Selector
+      const selector = document.getElementById('matchSelector');
+      selector.innerHTML = '';
+      data.matches.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `ম্যাচ #${m.matchNumber} — ${m.map} (${m.status})`;
+        if (m.id === activeMatchId) opt.selected = true;
+        selector.appendChild(opt);
+      });
+
+      // 3. Render Match Scores for activeMatchId
+      loadMatchScores(activeMatchId);
+
+      // 4. Render Team Manager Table
+      renderTeamManager(data.teams);
+    }
+
+    function loadMatchScores(matchId) {
+      activeMatchId = matchId;
+      const data = window.tourneyStorage.data;
+      if (!data) return;
+
+      const currentMatch = data.matches.find(m => m.id === matchId);
+      const tbody = document.getElementById('matchScoreTableBody');
+      tbody.innerHTML = '';
+
+      data.teams.forEach(t => {
+        const tr = document.createElement('tr');
+        const existingResult = currentMatch && currentMatch.results ? currentMatch.results[t.id] : null;
+        const currentRank = existingResult ? existingResult.rank : '';
+        const currentKills = existingResult ? existingResult.kills : '0';
+
+        let calculatedText = '-';
+        if (existingResult) {
+          const pts = window.PointsEngine.calculateMatchPoints(existingResult.rank, existingResult.kills);
+          calculatedText = `${pts.totalPoints} PTS (${pts.placePoints}P + ${pts.killPoints}K)`;
+        }
+
+        tr.innerHTML = `
+          <td><span class="slot-number">S#${t.slot}</span></td>
+          <td>
+            <strong>${t.teamName || '(খালি স্লট)'}</strong>
+            <span style="font-size: 11px; color: var(--text-muted); display: block;">${t.captainName || ''}</span>
+          </td>
+          <td>
+            <input type="number" min="1" max="12" class="form-control" style="width: 90px; padding: 6px;" 
+                   id="rank_${t.id}" value="${currentRank}" placeholder="1-12">
+          </td>
+          <td>
+            <input type="number" min="0" class="form-control" style="width: 90px; padding: 6px;" 
+                   id="kills_${t.id}" value="${currentKills}">
+          </td>
+          <td id="preview_${t.id}" style="font-weight: 700; color: var(--accent-emerald);">
+            ${calculatedText}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function saveMatchScores() {
+      const data = window.tourneyStorage.data;
+      const currentMatch = data.matches.find(m => m.id === activeMatchId);
+      if (!currentMatch) return;
+
+      if (!currentMatch.results) currentMatch.results = {};
+
+      data.teams.forEach(t => {
+        const rankInput = document.getElementById(`rank_${t.id}`);
+        const killsInput = document.getElementById(`kills_${t.id}`);
+
+        if (rankInput && rankInput.value) {
+          const rank = parseInt(rankInput.value, 10);
+          const kills = parseInt(killsInput.value, 10) || 0;
+          currentMatch.results[t.id] = { rank, kills };
+        } else {
+          delete currentMatch.results[t.id];
+        }
+      });
+
+      currentMatch.status = 'completed';
+      window.tourneyStorage.sync(data);
+      alert(`ম্যাচ #${currentMatch.matchNumber}-এর রেজাল্ট সফলভাবে সেভ ও লাইভ পয়েন্ট টেবিলে আপডেট হয়েছে!`);
+      loadMatchScores(activeMatchId);
+    }
+
+    function addNewMatch() {
+      const data = window.tourneyStorage.data;
+      const nextMatchNumber = data.matches.length + 1;
+      const maps = ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'Nexterra'];
+      const nextMap = maps[(nextMatchNumber - 1) % maps.length];
+
+      data.matches.push({
+        id: `match-${nextMatchNumber}`,
+        matchNumber: nextMatchNumber,
+        map: nextMap,
+        status: 'upcoming',
+        results: {}
+      });
+
+      activeMatchId = `match-${nextMatchNumber}`;
+      window.tourneyStorage.sync(data);
+      alert(`ম্যাচ #${nextMatchNumber} (${nextMap}) যোগ করা হয়েছে!`);
+    }
+
+    function saveRoomCredentials() {
+      const data = window.tourneyStorage.data;
+      data.roomCredentials = {
+        map: document.getElementById('adminMap').value.trim() || 'Bermuda',
+        matchTime: document.getElementById('adminTime').value.trim() || '9:00 PM',
+        roomId: document.getElementById('adminRoomId').value.trim(),
+        roomPassword: document.getElementById('adminRoomPass').value.trim(),
+        isUnlocked: true
+      };
+
+      window.tourneyStorage.sync(data);
+      alert('কাস্টম রুম আইডি ও পাসওয়ার্ড আপডেট হয়েছে!');
+    }
+
+    function renderTeamManager(teams) {
+      const tbody = document.getElementById('teamsManagerTableBody');
+      tbody.innerHTML = '';
+
+      teams.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="slot-number">#${t.slot}</span></td>
+          <td>
+            <input type="text" class="form-control" id="mng_name_${t.id}" value="${t.teamName || ''}" placeholder="টিমের নাম">
+          </td>
+          <td>
+            <input type="text" class="form-control" id="mng_captain_${t.id}" value="${t.captainName || ''}" placeholder="ক্যাপ্টেন">
+          </td>
+          <td>
+            <input type="text" class="form-control" id="mng_phone_${t.id}" value="${t.captainWhatsApp || ''}" placeholder="হোয়াটসঅ্যাপ">
+          </td>
+          <td>
+            ${t.isBooked 
+              ? '<span style="color: var(--accent-emerald); font-weight: 700;">✓ বুকড</span>' 
+              : '<span style="color: var(--text-muted);">খালি</span>'}
+          </td>
+          <td>
+            <button onclick="saveSingleTeam('${t.id}')" class="nav-btn nav-btn-primary" style="padding: 6px 10px; font-size: 11px;">
+              সেভ
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function saveSingleTeam(teamId) {
+      const data = window.tourneyStorage.data;
+      const target = data.teams.find(t => t.id === teamId);
+      if (!target) return;
+
+      const name = document.getElementById(`mng_name_${teamId}`).value.trim();
+      const captain = document.getElementById(`mng_captain_${teamId}`).value.trim();
+      const phone = document.getElementById(`mng_phone_${teamId}`).value.trim();
+
+      target.teamName = name;
+      target.captainName = captain;
+      target.captainWhatsApp = phone;
+      target.isBooked = name.length > 0;
+
+      window.tourneyStorage.sync(data);
+      alert(`স্লট #${target.slot} আপডেট হয়েছে!`);
+    }
+
+    function shareToWhatsApp() {
+      const data = window.tourneyStorage.data;
+      if (!data) return;
+
+      const completedMatches = data.matches.filter(m => m.status === 'completed').length;
+      const standings = window.PointsEngine.calculateOverallStandings(data.teams, data.matches);
+      const reportText = window.PointsEngine.generateWhatsAppReport(
+        data.meta.title,
+        standings,
+        completedMatches,
+        data.matches.length
+      );
+
+      navigator.clipboard.writeText(reportText).then(() => {
+        alert('📋 ফুল পয়েন্ট টেবিল ক্লিপবোর্ডে কপি হয়েছে! মেসেঞ্জার বা হোয়াটসঅ্যাপ গ্রুপে পেস্ট করুন।');
+        window.open(`https://wa.me/?text=${encodeURIComponent(reportText)}`, '_blank');
+      });
+    }
+  </script>
+</body>
+</html>
