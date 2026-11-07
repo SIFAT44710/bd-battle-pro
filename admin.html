@@ -2,11 +2,420 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=admin/index.html">
-  <script>window.location.replace("admin/index.html");</script>
-  <title>ARENA X — Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARENA X — Admin Control Panel</title>
+
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-bg: #0F172A;
+      --secondary-bg: #1E293B;
+      --card-bg: #1E293B;
+      --card-border: #334155;
+      --text-primary: #E2E8F0;
+      --text-secondary: #94A3B8;
+      --accent-yellow: #FACC15;
+      --accent-gradient: linear-gradient(135deg, #FACC15 0%, #FBBF24 100%);
+      --accent-blue: #3B82F6;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--primary-bg);
+      color: var(--text-primary);
+      font-family: 'Poppins', sans-serif;
+      padding-top: 65px;
+      min-height: 100vh;
+    }
+
+    /* Top Bar */
+    .admin-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(30, 41, 59, 0.98);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1040;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      background: var(--accent-gradient);
+      color: #0F172A;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Navigation Pills */
+    .admin-nav-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 20px;
+    }
+
+    .nav-pill-btn {
+      background: var(--secondary-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-pill-btn.active {
+      background: var(--accent-yellow);
+      color: #0F172A;
+      border-color: var(--accent-yellow);
+    }
+
+    /* Card */
+    .admin-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .form-control, .form-select {
+      background: #0F172A;
+      border: 1px solid var(--card-border);
+      color: #fff;
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: #0F172A;
+      border-color: var(--accent-yellow);
+      color: #fff;
+      box-shadow: 0 0 0 0.2rem rgba(250, 204, 21, 0.25);
+    }
+
+    .btn-custom-yellow {
+      background: var(--accent-gradient);
+      color: #0F172A;
+      font-weight: 700;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-custom-yellow:hover {
+      filter: brightness(1.1);
+      color: #0F172A;
+    }
+
+    .match-config-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .admin-tab { display: none; }
+    .admin-tab.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body style="background-color: #0F172A; color: #E2E8F0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
-  <p>Loading Admin Panel... <a href="admin/index.html" style="color: #FACC15;">Click here if not redirected</a></p>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="admin-navbar">
+    <div class="brand-title">
+      <i class="bi bi-shield-lock-fill text-warning"></i> ARENA X
+      <span class="brand-badge">ADMIN PANEL</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="/player/dashboard.html" target="_blank" class="btn btn-sm btn-outline-warning">
+        <i class="bi bi-box-arrow-up-right me-1"></i> Open User Panel
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container py-4" style="max-width: 900px;">
+
+    <!-- Navigation Pills -->
+    <div class="admin-nav-pills">
+      <button class="nav-pill-btn active" data-target="tab-matches">
+        <i class="bi bi-controller"></i> Matches & Room ID
+      </button>
+      <button class="nav-pill-btn" data-target="tab-slots">
+        <i class="bi bi-grid-3x3-gap-fill"></i> 12 Squad Slots
+      </button>
+      <button class="nav-pill-btn" data-target="tab-results">
+        <i class="bi bi-trophy-fill"></i> Match Results & Points
+      </button>
+      <button class="nav-pill-btn" data-target="tab-settings">
+        <i class="bi bi-gear-fill"></i> Tournament Settings
+      </button>
+    </div>
+
+    <!-- TAB 1: MATCHES & ROOM ID (1-6 MATCHES SELECTOR) -->
+    <section id="tab-matches" class="admin-tab active">
+      <div class="admin-card">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="h5 fw-bold text-white mb-1">
+              <i class="bi bi-controller text-warning me-1"></i> Match Series & Room Credentials
+            </h2>
+            <p class="small text-secondary mb-0">Select 1 to 6 matches and enter Room ID & Password for each match.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <label class="small text-secondary fw-bold">Series Matches:</label>
+            <select class="form-select form-select-sm" id="seriesMatchCountSelect" style="width: 140px;">
+              <option value="1">1 Match</option>
+              <option value="2">2 Matches</option>
+              <option value="3" selected>3 Matches</option>
+              <option value="4">4 Matches</option>
+              <option value="5">5 Matches</option>
+              <option value="6">6 Matches</option>
+            </select>
+          </div>
+        </div>
+
+        <form id="matchSeriesForm">
+          <div id="matchesContainer">
+            <!-- Populated dynamically (1 to 6 matches) by JS -->
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="submit" class="btn-custom-yellow" id="saveMatchesBtn">
+              <i class="bi bi-save-fill"></i> Save Match & Room Details
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 2: 12 SQUAD SLOTS MANAGER -->
+    <section id="tab-slots" class="admin-tab">
+      <div class="admin-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h5 fw-bold text-white mb-1">
+              <i class="bi bi-people-fill text-warning me-1"></i> 12 Squad Slots Manager
+            </h2>
+            <p class="small text-secondary mb-0">View registered squads, edit details, or free up slots.</p>
+          </div>
+          <span class="badge bg-warning text-dark fw-bold" id="adminBookedCountBadge">0 / 12 Booked</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle border-secondary">
+            <thead>
+              <tr class="text-secondary small">
+                <th>SLOT</th>
+                <th>SQUAD NAME</th>
+                <th>LEADER IGN</th>
+                <th>PLAYERS (2, 3, 4)</th>
+                <th>CONTACT</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="adminSlotsTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: MATCH RESULTS & POINTS ENTRY -->
+    <section id="tab-results" class="admin-tab">
+      <div class="admin-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div>
+            <h2 class="h5 fw-bold text-white mb-1">
+              <i class="bi bi-trophy-fill text-warning me-1"></i> Match Results & Standings Publisher
+            </h2>
+            <p class="small text-secondary mb-0">Input placement rank (1-12) & kills. FFWS points calculate automatically.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <label class="small text-secondary fw-bold">Select Match:</label>
+            <select class="form-select form-select-sm" id="resultMatchSelector" style="width: 140px;">
+              <option value="1">Match 1</option>
+              <option value="2">Match 2</option>
+              <option value="3">Match 3</option>
+            </select>
+          </div>
+        </div>
+
+        <form id="matchResultsForm">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle border-secondary">
+              <thead>
+                <tr class="text-secondary small">
+                  <th>SLOT</th>
+                  <th>SQUAD NAME</th>
+                  <th style="width: 150px;">PLACEMENT RANK</th>
+                  <th style="width: 120px;">KILLS</th>
+                  <th style="width: 100px;">PTS PREVIEW</th>
+                </tr>
+              </thead>
+              <tbody id="adminResultsTableBody">
+                <!-- Rendered by JS for booked squads -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn-custom-yellow" id="saveResultsBtn">
+              <i class="bi bi-broadcast"></i> Publish Standings Live
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 4: TOURNAMENT SETTINGS -->
+    <section id="tab-settings" class="admin-tab">
+      <div class="admin-card">
+        <h2 class="h5 fw-bold text-white mb-3">
+          <i class="bi bi-gear-fill text-warning me-1"></i> Tournament Overview Settings
+        </h2>
+
+        <form id="tournamentSettingsForm">
+          <div class="mb-3">
+            <label class="form-label small text-secondary">Tournament Title</label>
+            <input type="text" class="form-control" id="settingsTitleInput" value="Free Fire Daily Squad Championship" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small text-secondary">Entry Fee (BDT ৳)</label>
+              <input type="number" class="form-control" id="settingsEntryFeeInput" value="100" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary">Total Prize Pool (BDT ৳)</label>
+              <input type="number" class="form-control" id="settingsPrizePoolInput" value="1000" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-secondary">Status</label>
+              <select class="form-select" id="settingsStatusSelect">
+                <option value="upcoming">Upcoming</option>
+                <option value="live">Live Now</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn-custom-yellow">
+              <i class="bi bi-check2-circle"></i> Update Tournament Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: EDIT SQUAD (IGN ONLY) -->
+  <div class="modal fade" id="editSquadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title fw-bold" id="editSquadModalTitle">Edit Slot</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editSquadForm">
+            <input type="hidden" id="editSlotNumberHidden">
+            <div class="mb-3">
+              <label class="form-label small text-secondary">Squad Name</label>
+              <input type="text" class="form-control" id="editSquadNameInput" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-secondary">Leader IGN</label>
+              <input type="text" class="form-control" id="editLeaderIgnInput" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small text-secondary">Player 2 IGN</label>
+                <input type="text" class="form-control" id="editPlayer2Input">
+              </div>
+              <div class="col-6">
+                <label class="form-label small text-secondary">Player 3 IGN</label>
+                <input type="text" class="form-control" id="editPlayer3Input">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-secondary">Player 4 IGN</label>
+              <input type="text" class="form-control" id="editPlayer4Input">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-secondary">Contact Number</label>
+              <input type="tel" class="form-control" id="editContactInput">
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+              <button type="button" class="btn btn-outline-danger" id="clearSlotBtn">
+                <i class="bi bi-trash3"></i> Clear / Vacate Slot
+              </button>
+              <button type="submit" class="btn-custom-yellow">
+                <i class="bi bi-save"></i> Save Squad
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1060">
+    <div id="adminToast" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-bold" id="adminToastMessage">Saved successfully!</div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="/admin/js/admin.js"></script>
 </body>
 </html>

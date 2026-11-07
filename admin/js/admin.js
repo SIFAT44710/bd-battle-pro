@@ -7,8 +7,7 @@ import {
   doc, 
   onSnapshot, 
   updateDoc, 
-  setDoc,
-  getDoc 
+  setDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -64,7 +63,7 @@ function showToast(msg) {
   const toastEl = $('adminToast');
   const msgEl = $('adminToastMessage');
   if (msgEl) msgEl.textContent = msg;
-  if (toastEl) {
+  if (toastEl && window.bootstrap) {
     const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
     toast.show();
   }
@@ -169,11 +168,13 @@ function renderMatchConfigForm() {
   // Update Match Selector in Tab 3 (Results)
   const resSelect = $('resultMatchSelector');
   if (resSelect) {
+    const curVal = resSelect.value || "1";
     resSelect.innerHTML = '';
     for (let i = 1; i <= count; i++) {
       const opt = document.createElement('option');
       opt.value = i;
       opt.textContent = `Match ${i}`;
+      if (Number(curVal) === i) opt.selected = true;
       resSelect.appendChild(opt);
     }
   }
@@ -231,7 +232,9 @@ function renderSlotsManager() {
 
   const slots = tournamentData.slots || [];
   const bookedCount = slots.filter(s => s.booked).length;
-  $('adminBookedCountBadge').textContent = `${bookedCount} / 12 Booked`;
+  if ($('adminBookedCountBadge')) {
+    $('adminBookedCountBadge').textContent = `${bookedCount} / 12 Booked`;
+  }
 
   tbody.innerHTML = slots.map(slot => {
     if (slot.booked) {
@@ -296,8 +299,10 @@ function openEditSlotModal(slotNum) {
   $('editPlayer4Input').value = slot.player4 || '';
   $('editContactInput').value = slot.contact || '';
 
-  const modal = new bootstrap.Modal($('editSquadModal'));
-  modal.show();
+  if (window.bootstrap) {
+    const modal = new bootstrap.Modal($('editSquadModal'));
+    modal.show();
+  }
 }
 
 // Save Edited Slot to Firestore
@@ -330,7 +335,9 @@ async function handleSaveEditedSlot(e) {
     const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
     await updateDoc(docRef, { slots: currentSlots });
     showToast(`Slot ${slotNum} saved!`);
-    bootstrap.Modal.getInstance($('editSquadModal')).hide();
+    if (window.bootstrap) {
+      bootstrap.Modal.getInstance($('editSquadModal'))?.hide();
+    }
   } catch (err) {
     alert("Error updating slot: " + err.message);
   }
@@ -359,9 +366,10 @@ async function clearSlot(slotNum) {
     const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
     await updateDoc(docRef, { slots: currentSlots });
     showToast(`Slot #${slotNum} is now vacant.`);
-    const modalEl = $('editSquadModal');
-    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-    if (modalInstance) modalInstance.hide();
+    if (window.bootstrap) {
+      const modalEl = $('editSquadModal');
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
   } catch (err) {
     alert("Error clearing slot: " + err.message);
   }
@@ -525,37 +533,47 @@ function setupEvents() {
 
 // Real-Time Firestore Sync
 function initRealtimeSync() {
-  const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
-  onSnapshot(docRef, (snap) => {
-    if (snap.exists()) {
-      tournamentData = { ...tournamentData, ...snap.data() };
-      console.log("Admin Panel: Sync received", tournamentData);
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        tournamentData = { ...tournamentData, ...snap.data() };
+        if ($('seriesMatchCountSelect')) {
+          $('seriesMatchCountSelect').value = tournamentData.matchCount || 3;
+        }
+        if ($('settingsTitleInput')) $('settingsTitleInput').value = tournamentData.title || '';
+        if ($('settingsEntryFeeInput')) $('settingsEntryFeeInput').value = tournamentData.entryFee || 100;
+        if ($('settingsPrizePoolInput')) $('settingsPrizePoolInput').value = tournamentData.prizePool || 1000;
+        if ($('settingsStatusSelect')) $('settingsStatusSelect').value = tournamentData.status || 'upcoming';
 
-      // Sync form values
-      if ($('seriesMatchCountSelect')) {
-        $('seriesMatchCountSelect').value = tournamentData.matchCount || 3;
+        renderMatchConfigForm();
+        renderSlotsManager();
+        renderResultsEntry();
+      } else {
+        setDoc(docRef, tournamentData);
+        renderMatchConfigForm();
+        renderSlotsManager();
+        renderResultsEntry();
       }
-      if ($('settingsTitleInput')) $('settingsTitleInput').value = tournamentData.title || '';
-      if ($('settingsEntryFeeInput')) $('settingsEntryFeeInput').value = tournamentData.entryFee || 100;
-      if ($('settingsPrizePoolInput')) $('settingsPrizePoolInput').value = tournamentData.prizePool || 1000;
-      if ($('settingsStatusSelect')) $('settingsStatusSelect').value = tournamentData.status || 'upcoming';
-
-      renderMatchConfigForm();
-      renderSlotsManager();
-      renderResultsEntry();
-    } else {
-      // First time initialization in DB
-      setDoc(docRef, tournamentData);
-      renderMatchConfigForm();
-      renderSlotsManager();
-      renderResultsEntry();
-    }
-  }, (err) => {
-    console.error("Admin onSnapshot error:", err);
-  });
+    }, (err) => {
+      console.warn("Admin onSnapshot error:", err);
+    });
+  } catch (e) {
+    console.warn("initRealtimeSync failed to attach:", e);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Instant Initialization
+function init() {
   setupEvents();
+  renderMatchConfigForm();
+  renderSlotsManager();
+  renderResultsEntry();
   initRealtimeSync();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

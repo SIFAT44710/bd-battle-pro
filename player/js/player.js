@@ -23,7 +23,7 @@ const db = getFirestore(app);
 
 const TOURNAMENT_DOC_ID = "ff-daily-squad";
 
-// Default State in case doc is fresh
+// Default State in case doc is fresh or loading
 let tournamentData = {
   title: "Free Fire Daily Squad Championship",
   status: "upcoming",
@@ -58,7 +58,7 @@ function showToast(msg) {
   const toastEl = $('liveToast');
   const msgEl = $('toastMessage');
   if (msgEl) msgEl.textContent = msg;
-  if (toastEl) {
+  if (toastEl && window.bootstrap) {
     const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
     toast.show();
   }
@@ -79,33 +79,48 @@ function switchTab(tabId) {
 
 // Render Tournament Overview & Matches
 function renderOverview() {
-  $('tournamentTitleEl').textContent = tournamentData.title || "Free Fire Daily Squad Championship";
-  $('entryFeeEl').textContent = `৳${tournamentData.entryFee || 100}`;
-  $('prizePoolEl').textContent = `৳${tournamentData.prizePool || 1000}`;
+  const titleEl = $('tournamentTitleEl');
+  if (titleEl) titleEl.textContent = tournamentData.title || "Free Fire Daily Squad Championship";
+  
+  const entryFeeEl = $('entryFeeEl');
+  if (entryFeeEl) entryFeeEl.textContent = `৳${tournamentData.entryFee || 100}`;
+  
+  const prizePoolEl = $('prizePoolEl');
+  if (prizePoolEl) prizePoolEl.textContent = `৳${tournamentData.prizePool || 1000}`;
   
   const matchCount = tournamentData.matchCount || (tournamentData.matches ? tournamentData.matches.length : 3);
-  $('seriesMatchCountEl').textContent = `${matchCount} Matches`;
-  $('matchSummaryCountEl').textContent = `${matchCount} Matches in Series`;
+  const seriesMatchEl = $('seriesMatchCountEl');
+  if (seriesMatchEl) seriesMatchEl.textContent = `${matchCount} Matches`;
+  
+  const matchSummaryEl = $('matchSummaryCountEl');
+  if (matchSummaryEl) matchSummaryEl.textContent = `${matchCount} Matches in Series`;
 
   // Status Badge
   const statusBadge = $('liveStatusBadge');
-  if (tournamentData.status === 'live') {
-    statusBadge.className = 'pill-badge badge-live';
-    statusBadge.innerHTML = '<i class="bi bi-broadcast"></i> LIVE NOW';
-  } else if (tournamentData.status === 'completed') {
-    statusBadge.className = 'pill-badge bg-secondary text-white';
-    statusBadge.innerHTML = '<i class="bi bi-check-all"></i> COMPLETED';
-  } else {
-    statusBadge.className = 'pill-badge badge-upcoming';
-    statusBadge.innerHTML = '<i class="bi bi-clock-fill"></i> UPCOMING';
+  if (statusBadge) {
+    if (tournamentData.status === 'live') {
+      statusBadge.className = 'pill-badge badge-live';
+      statusBadge.innerHTML = '<i class="bi bi-broadcast"></i> LIVE NOW';
+    } else if (tournamentData.status === 'completed') {
+      statusBadge.className = 'pill-badge bg-secondary text-white';
+      statusBadge.innerHTML = '<i class="bi bi-check-all"></i> COMPLETED';
+    } else {
+      statusBadge.className = 'pill-badge badge-upcoming';
+      statusBadge.innerHTML = '<i class="bi bi-clock-fill"></i> UPCOMING';
+    }
   }
 
   // Calculate booked slots
   const slots = tournamentData.slots || [];
   const bookedCount = slots.filter(s => s.booked).length;
-  $('slotProgressTextEl').textContent = `${bookedCount} / 12 Squads`;
-  const pct = Math.round((bookedCount / 12) * 100);
-  $('slotProgressFillEl').style.width = `${pct}%`;
+  const progressText = $('slotProgressTextEl');
+  if (progressText) progressText.textContent = `${bookedCount} / 12 Squads`;
+  
+  const progressFill = $('slotProgressFillEl');
+  if (progressFill) {
+    const pct = Math.round((bookedCount / 12) * 100);
+    progressFill.style.width = `${pct}%`;
+  }
 
   // Render Match Schedule
   const matches = (tournamentData.matches || []).slice(0, matchCount);
@@ -301,8 +316,10 @@ function openBookingModal(targetSlot = null) {
   const alertEl = $('bookingAlertEl');
   if (alertEl) alertEl.style.display = 'none';
 
-  const modal = new bootstrap.Modal($('bookSlotModal'));
-  modal.show();
+  if (window.bootstrap) {
+    const modal = new bootstrap.Modal($('bookSlotModal'));
+    modal.show();
+  }
 }
 
 // Handle Form Submission for Slot Booking
@@ -360,7 +377,9 @@ async function handleBookSlotSubmit(e) {
 
     showToast(`Slot ${slotNum} Booked!`);
     setTimeout(() => {
-      bootstrap.Modal.getInstance($('bookSlotModal')).hide();
+      if (window.bootstrap) {
+        bootstrap.Modal.getInstance($('bookSlotModal'))?.hide();
+      }
       $('bookSlotForm').reset();
       switchTab('tab-slots');
     }, 1200);
@@ -397,30 +416,37 @@ function setupEvents() {
 
 // Real-Time Firestore Listener
 function initRealtimeSync() {
-  const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
-  onSnapshot(docRef, (snap) => {
-    if (snap.exists()) {
-      const data = snap.data();
-      tournamentData = { ...tournamentData, ...data };
-      console.log("Realtime Firestore Update received:", tournamentData);
-      renderOverview();
-      renderSlots();
-      renderRoomCredentials();
-      renderStandings();
-    } else {
-      console.warn("Tournament doc does not exist yet. Initializing default view.");
-      renderOverview();
-      renderSlots();
-      renderRoomCredentials();
-      renderStandings();
-    }
-  }, (err) => {
-    console.error("Firestore onSnapshot error:", err);
-  });
+  try {
+    const docRef = doc(db, "tournaments", TOURNAMENT_DOC_ID);
+    onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        tournamentData = { ...tournamentData, ...data };
+        renderOverview();
+        renderSlots();
+        renderRoomCredentials();
+        renderStandings();
+      }
+    }, (err) => {
+      console.warn("Firestore onSnapshot error:", err);
+    });
+  } catch (e) {
+    console.warn("initRealtimeSync failed to attach:", e);
+  }
 }
 
-// Initialization on DOM Ready
-document.addEventListener('DOMContentLoaded', () => {
+// Instant Initialization
+function init() {
   setupEvents();
+  renderOverview();
+  renderSlots();
+  renderRoomCredentials();
+  renderStandings();
   initRealtimeSync();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
