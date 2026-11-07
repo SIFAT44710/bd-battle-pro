@@ -843,6 +843,11 @@
                       <i class="bi bi-whatsapp"></i> ${s.contact}
                     </a>
                   ` : ''}
+                  ${s.trxId ? `
+                    <span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-mono font-bold flex items-center gap-1">
+                      <i class="bi bi-shield-check text-emerald-600"></i> TrxID: ${s.trxId} (${(s.paymentMethod || 'bKash').toUpperCase()}) • ৳${s.feePaid || match.entryFee || 100}
+                    </span>
+                  ` : ''}
                 </div>
               </div>
             `;

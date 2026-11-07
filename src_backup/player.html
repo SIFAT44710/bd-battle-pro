@@ -305,47 +305,121 @@
     </div>
 
     <form id="bookingForm" onsubmit="window.handleConfirmBooking(event)" class="space-y-2.5">
-      <div>
-        <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Slot Selection / নির্দিষ্ট স্লট</label>
-        <select class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookSlotSelect" required>
-          <!-- Options 1-12 generated -->
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Squad Name / স্কোয়াডের নাম</label>
-        <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookSquadName" placeholder="e.g. DARK VORTEX" required>
-      </div>
-
-      <div>
-        <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 1 (Squad Leader IGN)</label>
-        <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer1" placeholder="Leader In-Game Name" required>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
+      
+      <!-- STEP 1: SQUAD DETAILS -->
+      <div id="bookingStepDetails" class="space-y-2.5">
         <div>
-          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 2 IGN</label>
-          <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer2" placeholder="Player 2" required>
+          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Slot Selection / নির্দিষ্ট স্লট</label>
+          <select class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookSlotSelect" required>
+            <!-- Options 1-12 generated -->
+          </select>
         </div>
+
         <div>
-          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 3 IGN</label>
-          <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer3" placeholder="Player 3" required>
+          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Squad Name / স্কোয়াডের নাম</label>
+          <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookSquadName" placeholder="e.g. DARK VORTEX" required>
         </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 1 (Squad Leader IGN)</label>
+          <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer1" placeholder="Leader In-Game Name" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 2 IGN</label>
+            <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer2" placeholder="Player 2" required>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 3 IGN</label>
+            <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer3" placeholder="Player 3" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 4 IGN</label>
+          <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer4" placeholder="Player 4" required>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">WhatsApp Number (যোগাযোগ নম্বর)</label>
+          <input type="tel" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookWhatsApp" placeholder="e.g. 01791357521" required>
+        </div>
+
+        <!-- Entry Fee Notice -->
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-gray-700">
+            <span class="w-2 h-2 rounded-full bg-[#FF5722]"></span>
+            <span class="font-semibold">ম্যাচ এন্ট্রি ফি:</span>
+          </div>
+          <strong class="text-[#FF5722] font-mono text-sm" id="bookingEntryFeeDisplay">৳100 BDT</strong>
+        </div>
+
+        <button type="button" onclick="window.goToPaymentStep()" class="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#E64A19] hover:from-[#E64A19] hover:to-[#D84315] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center justify-center gap-2 mt-3">
+          <span>পেমেন্ট ও ভেরিফিকেশনে এগিয়ে যান</span> <i class="bi bi-arrow-right"></i>
+        </button>
       </div>
 
-      <div>
-        <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">Player 4 IGN</label>
-        <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 font-mono focus:outline-none focus:border-[#FF5722]" id="bookPlayer4" placeholder="Player 4" required>
-      </div>
+      <!-- STEP 2: PAYMENT & TRXID VERIFICATION -->
+      <div id="bookingStepPayment" class="space-y-3 hidden">
+        <!-- Top Navigation -->
+        <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+          <button type="button" onclick="window.backToDetailsStep()" class="text-xs font-bold text-gray-600 hover:text-[#FF5722] transition-colors flex items-center gap-1">
+            <i class="bi bi-arrow-left"></i> স্কোয়াড তথ্য এডিট
+          </button>
+          <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-orange-100 text-[#FF5722] font-mono" id="payFeeBadge">
+            ফি: ৳100
+          </span>
+        </div>
 
-      <div>
-        <label class="block text-[11px] font-semibold text-gray-700 mb-0.5">WhatsApp Number (Contact)</label>
-        <input type="tel" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722]" id="bookWhatsApp" placeholder="e.g. 01791357521" required>
-      </div>
+        <p class="text-xs text-center text-gray-600 font-semibold mb-1">যেকোনো একটি মাধ্যমে Send Money করুন:</p>
 
-      <button type="submit" class="w-full py-2.5 sm:py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-colors flex items-center justify-center gap-1.5 mt-3" id="confirmBookingBtn">
-        <i class="bi bi-check-circle-fill"></i> Confirm & Book Slot
-      </button>
+        <!-- Provider Buttons -->
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="window.selectPaymentProvider('bkash')" id="btnProvBkash" class="py-2 px-1 rounded-xl border border-pink-200 bg-pink-50 text-[#E2136E] font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5 shadow-sm">
+            <span class="text-sm">bKash</span>
+            <span class="text-[9px] font-normal">বিকাশ</span>
+          </button>
+          <button type="button" onclick="window.selectPaymentProvider('nagad')" id="btnProvNagad" class="py-2 px-1 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-300 font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5">
+            <span class="text-sm">Nagad</span>
+            <span class="text-[9px] font-normal">নগদ</span>
+          </button>
+          <button type="button" onclick="window.selectPaymentProvider('rocket')" id="btnProvRocket" class="py-2 px-1 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 hover:border-purple-300 font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5">
+            <span class="text-sm">Rocket</span>
+            <span class="text-[9px] font-normal">রকেট</span>
+          </button>
+        </div>
+
+        <!-- Target Number Card -->
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center relative space-y-1">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 block" id="payProviderTitle">বিকাশ পার্সোনাল নম্বর (Send Money)</span>
+          <div class="flex items-center justify-center gap-2">
+            <span class="font-mono font-bold text-lg sm:text-xl text-gray-900 tracking-wider" id="payTargetNumber">01791357521</span>
+            <button type="button" onclick="window.copyPaymentNumber()" class="px-2.5 py-1 rounded-lg bg-[#FF5722] hover:bg-[#E64A19] text-white text-[11px] font-bold transition-colors">
+              কপি
+            </button>
+          </div>
+          <p id="payCopyNotice" class="text-[11px] text-green-600 font-bold hidden">নম্বর কপি হয়েছে! ✓</p>
+        </div>
+
+        <!-- Instruction Alert -->
+        <div class="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-[11px] text-gray-700 leading-relaxed">
+          📌 উপরের নম্বরে <strong id="payInstructionAmount">৳100</strong> Send Money করার পর ফিরতি মেসেজের <strong class="text-[#FF5722]">TrxID</strong> নিচে দিয়ে কনফার্ম করুন।
+        </div>
+
+        <!-- TrxID Input -->
+        <div>
+          <label class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-1">
+            ট্রানজেকশন আইডি (TrxID)
+          </label>
+          <input type="text" id="payTrxId" placeholder="e.g. BKC84A9X21 বা 9BG28172" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-mono uppercase tracking-wider text-gray-900 focus:outline-none focus:border-[#FF5722]">
+          <p id="payTrxError" class="text-[11px] text-red-600 font-semibold mt-1 hidden"></p>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 sm:py-3 rounded-xl bg-[#00c853] hover:bg-[#00b248] text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-1.5 mt-3" id="confirmBookingBtn">
+          <i class="bi bi-shield-check"></i> TrxID যাচাই ও স্লট বুকিং চূড়ান্ত করুন
+        </button>
+      </div>
     </form>
   </div>
 
@@ -388,6 +462,11 @@
 
     let tournamentData = {
       tournamentName: "Free Fire Daily Squad Championship",
+      paymentSettings: {
+        bkashNumber: "01791357521",
+        nagadNumber: "01791357521",
+        rocketNumber: "01791357521"
+      },
       matches: [
         {
           id: "match-1",
@@ -661,7 +740,9 @@
                   </span>
                   <strong class="text-xs sm:text-sm font-bold text-gray-900 truncate">${s.squadName}</strong>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 shrink-0">CONFIRMED</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 shrink-0 flex items-center gap-1">
+                    <i class="bi bi-check2-circle"></i> CONFIRMED
+                  </span>
               </div>
               <div class="pt-1.5 border-t border-gray-200">
                 <span class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Squad Players:</span>
@@ -774,6 +855,12 @@
       }
 
       $('bookingModalTitle').textContent = `Book Slot for ${match.title || 'Match'}`;
+      const fee = match.entryFee || 100;
+      if ($('bookingEntryFeeDisplay')) $('bookingEntryFeeDisplay').textContent = `৳${fee} BDT`;
+      $('bookingStepDetails').classList.remove('hidden');
+      $('bookingStepPayment').classList.add('hidden');
+      if ($('payTrxId')) $('payTrxId').value = '';
+      if ($('payTrxError')) $('payTrxError').classList.add('hidden');
       $('bookingModalBackdrop').style.display = 'block';
       $('bookingModalBox').style.display = 'block';
     };
@@ -781,6 +868,84 @@
     window.closeBookingModal = function() {
       $('bookingModalBackdrop').style.display = 'none';
       $('bookingModalBox').style.display = 'none';
+    };
+
+    // Payment step navigation & provider selection
+    let selectedPaymentProvider = 'bkash';
+
+    window.goToPaymentStep = function() {
+      const match = getActiveMatch();
+      if (!match) return;
+
+      const squadName = $('bookSquadName').value.trim();
+      const p1 = $('bookPlayer1').value.trim();
+      const p2 = $('bookPlayer2').value.trim();
+      const p3 = $('bookPlayer3').value.trim();
+      const p4 = $('bookPlayer4').value.trim();
+      const contact = $('bookWhatsApp').value.trim();
+
+      if (!squadName || !p1 || !p2 || !p3 || !p4 || !contact) {
+        window.showToast("স্কোয়াডের নাম ও ৪ জন প্লেয়ারের IGN পূরণ করুন।", "warning");
+        return;
+      }
+
+      const fee = match.entryFee || 100;
+      $('bookingEntryFeeDisplay').textContent = `৳${fee} BDT`;
+      $('payFeeBadge').textContent = `এন্ট্রি ফি: ৳${fee}`;
+      $('payInstructionAmount').textContent = `৳${fee}`;
+
+      // Show payment step
+      $('bookingStepDetails').classList.add('hidden');
+      $('bookingStepPayment').classList.remove('hidden');
+      window.selectPaymentProvider(selectedPaymentProvider);
+    };
+
+    window.backToDetailsStep = function() {
+      $('bookingStepPayment').classList.add('hidden');
+      $('bookingStepDetails').classList.remove('hidden');
+    };
+
+    window.selectPaymentProvider = function(prov) {
+      selectedPaymentProvider = prov;
+      const ps = tournamentData.paymentSettings || {
+        bkashNumber: "01791357521",
+        nagadNumber: "01791357521",
+        rocketNumber: "01791357521"
+      };
+
+      const titleEl = $('payProviderTitle');
+      const numEl = $('payTargetNumber');
+
+      const btnB = $('btnProvBkash');
+      const btnN = $('btnProvNagad');
+      const btnR = $('btnProvRocket');
+
+      [btnB, btnN, btnR].forEach(b => {
+        b.className = 'py-2 px-1 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5';
+      });
+
+      if (prov === 'bkash') {
+        btnB.className = 'py-2 px-1 rounded-xl border border-pink-300 bg-pink-50 text-[#E2136E] font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5 shadow-sm';
+        titleEl.textContent = 'বিকাশ পার্সোনাল নম্বর (Send Money)';
+        numEl.textContent = ps.bkashNumber || '01791357521';
+      } else if (prov === 'nagad') {
+        btnN.className = 'py-2 px-1 rounded-xl border border-orange-300 bg-orange-50 text-[#F6921E] font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5 shadow-sm';
+        titleEl.textContent = 'নগদ পার্সোনাল নম্বর (Send Money)';
+        numEl.textContent = ps.nagadNumber || '01791357521';
+      } else if (prov === 'rocket') {
+        btnR.className = 'py-2 px-1 rounded-xl border border-purple-300 bg-purple-50 text-purple-700 font-bold text-xs transition-all text-center flex flex-col items-center gap-0.5 shadow-sm';
+        titleEl.textContent = 'রকেট পার্সোনাল নম্বর (Send Money)';
+        numEl.textContent = ps.rocketNumber || '01791357521';
+      }
+    };
+
+    window.copyPaymentNumber = function() {
+      const num = $('payTargetNumber').textContent;
+      navigator.clipboard.writeText(num).then(() => {
+        const notice = $('payCopyNotice');
+        notice.classList.remove('hidden');
+        setTimeout(() => notice.classList.add('hidden'), 2000);
+      });
     };
 
     window.handleConfirmBooking = async function(e) {
@@ -795,10 +960,45 @@
       const player3 = $('bookPlayer3').value.trim();
       const player4 = $('bookPlayer4').value.trim();
       const contact = $('bookWhatsApp').value.trim();
+      const trxId = ($('payTrxId') ? $('payTrxId').value : '').trim().toUpperCase();
+
+      const errBox = $('payTrxError');
+      if (errBox) errBox.classList.add('hidden');
+
+      // Validation
+      if (!trxId || trxId.length < 8) {
+        if (errBox) {
+          errBox.textContent = "অনুগ্রহ করে সঠিক ৮-১৬ ডিজিটের TrxID প্রদান করুন।";
+          errBox.classList.remove('hidden');
+        } else {
+          window.showToast("সঠিক TrxID প্রদান করুন।", "error");
+        }
+        return;
+      }
+
+      // Check duplicate TrxID across all booked slots
+      let isDuplicateTrx = false;
+      (tournamentData.matches || []).forEach(m => {
+        (m.slots || []).forEach(s => {
+          if (s.booked && s.trxId && s.trxId.toUpperCase() === trxId) {
+            isDuplicateTrx = true;
+          }
+        });
+      });
+
+      if (isDuplicateTrx) {
+        if (errBox) {
+          errBox.textContent = "এই TrxID দিয়ে ইতিমধ্যে একটি স্লট বুকিং করা হয়েছে! নতুন TrxID দিন।";
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
 
       const btn = $('confirmBookingBtn');
       btn.disabled = true;
-      btn.innerHTML = `Booking Slot #${slotNum}...`;
+      btn.innerHTML = `<i class="bi bi-arrow-repeat animate-spin"></i> ভেরিফাই ও বুকিং হচ্ছে...`;
+
+      const fee = match.entryFee || 100;
 
       try {
         const updatedMatches = (tournamentData.matches || []).map(m => {
@@ -813,7 +1013,11 @@
                   player2,
                   player3,
                   player4,
-                  contact
+                  contact,
+                  trxId,
+                  paymentMethod: selectedPaymentProvider,
+                  feePaid: fee,
+                  bookedAt: new Date().toISOString()
                 };
               }
               return s;
@@ -829,10 +1033,10 @@
         window.closeBookingModal();
         $('bookingForm').reset();
         window.showNoticeModal({
-          title: "স্কোয়াড স্লট বুকিং সফল! 🎉",
-          message: `অভিনন্দন! আপনার স্কোয়াড <strong>"${squadName}"</strong> সফলভাবে <strong>স্লট #${slotNum}</strong>-এ কনফার্ম করা হয়েছে।<br><br><span class="text-[#FF5722] font-semibold text-xs">ম্যাচ শুরুর ১০-১৫ মিনিট আগে রুম আইডি ও পাসওয়ার্ড এই পেজের রুম বক্সে পাবেন।</span>`,
+          title: "পেমেন্ট ভেরিফাইড ও স্লট বুকিং সফল! 🎉",
+          message: `অভিনন্দন! আপনার স্কোয়াড <strong>"${squadName}"</strong>-এর <strong>৳${fee}</strong> পেমেন্ট যাচাই করা হয়েছে এবং <strong>স্লট #${slotNum}</strong> চূড়ান্তভাবে বুক করা হয়েছে।<br><br><span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-800">TrxID: ${trxId} (${selectedPaymentProvider.toUpperCase()})</span><br><br><span class="text-[#FF5722] font-semibold text-xs">ম্যাচ শুরুর ১০-১৫ মিনিট আগে রুম আইডি ও পাসওয়ার্ড এই পেজের রুম বক্সে শো করবে।</span>`,
           type: "success",
-          confirmText: "বুঝেছি / ঠিক আছে"
+          confirmText: "ধন্যবাদ / সম্পন্ন"
         });
       } catch (err) {
         console.error("Booking failed:", err);
@@ -971,6 +1175,9 @@
             const data = snap.data();
             if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
               tournamentData = { ...tournamentData, ...data };
+            if (data.paymentSettings) {
+              tournamentData.paymentSettings = data.paymentSettings;
+            }
             } else if (data.slots) {
               tournamentData.matches[0].slots = data.slots;
               if (data.roomId) tournamentData.matches[0].roomId = data.roomId;
