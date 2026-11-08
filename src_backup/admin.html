@@ -132,6 +132,10 @@
       </div>
 
       <!-- Container for vertically rendered match cards -->
+      
+      <!-- AI Points Table Pending Reminder Banner -->
+      <div id="pointsTableNotificationContainer" class="hidden"></div>
+
       <div id="adminMatchesListContainer" class="space-y-4 sm:space-y-5">
         <!-- Rendered by JS -->
       </div>
@@ -235,6 +239,12 @@
             </button>
           </div>
         </form>
+      </div>
+
+      
+      <!-- AI MATCH RESULTS & POINTS TABLE SECTION -->
+      <div id="adminDetailPointsTableCard" class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+        <!-- Rendered dynamically by JS -->
       </div>
 
       <!-- 12 Squad Slots & Players for THIS Match -->
@@ -410,6 +420,49 @@
       </div>
     </section>
 
+  
+    <!-- GOOGLE GEMINI AI API SETTINGS CARD -->
+    <section class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+            <i class="bi bi-robot"></i>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-gray-900">Google Gemini AI Settings (ফ্রি স্কোরবোর্ড AI কনফিগারেশন)</h2>
+            <p class="text-[11px] sm:text-xs text-gray-500">ম্যাচের স্কোরবোর্ড স্ক্রিনশট থেকে অটোমেটিক পয়েন্ট টেবিল বানাতে জেমিনি এআই ব্যবহার হয়।</p>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 self-start sm:self-auto flex items-center gap-1.5" id="geminiKeyStatusBadge">
+          <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          READY / ACTIVE
+        </span>
+      </div>
+
+      <form id="geminiKeyForm" onsubmit="window.handleSaveGeminiKey(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Google Gemini API Key (গুগল এআই স্টুডিও কি)</label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="password" id="admGeminiApiKey" placeholder="AIzaSy..." class="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-mono text-gray-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+            <button type="button" onclick="window.toggleGeminiKeyVisibility()" class="px-3 py-2 rounded-xl border border-gray-300 bg-gray-100 hover:bg-gray-200 text-xs font-bold text-gray-700 transition-colors">
+              <i class="bi bi-eye" id="toggleKeyIcon"></i>
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-1.5">
+              <i class="bi bi-check2-circle"></i> Save Key (সংরক্ষণ করুন)
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-gray-500 pt-1">
+          <div>
+            💡 <strong>সম্পূর্ণ ফ্রি লাইফটাইম API Key:</strong> কোনো ক্রেডিট কার্ড ছাড়াই <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">Google AI Studio</a> থেকে ফ্রি API Key সংগ্রহ করুন (প্রতি মিনিটে ১৫টি ও দিনে ১৫০০টি স্ক্রিনশট ফ্রি)।
+          </div>
+          <div class="text-green-600 font-bold flex items-center gap-1">
+            <i class="bi bi-shield-check"></i> 100% Free Tier Supported
+          </div>
+        </div>
+      </form>
+    </section>
+
   </main>
 
   <!-- ========================================== -->
@@ -526,6 +579,120 @@
   <!-- ========================================== -->
   <!-- THEMED NOTICE / CONFIRMATION MODAL         -->
   <!-- ========================================== -->
+  
+  <!-- ========================================== -->
+  <!-- MODAL: AI SCOREBOARD & POINTS TABLE MODAL  -->
+  <!-- ========================================== -->
+  <div id="aiPointsTableBackdrop" class="custom-modal-backdrop" onclick="window.closeAiPointsTableModal()"></div>
+  <div id="aiPointsTableModalBox" class="custom-modal-box max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-lg shadow-sm">
+          🏆
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-extrabold text-gray-900" id="aiModalMatchTitle">AI Points Table & Match Results</h3>
+          <p class="text-[11px] text-gray-500">ফ্রি ফায়ার স্কোরবোর্ড স্ক্রিনশট থেকে অটোমেটিক পয়েন্ট টেবিল তৈরি করুন</p>
+        </div>
+      </div>
+      <button type="button" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 rounded-lg" onclick="window.closeAiPointsTableModal()">✕</button>
+    </div>
+
+    <!-- Step 1: Upload Screenshots & AI Action -->
+    <div id="aiUploadSection" class="space-y-4">
+      <div class="bg-orange-50/70 border border-dashed border-orange-300 rounded-2xl p-5 text-center space-y-3 transition-colors hover:border-[#FF5722]" id="aiDropzone">
+        <i class="bi bi-cloud-arrow-up text-3xl sm:text-4xl text-[#FF5722] block"></i>
+        <div>
+          <strong class="text-xs sm:text-sm font-bold text-gray-900 block">ম্যাচ শেষের ফ্রি ফায়ার স্কোরবোর্ড স্ক্রিনশট আপলোড দিন</strong>
+          <p class="text-[11px] text-gray-500 mt-0.5">
+            ১টি, ২টি বা ৩টি স্ক্রিনশট একসাথে সিলেক্ট করতে পারবেন (কিল লিস্ট / প্লেয়ার সামারি)। ছবি পেস্ট (Ctrl+V) করতেও পারবেন।
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <label class="px-4 py-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-sm transition-all inline-flex items-center gap-1.5">
+            <i class="bi bi-images"></i> Select Screenshots (ছবি নির্বাচন)
+            <input type="file" id="aiScoreboardFileInput" accept="image/*" multiple class="hidden" onchange="window.handleScreenshotUpload(event)">
+          </label>
+          <button type="button" onclick="window.generateSamplePointsTableForActive()" class="px-4 py-2 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all inline-flex items-center gap-1.5">
+            <i class="bi bi-magic text-yellow-300"></i> Instant Demo Data (ডেমো টেস্ট)
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview of uploaded screenshots -->
+      <div id="aiScreenshotsPreviewGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 hidden">
+        <!-- Image thumbnails rendered here -->
+      </div>
+
+      <!-- AI Processing Status Banner -->
+      <div id="aiProcessingState" class="hidden p-4 rounded-xl bg-blue-50 border border-blue-200 text-center space-y-2">
+        <div class="inline-block animate-spin text-2xl text-blue-600">
+          <i class="bi bi-arrow-repeat"></i>
+        </div>
+        <h4 class="text-xs sm:text-sm font-bold text-blue-900">Gemini AI স্কোরবোর্ড স্ক্রিনশট বিশ্লেষণ করছে...</h4>
+        <p class="text-[11px] text-blue-700">প্লেয়ারদের ইন-গেম নাম ও কিল কাউন্ট ১২টি রেজিস্টার্ড স্কোয়াডের নামের সাথে মেলানো হচ্ছে।</p>
+      </div>
+
+      <!-- Trigger AI Analyze Button -->
+      <div id="aiAnalyzeBtnContainer" class="hidden pt-1">
+        <button type="button" id="startAiAnalyzeBtn" onclick="window.runAiPointsTableAnalysis()" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2">
+          <i class="bi bi-cpu-fill text-yellow-300"></i> Run Gemini AI Scoreboard Analysis (স্কোরবোর্ড অ্যানালাইজ করুন)
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Interactive Review & Draft Editor -->
+    <div id="aiDraftReviewSection" class="hidden space-y-4 pt-2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50 p-3 rounded-xl border border-amber-200">
+        <div class="flex items-center gap-2 text-xs font-bold text-amber-900">
+          <i class="bi bi-check2-circle text-amber-600 text-base"></i>
+          <span>AI খসড়া তৈরি করেছে! নিচে মানগুলো যাচাই করে প্রয়োজনে এডিট করুন:</span>
+        </div>
+        <button type="button" onclick="window.reUploadScreenshots()" class="text-[11px] text-blue-600 underline font-bold hover:text-blue-800 self-start sm:self-auto">
+          + নতুন স্ক্রিনশট আপলোড করুন
+        </button>
+      </div>
+
+      <!-- Editable Points Table -->
+      <div class="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+              <th class="p-2.5 text-center w-12">Rank</th>
+              <th class="p-2.5">Squad Name</th>
+              <th class="p-2.5">Player Kills Breakdown</th>
+              <th class="p-2.5 text-center w-16">Kills</th>
+              <th class="p-2.5 text-center w-16">Place Pts</th>
+              <th class="p-2.5 text-center w-16">Total Pts</th>
+              <th class="p-2.5 text-center w-24">Prize (৳)</th>
+            </tr>
+          </thead>
+          <tbody id="aiDraftTableBody" class="divide-y divide-gray-200 bg-white">
+            <!-- Draft rows populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+        <div class="text-[11px] text-gray-500">
+          💡 <strong>FFWS রুলস:</strong> #1=12pts, #2=9pts, #3=8pts, #4=7pts... + প্রতি কিলে ১ পয়েন্ট।
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button type="button" onclick="window.closeAiPointsTableModal()" class="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-100 hover:bg-gray-200 text-xs font-bold text-gray-700 transition-colors">
+            বাতিল
+          </button>
+          <button type="button" id="savePointsTableBtn" onclick="window.saveAndPublishPointsTable()" class="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00c853] to-[#00a844] hover:from-[#00b34a] hover:to-[#00963d] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2">
+            <i class="bi bi-broadcast"></i> Publish Live to Players (পাবলিশ করুন)
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <div id="noticeModalBackdrop" class="custom-modal-backdrop" onclick="window.closeNoticeModal()"></div>
   <div id="noticeModalBox" class="custom-modal-box text-center">
     <div id="noticeIconContainer" class="w-14 h-14 mx-auto rounded-2xl bg-orange-50 border border-orange-200 text-[#FF5722] flex items-center justify-center text-2xl mb-3 shadow-sm">
@@ -640,6 +807,677 @@
 
     let activeMatchId = "match-1";
 
+    // ==========================================
+    // AI SCOREBOARD & POINTS TABLE ENGINE
+    // ==========================================
+    let aiUploadedImages = [];
+    let aiDraftPointsTable = [];
+    let aiActiveMatchId = null;
+
+    // FFWS Point System Map
+    const FFWS_PLACEMENT_POINTS = { 1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 0, 12: 0 };
+
+    // Helper: Parse time like "08:30 PM" to minutes
+    function parseTimeToMinutes(timeStr) {
+      if (!timeStr) return null;
+      const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!m) return null;
+      let hours = parseInt(m[1], 10);
+      const minutes = parseInt(m[2], 10);
+      const period = m[3] ? m[3].toUpperCase() : null;
+      if (period === 'PM' && hours < 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+
+    // Helper: Check if match has elapsed by 35-40 minutes
+    function hasMatchElapsed(timeStr, elapsedMinutes = 35) {
+      const matchMins = parseTimeToMinutes(timeStr);
+      if (matchMins === null) return false;
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      return currentMins >= (matchMins + elapsedMinutes);
+    }
+
+    // Helper: Check if a match needs points table notification
+    function shouldRemindPointsTable(m) {
+      if (!m) return false;
+      const hasTable = m.pointsTable && Array.isArray(m.pointsTable) && m.pointsTable.length > 0;
+      if (hasTable) return false;
+      if (m.status === 'completed' || m.status === 'finished') return true;
+      if (hasMatchElapsed(m.time, 35)) return true;
+      return false;
+    }
+
+    // Render Top Notification Banner for Matches Needing Points Table
+    function checkAndRenderPointsTableNotification() {
+      const container = $('pointsTableNotificationContainer');
+      if (!container) return;
+
+      const matches = tournamentData.matches || [];
+      const pendingMatches = matches.filter(shouldRemindPointsTable);
+
+      if (pendingMatches.length === 0) {
+        container.className = 'hidden';
+        container.innerHTML = '';
+        return;
+      }
+
+      const m = pendingMatches[0];
+      container.className = 'block';
+      container.innerHTML = `
+        <div class="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-red-500/15 border-2 border-amber-400 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3.5 shadow-md">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0 shadow animate-bounce">
+              <i class="bi bi-bell-fill"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-500 text-white uppercase animate-pulse">অ্যাকশন প্রয়োজন</span>
+                <strong class="text-xs sm:text-sm font-extrabold text-gray-900 truncate">${m.title || 'Match'} শেষ হয়েছে!</strong>
+              </div>
+              <p class="text-[11px] sm:text-xs text-gray-700 mt-1 leading-relaxed">
+                ম্যাচ সমাপ্ত হয়েছে (~৪০ মিনিট পার হয়েছে) কিন্তু <strong>পয়েন্ট টেবিল তৈরি করা হয়নি</strong>! ফ্রি ফায়ার রেজাল্ট স্ক্রিনশট আপলোড করে এআই দিয়ে স্বয়ংক্রিয়ভাবে পয়েন্ট টেবিল জেনারেট করুন।
+              </p>
+            </div>
+          </div>
+          <button onclick="window.openAiPointsTableModal('${m.id}')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#E64A19] hover:from-[#E64A19] hover:to-[#D84315] text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 shrink-0">
+            <i class="bi bi-lightning-charge-fill text-yellow-300"></i> AI পয়েন্ট টেবিল তৈরি করুন
+          </button>
+        </div>
+      `;
+    }
+
+    // Render AI Points Table Card in Detail View
+    function renderDetailPointsTableCard(match) {
+      const card = $('adminDetailPointsTableCard');
+      if (!card) return;
+
+      const hasTable = match.pointsTable && Array.isArray(match.pointsTable) && match.pointsTable.length > 0;
+
+      if (!hasTable) {
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+                🏆
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-gray-900">AI Match Results & Points Table</h3>
+                <p class="text-[11px] sm:text-xs text-gray-500">ফ্রি ফায়ার স্কোরবোর্ড থেকে স্বয়ংক্রিয় প্লেয়ার ও স্কোয়াড র‍্যাঙ্কিং</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 self-start sm:self-auto">
+              ⚠️ PENDING RESULTS
+            </span>
+          </div>
+
+          <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-center space-y-2.5">
+            <i class="bi bi-trophy text-amber-500 text-3xl block"></i>
+            <div>
+              <strong class="text-xs sm:text-sm font-bold text-gray-900 block">এই ম্যাচের এখনও পয়েন্ট টেবিল পাবলিশ করা হয়নি</strong>
+              <p class="text-[11px] text-gray-600 mt-0.5">
+                ম্যাচ শেষে ফ্রি ফায়ারের রেজাল্ট স্ক্রিনশট আপলোড দিলে গুগল এআই স্বয়ংক্রিয়ভাবে প্লেয়ার নাম মিলিয়ে পয়েন্ট টেবিল বানিয়ে দেবে।
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+              <button onclick="window.openAiPointsTableModal('${match.id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#E64A19] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
+                <i class="bi bi-cloud-arrow-up-fill text-yellow-300"></i> Upload Scoreboard & Generate with AI
+              </button>
+              <button onclick="window.generateSamplePointsTableForActive('${match.id}')" class="px-4 py-2 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
+                <i class="bi bi-magic text-yellow-300"></i> Generate Demo Table
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        const top3 = match.pointsTable.slice(0, 3);
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
+                🏆
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm sm:text-base font-bold text-gray-900">Official Points Table & Results</h3>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">🟢 LIVE TO PLAYERS</span>
+                </div>
+                <p class="text-[11px] sm:text-xs text-gray-500">প্লেয়ার পেজে এই অফিশিয়াল পয়েন্ট টেবিল দৃশ্যমান রয়েছে।</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+              <button onclick="window.openAiPointsTableModal('${match.id}')" class="px-3 py-1.5 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs transition-colors flex items-center gap-1">
+                <i class="bi bi-pencil-square"></i> Edit / Re-generate
+              </button>
+            </div>
+          </div>
+
+          <!-- Top 3 Podium Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            ${top3.map((t, idx) => {
+              const medals = ['🥇 BOOYAH CHAMPION', '🥈 1ST RUNNER UP', '🥉 2ND RUNNER UP'];
+              const bgs = [
+                'bg-gradient-to-br from-amber-500/10 to-yellow-500/20 border-amber-300',
+                'bg-gradient-to-br from-gray-100 to-gray-200/60 border-gray-300',
+                'bg-gradient-to-br from-orange-50 to-amber-100/60 border-orange-200'
+              ];
+              return `
+                <div class="${bgs[idx] || 'bg-gray-50'} p-3.5 rounded-xl border text-center space-y-1">
+                  <span class="text-[10px] font-extrabold text-amber-800 tracking-wider block uppercase">${medals[idx] || `RANK #${t.rank}`}</span>
+                  <strong class="text-sm font-black text-gray-900 block truncate">${t.squadName}</strong>
+                  <div class="flex items-center justify-center gap-3 text-xs pt-1">
+                    <span class="text-gray-600">Points: <strong class="text-gray-900 font-mono font-bold">${t.totalPoints}</strong></span>
+                    <span class="text-gray-600">Kills: <strong class="text-[#FF5722] font-mono font-bold">${t.killPoints}</strong></span>
+                  </div>
+                  ${t.prizeWon > 0 ? `
+                    <div class="mt-1 pt-1 border-t border-gray-200/60 text-green-700 font-bold font-mono text-xs">
+                      Prize: ৳${t.prizeWon}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Quick Points Table Preview -->
+          <div class="overflow-x-auto border border-gray-200 rounded-xl">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                  <th class="p-2 text-center w-12">Rank</th>
+                  <th class="p-2">Squad</th>
+                  <th class="p-2 text-center">Kills</th>
+                  <th class="p-2 text-center">Place Pts</th>
+                  <th class="p-2 text-center font-bold">Total Pts</th>
+                  <th class="p-2 text-center">Prize (৳)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white">
+                ${match.pointsTable.map(row => `
+                  <tr class="hover:bg-gray-50/80 transition-colors">
+                    <td class="p-2 text-center font-mono font-bold text-gray-800">#${row.rank}</td>
+                    <td class="p-2 font-bold text-gray-900 truncate max-w-[140px]">${row.squadName}</td>
+                    <td class="p-2 text-center font-mono text-[#FF5722] font-bold">${row.killPoints}</td>
+                    <td class="p-2 text-center font-mono text-gray-600">${row.placementPoints}</td>
+                    <td class="p-2 text-center font-mono font-bold text-green-700">${row.totalPoints}</td>
+                    <td class="p-2 text-center font-mono font-bold text-gray-900">${row.prizeWon ? '৳' + row.prizeWon : '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    // Modal Control: Open AI Modal
+    window.openAiPointsTableModal = function(matchId) {
+      aiActiveMatchId = matchId || activeMatchId;
+      const match = (tournamentData.matches || []).find(m => m.id === aiActiveMatchId);
+      if (!match) return;
+
+      $('aiModalMatchTitle').textContent = `${match.title || 'Match'} • AI Points Table`;
+      aiUploadedImages = [];
+
+      // Check if match already has points table
+      if (match.pointsTable && Array.isArray(match.pointsTable) && match.pointsTable.length > 0) {
+        aiDraftPointsTable = JSON.parse(JSON.stringify(match.pointsTable));
+        $('aiUploadSection').classList.add('hidden');
+        $('aiDraftReviewSection').classList.remove('hidden');
+        window.renderDraftPointsTable();
+      } else {
+        $('aiUploadSection').classList.remove('hidden');
+        $('aiDraftReviewSection').classList.add('hidden');
+        $('aiProcessingState').classList.add('hidden');
+        $('aiScreenshotsPreviewGrid').classList.add('hidden');
+        $('aiScreenshotsPreviewGrid').innerHTML = '';
+        $('aiAnalyzeBtnContainer').classList.add('hidden');
+      }
+
+      $('aiPointsTableBackdrop').style.display = 'block';
+      $('aiPointsTableModalBox').style.display = 'block';
+    };
+
+    window.closeAiPointsTableModal = function() {
+      $('aiPointsTableBackdrop').style.display = 'none';
+      $('aiPointsTableModalBox').style.display = 'none';
+      aiUploadedImages = [];
+    };
+
+    window.reUploadScreenshots = function() {
+      $('aiDraftReviewSection').classList.add('hidden');
+      $('aiUploadSection').classList.remove('hidden');
+      $('aiProcessingState').classList.add('hidden');
+    };
+
+    // Handle File Upload (1, 2, 3 or more images)
+    window.handleScreenshotUpload = function(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      files.forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const dataUrl = evt.target.result;
+          const base64Data = dataUrl.split(',')[1];
+          aiUploadedImages.push({
+            name: file.name,
+            mimeType: file.type || 'image/jpeg',
+            base64: base64Data,
+            previewUrl: dataUrl
+          });
+          renderScreenshotsPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    // Paste Image from Clipboard
+    window.addEventListener('paste', function(e) {
+      if ($('aiPointsTableModalBox').style.display !== 'block') return;
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            aiUploadedImages.push({
+              name: `Pasted_Scoreboard_${Date.now()}.png`,
+              mimeType: blob.type,
+              base64: evt.target.result.split(',')[1],
+              previewUrl: evt.target.result
+            });
+            renderScreenshotsPreview();
+          };
+          reader.readAsDataURL(blob);
+        }
+      }
+    });
+
+    function renderScreenshotsPreview() {
+      const grid = $('aiScreenshotsPreviewGrid');
+      const btnCont = $('aiAnalyzeBtnContainer');
+      if (!grid || !btnCont) return;
+
+      if (aiUploadedImages.length === 0) {
+        grid.classList.add('hidden');
+        btnCont.classList.add('hidden');
+        return;
+      }
+
+      grid.classList.remove('hidden');
+      btnCont.classList.remove('hidden');
+
+      grid.innerHTML = aiUploadedImages.map((img, idx) => `
+        <div class="relative rounded-xl overflow-hidden border border-gray-200 bg-black group aspect-video">
+          <img src="${img.previewUrl}" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <button type="button" onclick="window.removeUploadedScreenshot(${idx})" class="p-1.5 rounded-lg bg-red-600 text-white font-bold text-xs">
+              <i class="bi bi-trash3"></i> Remove
+            </button>
+          </div>
+          <span class="absolute bottom-1 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-white">#${idx + 1}</span>
+        </div>
+      `).join('');
+    }
+
+    window.removeUploadedScreenshot = function(idx) {
+      aiUploadedImages.splice(idx, 1);
+      renderScreenshotsPreview();
+    };
+
+    // Instant Demo Points Table Generator
+    window.generateSamplePointsTableForActive = function(customMatchId) {
+      const matchId = customMatchId || aiActiveMatchId || activeMatchId;
+      const match = (tournamentData.matches || []).find(m => m.id === matchId);
+      if (!match) return;
+
+      aiActiveMatchId = matchId;
+      const slots = match.slots || [];
+      const bookedSlots = slots.filter(s => s.booked && s.squadName);
+
+      // 12 squad rows
+      const table = Array.from({ length: 12 }, (_, i) => {
+        const rank = i + 1;
+        const placePts = FFWS_PLACEMENT_POINTS[rank] || 0;
+        const slot = bookedSlots[i] || slots[i] || { slotNumber: rank, squadName: `Squad #${rank}` };
+        const squadName = slot.squadName || `Squad #${rank}`;
+        const killsCount = Math.max(0, 11 - i * 1);
+        const totalPts = placePts + killsCount;
+
+        let prize = 0;
+        if (rank === 1) prize = Math.round(Number(match.prizePool || 1000) * 0.5);
+        else if (rank === 2) prize = Math.round(Number(match.prizePool || 1000) * 0.3);
+        else if (rank === 3) prize = Math.round(Number(match.prizePool || 1000) * 0.2);
+
+        const players = [slot.player1, slot.player2, slot.player3, slot.player4].filter(Boolean);
+        const killBreakdown = {};
+        if (players.length > 0) {
+          killBreakdown[players[0]] = Math.ceil(killsCount * 0.4);
+          if (players[1]) killBreakdown[players[1]] = Math.floor(killsCount * 0.3);
+          if (players[2]) killBreakdown[players[2]] = Math.floor(killsCount * 0.2);
+          if (players[3]) killBreakdown[players[3]] = Math.max(0, killsCount - Object.values(killBreakdown).reduce((a, b) => a + b, 0));
+        }
+
+        return {
+          rank,
+          slotNumber: slot.slotNumber || rank,
+          squadName,
+          placementPoints: placePts,
+          killPoints: killsCount,
+          totalPoints: totalPts,
+          prizeWon: prize,
+          kills: killBreakdown
+        };
+      });
+
+      aiDraftPointsTable = table;
+      $('aiUploadSection').classList.add('hidden');
+      $('aiDraftReviewSection').classList.remove('hidden');
+      window.renderDraftPointsTable();
+
+      $('aiPointsTableBackdrop').style.display = 'block';
+      $('aiPointsTableModalBox').style.display = 'block';
+      window.showToast("ডেমো পয়েন্ট টেবিল তৈরি হয়েছে! মানগুলো রিভিউ করুন। ✨", "success");
+    };
+
+    // Run Gemini Vision OCR & Name Matching
+    window.runAiPointsTableAnalysis = async function() {
+      if (aiUploadedImages.length === 0) {
+        window.showToast("অনুগ্রহ করে অন্তত ১টি স্কোরবোর্ড স্ক্রিনশট আপলোড দিন!", "error");
+        return;
+      }
+
+      const match = (tournamentData.matches || []).find(m => m.id === aiActiveMatchId);
+      if (!match) return;
+
+      const apiKey = localStorage.getItem('gemini_api_key') || tournamentData.geminiApiKey || '';
+
+      if (!apiKey) {
+        window.showNoticeModal({
+          title: "Google Gemini API Key প্রয়োজন",
+          message: "স্ক্রিনশট স্বয়ংক্রিয়ভাবে প্রসেস করতে আপনার ফ্রি Google Gemini API Key সেট করা প্রয়োজন। আপনি নিচের বাটনে ক্লিক করে ডেমো ডাটা দিয়ে ইনস্ট্যান্ট টেস্ট করতে পারেন অথবা Settings-এ কী যুক্ত করতে পারেন।",
+          type: "warning",
+          confirmText: "✨ ডেমো ডাটা দিয়ে তৈরি করুন",
+          cancelText: "বাতিল",
+          onConfirm: () => {
+            window.generateSamplePointsTableForActive(aiActiveMatchId);
+          }
+        });
+        return;
+      }
+
+      const processingEl = $('aiProcessingState');
+      const analyzeBtn = $('startAiAnalyzeBtn');
+      processingEl.classList.remove('hidden');
+      analyzeBtn.disabled = true;
+
+      try {
+        const slots = match.slots || [];
+        const squadRosterPrompt = slots.map(s => 
+          `Slot ${s.slotNumber}: Squad "${s.squadName || 'Empty'}" (Players: ${[s.player1, s.player2, s.player3, s.player4].filter(Boolean).join(', ') || 'N/A'})`
+        ).join('\n');
+
+        const promptText = `
+You are an expert Free Fire esports referee & OCR parser.
+Analyze the attached Free Fire match end scoreboard / kill summary screenshot(s).
+
+Registered Squads and Players for this match:
+${squadRosterPrompt}
+
+Official FFWS Point System Rules:
+- Rank 1 (Booyah): 12 placement points
+- Rank 2: 9 placement points
+- Rank 3: 8 placement points
+- Rank 4: 7 placement points
+- Rank 5: 6 placement points
+- Rank 6: 5 placement points
+- Rank 7: 4 placement points
+- Rank 8: 3 placement points
+- Rank 9: 2 placement points
+- Rank 10: 1 placement point
+- Rank 11-12: 0 placement points
+- Kill Points: Exactly +1 point per kill.
+- Total Points = Placement Points + Kill Points.
+- Match Prize Pool is ${match.prizePool || 1000} BDT. Distribute: Rank 1 gets 50%, Rank 2 gets 30%, Rank 3 gets 20%, others 0.
+
+Tasks:
+1. Extract player in-game names and kills from the screenshot(s).
+2. Match extracted players to their registered Squad above (fuzzy match ignoring clan tags e.g. '71_' or special fonts).
+3. Sum up total squad kills.
+4. Calculate placementPoints and totalPoints for each squad.
+5. Return a strict JSON array of 12 squad objects sorted by rank ascending (1 to 12).
+
+JSON format:
+[
+  {
+    "rank": 1,
+    "slotNumber": 1,
+    "squadName": "DARK VORTEX",
+    "placementPoints": 12,
+    "killPoints": 9,
+    "totalPoints": 21,
+    "prizeWon": 500,
+    "kills": {
+      "Vortex_Lead": 5,
+      "Vortex_Sniper": 4
+    }
+  }
+]
+Return ONLY the raw JSON array. No markdown code blocks, no other text.
+`;
+
+        const parts = [{ text: promptText }];
+        for (const img of aiUploadedImages) {
+          parts.push({
+            inline_data: {
+              mime_type: img.mimeType || 'image/jpeg',
+              data: img.base64
+            }
+          });
+        }
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json'
+            }
+          })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Gemini API Error (${res.status}): ${errText}`);
+        }
+
+        const data = await res.json();
+        const rawJsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawJsonText) throw new Error("Gemini AI থেকে কোনো ফলাফল পাওয়া যায়নি।");
+
+        const parsed = JSON.parse(rawJsonText.replace(/```json/g, '').replace(/```/g, '').trim());
+        aiDraftPointsTable = Array.isArray(parsed) ? parsed : [];
+
+        if (aiDraftPointsTable.length === 0) {
+          throw new Error("স্কোরবোর্ড টেবিল পার্স করা যায়নি।");
+        }
+
+        $('aiUploadSection').classList.add('hidden');
+        $('aiDraftReviewSection').classList.remove('hidden');
+        window.renderDraftPointsTable();
+        window.showToast("Gemini AI সফলভাবে স্কোরবোর্ড এনালাইসিস সম্পন্ন করেছে! 🔥", "success");
+      } catch (err) {
+        console.error("AI Analysis failed:", err);
+        window.showNoticeModal({
+          title: "AI এনালাইসিস ব্যর্থ হয়েছে",
+          message: `ত্রুটি: ${err.message}<br><br>বিকল্প হিসেবে আপনি ডেমো ডাটা দিয়ে পয়েন্ট টেবিল তৈরি করে নিতে পারেন।`,
+          type: "error",
+          confirmText: "✨ ডেমো ডাটা ব্যবহার করুন",
+          cancelText: "বাতিল",
+          onConfirm: () => {
+            window.generateSamplePointsTableForActive(aiActiveMatchId);
+          }
+        });
+      } finally {
+        processingEl.classList.add('hidden');
+        analyzeBtn.disabled = false;
+      }
+    };
+
+    // Render Draft Table for Admin Review
+    window.renderDraftPointsTable = function() {
+      const tbody = $('aiDraftTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = aiDraftPointsTable.map((row, idx) => {
+        const killEntries = Object.entries(row.kills || {});
+        const breakdownBadges = killEntries.length > 0 
+          ? killEntries.map(([p, k]) => `<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 text-[10px] font-mono">${p}: <strong>${k}</strong></span>`).join(' ')
+          : '<span class="text-gray-400 text-[10px]">No individual kills recorded</span>';
+
+        return `
+          <tr class="hover:bg-gray-50/80 transition-colors">
+            <td class="p-2.5 text-center font-mono font-bold text-gray-900">
+              #${row.rank}
+            </td>
+            <td class="p-2.5">
+              <input type="text" value="${row.squadName}" class="w-full bg-transparent border-b border-gray-200 focus:border-[#FF5722] text-xs font-bold text-gray-900 focus:outline-none" onchange="window.updateDraftRow(${idx}, 'squadName', this.value)">
+            </td>
+            <td class="p-2.5">
+              <div class="flex flex-wrap gap-1 max-w-[280px]">
+                ${breakdownBadges}
+              </div>
+            </td>
+            <td class="p-2.5 text-center">
+              <input type="number" min="0" value="${row.killPoints}" class="w-14 text-center font-mono font-bold text-[#FF5722] bg-gray-50 border border-gray-200 rounded px-1 py-0.5 text-xs focus:outline-none" onchange="window.updateDraftRow(${idx}, 'killPoints', Number(this.value))">
+            </td>
+            <td class="p-2.5 text-center">
+              <input type="number" min="0" value="${row.placementPoints}" class="w-14 text-center font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 text-xs focus:outline-none" onchange="window.updateDraftRow(${idx}, 'placementPoints', Number(this.value))">
+            </td>
+            <td class="p-2.5 text-center font-mono font-bold text-green-700" id="draftTotalPts_${idx}">
+              ${row.totalPoints}
+            </td>
+            <td class="p-2.5 text-center">
+              <input type="number" min="0" value="${row.prizeWon || 0}" class="w-20 text-center font-mono font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded px-1 py-0.5 text-xs focus:outline-none" onchange="window.updateDraftRow(${idx}, 'prizeWon', Number(this.value))">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    window.updateDraftRow = function(idx, field, val) {
+      if (!aiDraftPointsTable[idx]) return;
+      aiDraftPointsTable[idx][field] = val;
+      if (field === 'killPoints' || field === 'placementPoints') {
+        const k = Number(aiDraftPointsTable[idx].killPoints || 0);
+        const p = Number(aiDraftPointsTable[idx].placementPoints || 0);
+        aiDraftPointsTable[idx].totalPoints = k + p;
+        const el = $(`draftTotalPts_${idx}`);
+        if (el) el.textContent = k + p;
+      }
+    };
+
+    // Save and Publish Points Table to Firestore
+    window.saveAndPublishPointsTable = async function() {
+      const match = (tournamentData.matches || []).find(m => m.id === aiActiveMatchId);
+      if (!match) return;
+
+      const saveBtn = $('savePointsTableBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Publishing...';
+
+      const updatedMatches = (tournamentData.matches || []).map(m => {
+        if (m.id === aiActiveMatchId) {
+          return {
+            ...m,
+            status: 'completed',
+            pointsTable: aiDraftPointsTable,
+            pointsTablePublishedAt: new Date().toISOString()
+          };
+        }
+        return m;
+      });
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { matches: updatedMatches });
+        tournamentData.matches = updatedMatches;
+
+        window.closeAiPointsTableModal();
+        window.showToast("পয়েন্ট টেবিল সফলভাবে লাইভ পাবলিশ করা হয়েছে! 🏆", "success");
+        checkAndRenderPointsTableNotification();
+        window.renderAdminMatchesList();
+        if ($('adminMatchDetailView').style.display === 'block') {
+          window.renderAdminMatchDetail();
+        }
+        updateLedger();
+      } catch (err) {
+        console.error("Points table save error:", err);
+        window.showNoticeModal({
+          title: "পাবলিশ ব্যর্থ",
+          message: "ত্রুটি: " + err.message,
+          type: "error"
+        });
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-broadcast"></i> Publish Live to Players (পাবলিশ করুন)';
+      }
+    };
+
+    // Gemini API Key Management
+    window.handleSaveGeminiKey = async function(e) {
+      e.preventDefault();
+      const key = $('admGeminiApiKey').value.trim();
+      localStorage.setItem('gemini_api_key', key);
+
+      try {
+        const docRef = doc(db, "tournaments", TOURNAMENT_ID);
+        await updateDoc(docRef, { geminiApiKey: key });
+        tournamentData.geminiApiKey = key;
+        window.showToast("Google Gemini API Key সংরক্ষিত হয়েছে! 🔑", "success");
+        updateGeminiKeyBadge();
+      } catch (err) {
+        window.showToast("লোকাল স্টোরেজে সংরক্ষিত হয়েছে।", "success");
+        updateGeminiKeyBadge();
+      }
+      return false;
+    };
+
+    window.toggleGeminiKeyVisibility = function() {
+      const input = $('admGeminiApiKey');
+      const icon = $('toggleKeyIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    };
+
+    function updateGeminiKeyBadge() {
+      const badge = $('geminiKeyStatusBadge');
+      const key = localStorage.getItem('gemini_api_key') || tournamentData.geminiApiKey || '';
+      if ($('admGeminiApiKey') && !$('admGeminiApiKey').value) {
+        $('admGeminiApiKey').value = key;
+      }
+      if (badge) {
+        if (key) {
+          badge.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 self-start sm:self-auto flex items-center gap-1.5';
+          badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ACTIVE & CONNECTED';
+        } else {
+          badge.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 self-start sm:self-auto flex items-center gap-1.5';
+          badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> KEY NOT SET (DEMO MODE)';
+        }
+      }
+    }
+
+
     const $ = (id) => document.getElementById(id);
 
     function getSelectedMatch() {
@@ -725,6 +1563,7 @@
                 <div class="px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold shrink-0 ${statusBadgeClass}">
                   ${statusText}
                 </div>
+                ${m.pointsTable && m.pointsTable.length > 0 ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500 text-white shrink-0 shadow-sm flex items-center gap-1"><i class="bi bi-trophy-fill text-yellow-200"></i> RESULTS OUT</span>` : ''}
               </div>
               <h2 class="font-bold text-sm sm:text-base tracking-tight leading-snug mt-1 flex items-center gap-1.5 truncate">
                 <i class="bi bi-controller text-[#FF5722] shrink-0"></i> <span class="truncate">${m.title || `Match #${m.matchNumber || idx + 1}`}</span>
@@ -764,12 +1603,15 @@
               </div>
 
               <!-- Action Buttons -->
-              <div class="grid grid-cols-2 gap-2 pt-1" onclick="event.stopPropagation()">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1" onclick="event.stopPropagation()">
                 <button class="w-full py-2.5 px-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.viewAdminMatch('${m.id}')">
-                  <i class="bi bi-gear-fill"></i> <span class="truncate">Manage & 12 Slots</span>
+                  <i class="bi bi-gear-fill"></i> <span class="truncate">12 Slots</span>
+                </button>
+                <button class="w-full py-2.5 px-2 rounded-xl ${m.pointsTable && m.pointsTable.length > 0 ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.openAiPointsTableModal('${m.id}')">
+                  <i class="bi bi-trophy-fill text-yellow-300"></i> <span class="truncate">${m.pointsTable && m.pointsTable.length > 0 ? 'Points Table' : 'AI Points Table'}</span>
                 </button>
                 <button class="w-full py-2.5 px-2 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.handleDeleteMatch('${m.id}')">
-                  <i class="bi bi-trash3-fill text-red-400"></i> <span class="truncate">Delete Match</span>
+                  <i class="bi bi-trash3-fill text-red-400"></i> <span class="truncate">Delete</span>
                 </button>
               </div>
             </div>
@@ -825,6 +1667,7 @@
         $('detailMatchSlotsCount').textContent = `${bookedCount} / 12 Slots Booked`;
       }
 
+      renderDetailPointsTableCard(match);
       const slotsContainer = $('detailMatchSlotsContainer');
       if (slotsContainer) {
         slotsContainer.innerHTML = slots.map(s => {
@@ -1378,7 +2221,23 @@
             roomId: "893411",
             roomPass: "7788",
             showIdPass: true,
-            slots: match1Slots
+            slots: match1Slots,
+
+            pointsTable: [
+              { rank: 1, slotNumber: 1, squadName: "DARK VORTEX", placementPoints: 12, killPoints: 11, totalPoints: 23, prizeWon: 500, kills: { "Vortex_Lead": 5, "Vortex_Sniper": 3, "Vortex_Assault": 2, "Vortex_Rusher": 1 } },
+              { rank: 2, slotNumber: 2, squadName: "71 ESPL", placementPoints: 9, killPoints: 8, totalPoints: 17, prizeWon: 300, kills: { "71_Lead": 4, "71_Sniper": 2, "71_Assault": 1, "71_Rusher": 1 } },
+              { rank: 3, slotNumber: 3, squadName: "DEADLY VIPERS", placementPoints: 8, killPoints: 7, totalPoints: 15, prizeWon: 200, kills: { "DEADLY_Lead": 3, "DEADLY_Sniper": 2, "DEADLY_Assault": 1, "DEADLY_Rusher": 1 } },
+              { rank: 4, slotNumber: 4, squadName: "NO MERCY", placementPoints: 7, killPoints: 6, totalPoints: 13, prizeWon: 0, kills: { "NO_Lead": 3, "NO_Sniper": 1, "NO_Assault": 1, "NO_Rusher": 1 } },
+              { rank: 5, slotNumber: 5, squadName: "BENGAL TIGERS", placementPoints: 6, killPoints: 5, totalPoints: 11, prizeWon: 0, kills: { "BENGAL_Lead": 2, "BENGAL_Sniper": 2, "BENGAL_Assault": 1, "BENGAL_Rusher": 0 } },
+              { rank: 6, slotNumber: 6, squadName: "APEX PREDATORS", placementPoints: 5, killPoints: 4, totalPoints: 9, prizeWon: 0, kills: { "APEX_Lead": 2, "APEX_Sniper": 1, "APEX_Assault": 1, "APEX_Rusher": 0 } },
+              { rank: 7, slotNumber: 7, squadName: "SILENT KILLERS", placementPoints: 4, killPoints: 4, totalPoints: 8, prizeWon: 0, kills: { "SILENT_Lead": 2, "SILENT_Sniper": 1, "SILENT_Assault": 1, "SILENT_Rusher": 0 } },
+              { rank: 8, slotNumber: 8, squadName: "RED DRAGONS", placementPoints: 3, killPoints: 3, totalPoints: 6, prizeWon: 0, kills: { "RED_Lead": 1, "RED_Sniper": 1, "RED_Assault": 1, "RED_Rusher": 0 } },
+              { rank: 9, slotNumber: 9, squadName: "TITAN SQUAD", placementPoints: 2, killPoints: 2, totalPoints: 4, prizeWon: 0, kills: { "TITAN_Lead": 1, "TITAN_Sniper": 1, "TITAN_Assault": 0, "TITAN_Rusher": 0 } },
+              { rank: 10, slotNumber: 10, squadName: "CYBER WARRIORS", placementPoints: 1, killPoints: 2, totalPoints: 3, prizeWon: 0, kills: { "CYBER_Lead": 1, "CYBER_Sniper": 1, "CYBER_Assault": 0, "CYBER_Rusher": 0 } },
+              { rank: 11, slotNumber: 11, squadName: "SHADOW HUNTERS", placementPoints: 0, killPoints: 1, totalPoints: 1, prizeWon: 0, kills: { "SHADOW_Lead": 1, "SHADOW_Sniper": 0, "SHADOW_Assault": 0, "SHADOW_Rusher": 0 } },
+              { rank: 12, slotNumber: 12, squadName: "ROYAL FORCE", placementPoints: 0, killPoints: 0, totalPoints: 0, prizeWon: 0, kills: {} }
+            ],
+            pointsTablePublishedAt: new Date().toISOString(),
           },
           {
             id: "match-2",

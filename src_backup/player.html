@@ -237,6 +237,15 @@
   <!-- ========================================== -->
   <!-- MODAL 1: ROOM ID & PASSWORD MODAL          -->
   <!-- ========================================== -->
+  
+  <!-- ========================================== -->
+  <!-- MODAL: MATCH RESULTS & POINTS TABLE MODAL  -->
+  <!-- ========================================== -->
+  <div id="playerPointsTableBackdrop" class="custom-modal-backdrop" onclick="window.closePlayerPointsTableModal()"></div>
+  <div id="playerPointsTableModalBox" class="custom-modal-box max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <!-- Populated by JS -->
+  </div>
+
   <div id="idPasswordBackdrop" class="custom-modal-backdrop" onclick="window.closeIdPassModal()"></div>
   <div id="idPasswordModalBox" class="custom-modal-box">
     <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-200">
@@ -538,6 +547,126 @@
 
     let activeMatchId = "match-1";
 
+    // ==========================================
+    // PLAYER POINTS TABLE & RESULTS VIEWER
+    // ==========================================
+    window.openPlayerPointsTableModal = function(matchId) {
+      const match = (tournamentData.matches || []).find(m => m.id === matchId) || getActiveMatch();
+      if (!match || !match.pointsTable || !match.pointsTable.length) {
+        window.showToast("এই ম্যাচের পয়েন্ট টেবিল এখনও পাবলিশ করা হয়নি।", "error");
+        return;
+      }
+
+      const modalBox = $('playerPointsTableModalBox');
+      const top3 = match.pointsTable.slice(0, 3);
+      const medals = ['🥇 BOOYAH CHAMPION', '🥈 1ST RUNNER UP', '🥉 2ND RUNNER UP'];
+      const bgs = [
+        'bg-gradient-to-br from-amber-500/15 via-yellow-500/20 to-orange-500/10 border-amber-400',
+        'bg-gradient-to-br from-gray-100 to-gray-200/80 border-gray-300',
+        'bg-gradient-to-br from-orange-50 to-amber-100/70 border-orange-200'
+      ];
+
+      modalBox.innerHTML = `
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-xl shadow-md">
+              🏆
+            </div>
+            <div>
+              <h3 class="text-sm sm:text-base font-extrabold text-gray-900">${match.title || 'Match'} • Points Table</h3>
+              <p class="text-[11px] text-gray-500">অফিশিয়াল ম্যাচ ফলাফল ও ১২ স্কোয়াডের পয়েন্ট তালিকা</p>
+            </div>
+          </div>
+          <button type="button" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 rounded-lg" onclick="window.closePlayerPointsTableModal()">✕</button>
+        </div>
+
+        <!-- Top 3 Podium Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
+          ${top3.map((t, idx) => `
+            <div class="${bgs[idx]} p-3.5 rounded-xl border text-center space-y-1 shadow-sm">
+              <span class="text-[10px] font-extrabold text-amber-900 tracking-wider block uppercase">${medals[idx]}</span>
+              <strong class="text-sm font-black text-gray-900 block truncate">${t.squadName}</strong>
+              <div class="flex items-center justify-center gap-3 text-xs pt-0.5">
+                <span class="text-gray-600">Points: <strong class="text-gray-900 font-mono font-bold">${t.totalPoints}</strong></span>
+                <span class="text-gray-600">Kills: <strong class="text-[#FF5722] font-mono font-bold">${t.killPoints}</strong></span>
+              </div>
+              ${t.prizeWon > 0 ? `
+                <div class="mt-1 pt-1 border-t border-gray-300/60 text-green-700 font-bold font-mono text-xs">
+                  🏆 Prize: ৳${t.prizeWon}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Full 12 Squad Points Table -->
+        <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-3">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                  <th class="p-2.5 text-center w-12">Rank</th>
+                  <th class="p-2.5">Squad Name</th>
+                  <th class="p-2.5 text-center">Kills</th>
+                  <th class="p-2.5 text-center">Place Pts</th>
+                  <th class="p-2.5 text-center font-bold">Total Pts</th>
+                  <th class="p-2.5 text-center">Prize (৳)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white">
+                ${match.pointsTable.map((row, idx) => {
+                  const killEntries = Object.entries(row.kills || {});
+                  const hasKills = killEntries.length > 0;
+                  return `
+                    <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.togglePlayerSquadKills('player_kill_${idx}')">
+                      <td class="p-2.5 text-center font-mono font-bold ${row.rank <= 3 ? 'text-amber-600 font-black' : 'text-gray-700'}">
+                        #${row.rank}
+                      </td>
+                      <td class="p-2.5">
+                        <strong class="text-gray-900 block truncate">${row.squadName}</strong>
+                        ${hasKills ? `
+                          <div id="player_kill_${idx}" class="hidden flex-wrap gap-1 mt-1">
+                            ${killEntries.map(([p, k]) => `<span class="px-1.5 py-0.5 rounded bg-orange-50 text-[#FF5722] border border-orange-200 text-[10px] font-mono">${p}: <strong>${k} kills</strong></span>`).join('')}
+                          </div>
+                          <span class="text-[9px] text-gray-400 block hover:text-[#FF5722]">Tap to view player kills</span>
+                        ` : ''}
+                      </td>
+                      <td class="p-2.5 text-center font-mono font-bold text-[#FF5722]">${row.killPoints}</td>
+                      <td class="p-2.5 text-center font-mono text-gray-600">${row.placementPoints}</td>
+                      <td class="p-2.5 text-center font-mono font-black text-green-700">${row.totalPoints}</td>
+                      <td class="p-2.5 text-center font-mono font-bold text-gray-900">${row.prizeWon ? '৳' + row.prizeWon : '-'}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+          <span>💡 <strong>পয়েন্ট সিস্টেম:</strong> #1=12, #2=9, #3=8, #4=7 ... + প্রতি কিলে ১ পয়েন্ট।</span>
+          <button type="button" class="px-4 py-2 rounded-xl bg-gray-900 text-white font-bold text-xs" onclick="window.closePlayerPointsTableModal()">
+            বন্ধ করুন
+          </button>
+        </div>
+      `;
+
+      $('playerPointsTableBackdrop').style.display = 'block';
+      $('playerPointsTableModalBox').style.display = 'block';
+    };
+
+    window.closePlayerPointsTableModal = function() {
+      $('playerPointsTableBackdrop').style.display = 'none';
+      $('playerPointsTableModalBox').style.display = 'none';
+    };
+
+    window.togglePlayerSquadKills = function(id) {
+      const el = $(id);
+      if (el) el.classList.toggle('hidden');
+    };
+
+
     const $ = (id) => document.getElementById(id);
 
     function getActiveMatch() {
@@ -584,6 +713,7 @@
                 <div class="px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold shrink-0 ${isLive ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-200 border border-gray-700'}">
                   ${timerText}
                 </div>
+                ${m.pointsTable && m.pointsTable.length > 0 ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500 text-white shrink-0 shadow-sm flex items-center gap-1"><i class="bi bi-trophy-fill text-yellow-200"></i> RESULTS OUT</span>` : ''}
               </div>
               <h2 class="font-bold text-sm sm:text-base tracking-tight leading-snug mt-1 flex items-center gap-1.5 truncate">
                 <i class="bi bi-controller text-[#FF5722] shrink-0"></i> <span class="truncate">${m.title || `Match #${m.matchNumber}`}</span>
@@ -627,9 +757,15 @@
                 <button class="w-full py-2.5 px-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.viewMatch('${m.id}')">
                   <i class="bi bi-grid-3x3-gap-fill"></i> <span class="truncate">Book Slot</span>
                 </button>
-                <button class="w-full py-2.5 px-2 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.openIdPassModal('${m.id}')">
-                  <i class="bi bi-key-fill text-yellow-400"></i> <span class="truncate">Room ID/Pass</span>
-                </button>
+                ${m.pointsTable && m.pointsTable.length > 0 ? `
+                  <button class="w-full py-2.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.openPlayerPointsTableModal('${m.id}')">
+                    <i class="bi bi-trophy-fill text-yellow-200"></i> <span class="truncate">Points Table</span>
+                  </button>
+                ` : `
+                  <button class="w-full py-2.5 px-2 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5" onclick="window.openIdPassModal('${m.id}')">
+                    <i class="bi bi-key-fill text-yellow-400"></i> <span class="truncate">Room ID/Pass</span>
+                  </button>
+                `}
               </div>
             </div>
 
@@ -722,6 +858,54 @@
       $('detailSlotsProgressText').textContent = `${bookedCount} / 12 Slots Booked`;
       const percent = Math.min(100, Math.round((bookedCount / 12) * 100));
       $('detailSlotsProgressBar').style.width = `${percent}%`;
+
+      // Render Results / Points Table Section if exists
+      const resultsContainer = $('playerDetailPointsTableContainer');
+      if (resultsContainer) {
+        if (match.pointsTable && match.pointsTable.length > 0) {
+          resultsContainer.className = 'block';
+          const top3 = match.pointsTable.slice(0, 3);
+          resultsContainer.innerHTML = `
+            <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-xl shadow-md">
+                    🏆
+                  </div>
+                  <div>
+                    <h3 class="text-sm sm:text-base font-extrabold text-gray-900">Official Match Results & Points Table</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500">ম্যাচ সম্পন্ন হয়েছে • ফলাফল ও পয়েন্ট তালিকা</p>
+                  </div>
+                </div>
+                <button onclick="window.openPlayerPointsTableModal('${match.id}')" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 self-start sm:self-auto">
+                  <i class="bi bi-arrows-fullscreen"></i> Full Table
+                </button>
+              </div>
+
+              <!-- Top 3 Podium -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                ${top3.map((t, idx) => {
+                  const medals = ['🥇 BOOYAH CHAMPION', '🥈 1ST RUNNER UP', '🥉 2ND RUNNER UP'];
+                  return `
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-50/50 p-3.5 rounded-xl border border-amber-200 text-center space-y-1">
+                      <span class="text-[10px] font-extrabold text-amber-900 uppercase block">${medals[idx]}</span>
+                      <strong class="text-sm font-black text-gray-900 block truncate">${t.squadName}</strong>
+                      <div class="flex items-center justify-center gap-3 text-xs pt-0.5">
+                        <span class="text-gray-600">Pts: <strong class="text-gray-900 font-mono font-bold">${t.totalPoints}</strong></span>
+                        <span class="text-gray-600">Kills: <strong class="text-[#FF5722] font-mono font-bold">${t.killPoints}</strong></span>
+                      </div>
+                      ${t.prizeWon > 0 ? `<div class="text-green-700 font-mono font-bold text-xs mt-1">Prize: ৳${t.prizeWon}</div>` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          resultsContainer.className = 'hidden';
+          resultsContainer.innerHTML = '';
+        }
+      }
 
       const slotsContainer = $('detailSlotsContainer');
       slotsContainer.innerHTML = slots.map(s => {
