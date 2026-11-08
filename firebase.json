@@ -24,6 +24,7 @@
       "firebase.json",
       ".firebaserc",
       "**/.*",
+      "**/*.apk",
       "ARENA X ____Saas/**",
       "*.md",
       "node_modules/**",
