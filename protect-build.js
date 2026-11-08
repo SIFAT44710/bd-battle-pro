@@ -106,6 +106,7 @@ async function run() {
   // 2. Process Player Panel
   console.log("-> Compiling & Hardening Player Panel...");
   const protectedPlayer = await processHtmlFile(path.join(srcDir, 'player.html'));
+  fs.writeFileSync(path.join(baseDir, 'player.html'), protectedPlayer, 'utf8');
   fs.writeFileSync(path.join(baseDir, 'player', 'dashboard.html'), protectedPlayer, 'utf8');
   fs.writeFileSync(path.join(baseDir, 'player', 'index.html'), protectedPlayer, 'utf8');
 

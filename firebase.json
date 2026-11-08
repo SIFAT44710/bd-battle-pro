@@ -2,6 +2,7 @@
   "hosting": {
     "public": ".",
     "cleanUrls": true,
+    "trailingSlash": false,
     "headers": [
       {
         "source": "**",
@@ -14,8 +15,8 @@
       }
     ],
     "rewrites": [
-      { "source": "/player", "destination": "/player/dashboard.html" },
-      { "source": "/player/**", "destination": "/player/dashboard.html" },
+      { "source": "/player", "destination": "/player.html" },
+      { "source": "/player/**", "destination": "/player.html" },
       { "source": "/admin", "destination": "/admin.html" },
       { "source": "/admin/**", "destination": "/admin.html" },
       { "source": "**", "destination": "/index.html" }
