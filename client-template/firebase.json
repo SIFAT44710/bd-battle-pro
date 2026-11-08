@@ -1,0 +1,40 @@
+{
+  "hosting": {
+    "public": ".",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      { "source": "/player", "destination": "/player.html" },
+      { "source": "/player/**", "destination": "/player.html" },
+      { "source": "/admin", "destination": "/admin.html" },
+      { "source": "/admin/**", "destination": "/admin.html" },
+      { "source": "**", "destination": "/index.html" }
+    ],
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.*",
+      "**/*.apk",
+      "ARENA X ____Saas/**",
+      "*.md",
+      "node_modules/**",
+      "package*.json",
+      "protect-build.js",
+      "src_backup/**"
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
