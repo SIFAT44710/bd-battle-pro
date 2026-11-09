@@ -1,9 +1,17 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from both local bot dir and root project dir
+dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
 export const config = {
   gemini: {
-    apiKey: process.env.GEMINI_API_KEY || ''
+    apiKey: process.env.GEMINI_API_KEY || 'AQ.Ab8RN6JPMJBewHtj4jRfbQnYxW8zYBLxbhmOOisisOS7eF2xHg'
   },
   firebase: {
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json',

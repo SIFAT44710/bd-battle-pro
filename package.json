@@ -4,6 +4,10 @@
   "description": "> **Author & Lead Architect:** Sifat Bin Shahjahan   > **Architecture:** Pure HTML5 + CSS3 + Vanilla JavaScript + Firebase & LocalStorage   > **Tournament Format:** 12 Squads / 48 Players (Full Custom Room Capacity)   > **Point System:** Official FFWS Points System (#1=12, #2=9, #3=8 ... + 1 pt/kill)   > **Status:** Ultra-Lightweight, Production Ready, Zero Node.js Bloat",
   "main": "index.js",
   "scripts": {
+    "build": "node protect-build.js",
+    "deploy": "node protect-build.js; firebase deploy --only hosting --project ff-squad-arena-bd",
+    "bot": "node whatsapp-bot/index.js",
+    "bot:test": "node whatsapp-bot/test-bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

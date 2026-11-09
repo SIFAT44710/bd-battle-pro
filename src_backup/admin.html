@@ -234,6 +234,9 @@
             <button type="submit" id="saveMatchBtn" class="w-full sm:flex-1 py-2.5 sm:py-3 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-colors flex items-center justify-center gap-2">
               <i class="bi bi-broadcast"></i> Save & Publish Live to Players
             </button>
+            <button type="button" onclick="window.openWhatsAppBroadcastModal()" class="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs sm:text-sm shadow-sm transition-colors flex items-center justify-center gap-2">
+              <i class="bi bi-whatsapp"></i> Broadcast to Players
+            </button>
             <button type="button" onclick="window.handleDeleteActiveMatch()" class="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs sm:text-sm border border-red-200 transition-colors flex items-center justify-center gap-1.5">
               <i class="bi bi-trash3-fill"></i> Delete Match
             </button>
@@ -461,6 +464,73 @@
           </div>
         </div>
       </form>
+    </section>
+
+    <!-- WHATSAPP AI AUTONOMOUS BOT CONTROLLER -->
+    <section class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-xl shadow-sm">
+            <i class="bi bi-robot"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm sm:text-base font-bold text-gray-900">WhatsApp AI Auto-Booking Bot</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-100 text-green-700 uppercase tracking-wider">Live Bridge</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-gray-500">খেলোয়াড়দের হোয়াটসঅ্যাপে পাঠানো বিকাশ/নগদ পেমেন্ট স্ক্রিনশট বা মেসেজ থেকে অটোমেটিক স্লট বুকিং ও লাইভ সাইট সিঙ্ক।</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 flex items-center gap-1.5" id="botStatusBadge">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            AUTONOMOUS 24/7
+          </span>
+        </div>
+      </div>
+
+      <!-- Feature Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+          <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+            <i class="bi bi-camera-fill text-green-600"></i> Vision OCR
+          </div>
+          <p class="text-[11px] text-gray-500">বিকাশ/নগদের পেমেন্ট স্ক্রিনশট থেকে TrxID, অ্যামাউন্ট ও প্রেরক স্বয়ংক্রিয়ভাবে রিড করে।</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+          <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+            <i class="bi bi-chat-quote-fill text-blue-600"></i> Banglish NLP
+          </div>
+          <p class="text-[11px] text-gray-500">Gemini 3.5 Flash দিয়ে এলোমেলো বাংলা/বাংলিশ মেসেজ প্রসেস করে স্লট ও স্কোয়াডের নাম বের করে।</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+          <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+            <i class="bi bi-shield-lock-fill text-purple-600"></i> Atomic Firestore
+          </div>
+          <p class="text-[11px] text-gray-500">ডুপ্লিকেট TrxID ফ্রড প্রতিরোধ ও রেস-কন্ডিশন ছাড়াই ওয়েবসাইটে স্লট লক ও কনফার্মেশন পাঠায়।</p>
+        </div>
+      </div>
+
+      <!-- Quick Run & Test Box -->
+      <div class="bg-slate-900 text-slate-100 rounded-xl p-3 sm:p-4 space-y-3 font-mono text-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-400 text-[11px] font-sans font-bold flex items-center gap-1.5">
+            <i class="bi bi-terminal-fill text-green-400"></i> টার্মিনালে বট চালু করার কমান্ড:
+          </span>
+          <button type="button" onclick="window.copyBotRunCommand()" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-green-400 border border-slate-700 transition-colors">
+            <i class="bi bi-clipboard"></i> কপি কমান্ড
+          </button>
+        </div>
+        <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between overflow-x-auto text-emerald-400 font-bold select-all" id="botRunCommandText">
+          npm run bot
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-sans text-slate-400 pt-1">
+          <span>QR কোড স্ক্যান করে কানেক্ট করলেই বট সার্বক্ষণিক লাইভ বুকিং প্রসেস করবে।</span>
+          <a href="https://wa.me/8801791357521" target="_blank" class="text-green-400 hover:underline font-bold flex items-center gap-1">
+            <i class="bi bi-whatsapp"></i> ওপেন হোয়াটসঅ্যাপ চ্যাট (01791357521)
+          </a>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -704,6 +774,53 @@
       <button type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm shadow-sm transition-all" onclick="window.closeNoticeModal()" id="noticeConfirmBtn">
         ঠিক আছে
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 5: WHATSAPP ROOM ALERT BROADCAST     -->
+  <!-- ========================================== -->
+  <div id="whatsappBroadcastBackdrop" class="custom-modal-backdrop" onclick="window.closeWhatsAppBroadcastModal()"></div>
+  <div id="whatsappBroadcastModalBox" class="custom-modal-box max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-lg shadow-sm">
+          <i class="bi bi-whatsapp"></i>
+        </div>
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-gray-900 mb-0">Broadcast Room ID & Password</h3>
+          <p class="text-[11px] text-gray-500">খেলোয়াড়দের হোয়াটসঅ্যাপে কাস্টম রুমের তথ্য পাঠান</p>
+        </div>
+      </div>
+      <button type="button" class="text-gray-400 hover:text-gray-600 text-lg font-bold p-1" onclick="window.closeWhatsAppBroadcastModal()">✕</button>
+    </div>
+
+    <!-- Live Announcement Preview & Copy -->
+    <div class="space-y-3.5">
+      <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+            <i class="bi bi-megaphone-fill text-[#FF5722]"></i> রুম নোটিশ মেসেজ (কপি করে গ্রুপে পেস্ট করুন)
+          </label>
+          <button type="button" onclick="window.copyWhatsAppBroadcastText()" class="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
+            <i class="bi bi-clipboard-check"></i> <span id="copyBroadcastBtnText">কপি নোটিশ</span>
+          </button>
+        </div>
+        <textarea id="broadcastMessageArea" rows="7" readonly class="w-full bg-white border border-gray-300 rounded-xl p-3 text-xs font-mono text-gray-800 leading-relaxed focus:outline-none select-all"></textarea>
+      </div>
+
+      <!-- Booked Squad Leaders Quick Direct Send List -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+            <i class="bi bi-people-fill text-blue-600"></i> স্কোয়াড লিডারদের পার্সোনাল মেসেজ পাঠান
+          </h4>
+          <span class="text-[11px] text-gray-500" id="broadcastSquadCount">০ স্কোয়াড রেজিস্টার্ড</span>
+        </div>
+        <div id="broadcastSquadsList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1984,6 +2101,129 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
             });
           }
         }
+      });
+    };
+
+    // ==========================================
+    // WHATSAPP ROOM ALERT BROADCAST HANDLERS
+    // ==========================================
+    window.openWhatsAppBroadcastModal = function() {
+      const match = getSelectedMatch();
+      if (!match) {
+        window.showToast("কোনো সক্রিয় ম্যাচ নির্বাচন করা নেই", "error");
+        return;
+      }
+
+      const roomId = ($('admRoomId') && $('admRoomId').value.trim()) || match.roomId || 'TBA';
+      const roomPass = ($('admRoomPass') && $('admRoomPass').value.trim()) || match.roomPass || 'TBA';
+      const slots = match.slots || [];
+      const bookedSlots = slots.filter(s => s.booked);
+
+      // Generate formatted announcement text
+      const broadcastMsg = `🏆 *ARENA X TOURNAMENT ALERT* 🏆\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `🎮 *ম্যাচ:* ${match.title || 'Free Fire Squad Championship'}\n` +
+        `🗺️ *ম্যাপ:* ${match.map || 'Bermuda'} | ⏰ *সময়:* ${match.time || '08:30 PM'}\n` +
+        `🆔 *Room ID:* \`${roomId}\`\n` +
+        `🔑 *Password:* \`${roomPass}\`\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `⚠️ *নিয়মাবলী:*\n` +
+        `১. শুধুমাত্র আপনার বুক করা নির্দিষ্ট স্লটে জয়েন করবেন।\n` +
+        `২. হ্যাকার বা পিসি এমুলেটর সম্পূর্ণ নিষিদ্ধ।\n` +
+        `৩. নির্ধারিত সময়ের ঠিক ৫ মিনিট আগে রুম স্টার্ট হবে!\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `🌐 লাইভ সাইট: https://ff-squad-arena-bd.web.app/player\n` +
+        `Good Luck Squads! 🔥`;
+
+      if ($('broadcastMessageArea')) {
+        $('broadcastMessageArea').value = broadcastMsg;
+      }
+
+      if ($('broadcastSquadCount')) {
+        $('broadcastSquadCount').textContent = `${bookedSlots.length} স্কোয়াড রেজিস্টার্ড`;
+      }
+
+      // Render Squad Leaders Quick Direct Send List
+      const container = $('broadcastSquadsList');
+      if (container) {
+        if (bookedSlots.length === 0) {
+          container.innerHTML = `
+            <div class="p-3 text-center text-xs text-gray-500 bg-gray-50 rounded-xl border border-gray-200">
+              এই ম্যাচে এখনো কোনো স্কোয়াড বুক করা হয়নি।
+            </div>
+          `;
+        } else {
+          container.innerHTML = bookedSlots.map(s => {
+            const rawPhone = s.contact || '';
+            const cleanPhone = rawPhone.replace(/\D/g, '').replace(/^880/, '0');
+            const targetWaPhone = cleanPhone.startsWith('0') ? '88' + cleanPhone : cleanPhone;
+            
+            const leaderMsg = `🎮 *ARENA X CUSTOM ROOM ALERT* 🎮\n` +
+              `হ্যালো *${s.player1 || s.squadName}*! আপনার স্কোয়াড *${s.squadName}* (Slot #${s.slotNumber < 10 ? '0' + s.slotNumber : s.slotNumber})-এর রুম তথ্য নিচে দেওয়া হলো:\n\n` +
+              `🏆 ম্যাচ: ${match.title}\n` +
+              `⏰ সময়: ${match.time}\n` +
+              `🆔 *Room ID:* ${roomId}\n` +
+              `🔑 *Password:* ${roomPass}\n\n` +
+              `নির্ধারিত সময়ে রুমে ঢুকে আপনার স্লটে অবস্থান নিন। শুভকামনা!`;
+
+            const waDirectLink = `https://wa.me/${targetWaPhone}?text=${encodeURIComponent(leaderMsg)}`;
+
+            return `
+              <div class="flex items-center justify-between p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200/80 transition-colors">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-orange-100 text-[#FF5722] font-mono font-bold text-xs flex items-center justify-center">
+                    #${s.slotNumber < 10 ? '0' + s.slotNumber : s.slotNumber}
+                  </div>
+                  <div>
+                    <h5 class="text-xs font-bold text-gray-900 leading-tight">${s.squadName}</h5>
+                    <p class="text-[10px] text-gray-500 font-mono">${s.player1 || 'Leader'} • 📱 ${cleanPhone || 'No Phone'}</p>
+                  </div>
+                </div>
+                ${cleanPhone ? `
+                  <a href="${waDirectLink}" target="_blank" class="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-bold flex items-center gap-1 transition-colors shadow-sm">
+                    <i class="bi bi-whatsapp"></i> সেন্ড
+                  </a>
+                ` : `
+                  <span class="text-[10px] text-gray-400 font-medium italic">নম্বর নেই</span>
+                `}
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      $('whatsappBroadcastBackdrop').style.display = 'block';
+      $('whatsappBroadcastModalBox').style.display = 'block';
+    };
+
+    window.closeWhatsAppBroadcastModal = function() {
+      if ($('whatsappBroadcastBackdrop')) $('whatsappBroadcastBackdrop').style.display = 'none';
+      if ($('whatsappBroadcastModalBox')) $('whatsappBroadcastModalBox').style.display = 'none';
+    };
+
+    window.copyWhatsAppBroadcastText = function() {
+      const area = $('broadcastMessageArea');
+      if (!area) return;
+      navigator.clipboard.writeText(area.value).then(() => {
+        window.showToast("নোটিশ মেসেজ ক্লিপবোর্ডে কপি হয়েছে! ✓", "success");
+        const btnText = $('copyBroadcastBtnText');
+        if (btnText) {
+          btnText.textContent = "কপি হয়েছে! ✓";
+          setTimeout(() => { btnText.textContent = "কপি নোটিশ"; }, 2500);
+        }
+      }).catch(err => {
+        area.select();
+        document.execCommand('copy');
+        window.showToast("নোটিশ মেসেজ কপি হয়েছে! ✓", "success");
+      });
+    };
+
+    window.copyBotRunCommand = function() {
+      const cmd = "npm run bot";
+      navigator.clipboard.writeText(cmd).then(() => {
+        window.showToast("টার্মিনাল কমান্ড 'npm run bot' কপি হয়েছে! ✓", "success");
+      }).catch(() => {
+        window.showToast("কমান্ড: npm run bot", "info");
       });
     };
 
