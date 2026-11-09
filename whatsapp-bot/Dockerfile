@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy dependency manifests
+COPY package*.json ./
+
+# Install dependencies cleanly
+RUN npm install --production
+
+# Copy source code
+COPY . .
+
+# Expose web dashboard & healthcheck port
+EXPOSE 3000
+
+ENV PORT=3000
+ENV NODE_ENV=production
+
+CMD ["node", "index.js"]

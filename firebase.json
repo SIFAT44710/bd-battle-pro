@@ -38,6 +38,8 @@
       "*.md",
       "package*.json",
       "protect-build.js",
+      "render.yaml",
+      "Dockerfile",
       "src_backup/**"
     ]
   },

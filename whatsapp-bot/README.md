@@ -29,7 +29,37 @@ An autonomous Node.js bot for Free Fire tournament organizers in Bangladesh. It 
 
 ---
 
-## 🚀 Quick Setup & Run
+## ☁️ 100% Free 24/7 Cloud Deployment (No PC Needed / GitHub Linked)
+
+আপনার বা আপনার টুর্নামেন্ট অর্গানাইজারদের কোনো পিসি ছাড়াই ২৪ ঘণ্টা ক্লাউডে বট চালু রাখার জন্য Render বা Koyeb-এর ফ্রি টায়ার ব্যবহার করুন:
+
+### ১. Render.com এ ১-ক্লিক ডিপ্লয় (Free Tier):
+1. [Render.com](https://render.com)-এ গিয়ে আপনার GitHub অ্যাকাউন্ট দিয়ে লগইন করুন (সম্পূর্ণ ফ্রি, কোনো ক্রেডিট কার্ড লাগে না)।
+2. **"New +"** বাটনে ক্লিক করে **"Web Service"** সিলেক্ট করুন।
+3. আপনার গিটহ্যাব রিপোজিটরি `SIFAT44710/bd-battle-pro` সিলেক্ট করুন।
+4. রিপোজিটরির রুটে অলরেডি `render.yaml` কনফিগার করা আছে। শুধু নিচের মতো কনফিগ দিন:
+   - **Root Directory:** `whatsapp-bot`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+5. **Create Web Service**-এ ক্লিক করুন।
+6. ২ মিনিটের মধ্যে বট লাইভ হয়ে যাবে এবং Render আপনাকে একটি ফ্রি লাইভ ড্যাশবোর্ড URL দেবে (যেমন: `https://arena-x-bot.onrender.com`)।
+
+### ২. মোবাইল দিয়ে সরাসরি পেয়ারিং (Pairing Code — নো পিসি, নো কিউআর):
+1. আপনার ফোনের ব্রাউজার থেকে Render-এর লাইভ লিংকে ঢুকুন।
+2. সেখানে **"📱 মোবাইল দিয়ে কানেক্ট করুন"** বক্সে আপনার WhatsApp নম্বর (যেমন: `01791357521`) দিয়ে **"পেয়ারিং কোড পান"** চাপুন।
+3. স্ক্রিনে একটি ৮ ডিজিটের কোড (যেমন: `ABCD-1234`) ভেসে উঠবে।
+4. আপনার ফোনের WhatsApp > **Settings** > **Linked Devices** > **Link with phone number instead**-এ গিয়ে কোডটি বসিয়ে দিন।
+5. ব্যস! কোনো পিসি ছাড়াই আপনার মোবাইল থেকে ক্লাউড বট সার্বক্ষণিক কানেক্ট হয়ে যাবে!
+
+### ৩. ২৪ ঘণ্টা নিরবচ্ছিন্ন সচল রাখার ট্রিক (Keep-Alive):
+Render ফ্রি টায়ারে ১৫ মিনিট রিকোয়েস্ট না আসলে স্লিপে যায়। বটকে ২৪ ঘণ্টা জাগিয়ে রাখতে:
+- [cron-job.org](https://cron-job.org) বা [uptimerobot.com](https://uptimerobot.com)-এ ফ্রি অ্যাকাউন্ট খুলুন।
+- আপনার বটের হেলথ URL অ্যাড করুন: `https://your-bot-url.onrender.com/ping` (প্রতি ১০ মিনিট পরপর পিং পাঠাবে)।
+- এটি আজীবন সম্পূর্ণ ফ্রিতে আপনার বটকে ২৪ ঘণ্টা ৩৬৫ দিন অনলাইনে রাখবে!
+
+---
+
+## 🚀 Quick Setup & Run (Local PC)
 
 ### 1. Install Dependencies
 ```powershell

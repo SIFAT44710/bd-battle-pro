@@ -1,5 +1,6 @@
 import { startWhatsAppBot } from './services/whatsapp.js';
 import { initFirestore } from './services/firestore.js';
+import { startWebServer } from './services/server.js';
 import { config } from './config.js';
 
 console.log(`
@@ -15,6 +16,9 @@ console.log(`
 `);
 
 async function main() {
+  // 0. Start Web Dashboard & Cloud Healthcheck Server (for Render / Koyeb / Mobile Pairing)
+  startWebServer(process.env.PORT || 3000);
+
   // 1. Verify Gemini API Key
   if (!config.gemini.apiKey) {
     console.error('❌ [CRITICAL]: GEMINI_API_KEY is missing!');

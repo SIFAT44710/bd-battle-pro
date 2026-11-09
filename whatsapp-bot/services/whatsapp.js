@@ -11,6 +11,7 @@ import { parseBookingText, parsePaymentScreenshot } from './gemini.js';
 import { bookSlotInFirestore, normalizePhone } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
+import { botState, registerSocket } from './server.js';
 
 const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 
@@ -30,6 +31,8 @@ export async function startWhatsAppBot() {
     generateHighQualityLinkPreview: true
   });
 
+  registerSocket(sock);
+
   // Save auth state changes
   sock.ev.on('creds.update', saveCreds);
 
@@ -38,6 +41,8 @@ export async function startWhatsAppBot() {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
+      botState.qr = qr;
+      botState.status = 'qr_ready';
       console.log('\n======================================================');
       console.log('📱 SCAN THIS WHATSAPP QR CODE WITH YOUR PHONE:');
       console.log('======================================================\n');
@@ -46,6 +51,8 @@ export async function startWhatsAppBot() {
     }
 
     if (connection === 'close') {
+      botState.status = 'disconnected';
+      botState.user = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       console.log(`[WhatsApp]: Connection closed (${statusCode}). Reconnecting: ${shouldReconnect}`);
@@ -55,6 +62,11 @@ export async function startWhatsAppBot() {
         console.log('[WhatsApp]: Logged out. Delete auth_info_baileys and restart to generate new QR.');
       }
     } else if (connection === 'open') {
+      botState.status = 'connected';
+      botState.user = sock.user?.id || 'Connected';
+      botState.connectedAt = new Date().toISOString();
+      botState.qr = null;
+      botState.pairingCode = null;
       console.log('\n======================================================');
       console.log(`🟢 WHATSAPP BOT ONLINE & CONNECTED AS: ${sock.user?.id || 'ARENA X'}`);
       console.log('======================================================\n');

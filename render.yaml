@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: arena-x-whatsapp-bot
+    env: node
+    plan: free
+    region: oregon
+    rootDir: whatsapp-bot
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: GEMINI_API_KEY
+        value: AQ.Ab8RN6JPMJBewHtj4jRfbQnYxW8zYBLxbhmOOisisOS7eF2xHg
+      - key: TOURNAMENT_DOC_ID
+        value: ff-daily-squad
+      - key: DEFAULT_ENTRY_FEE
+        value: 100
+      - key: WEBSITE_URL
+        value: https://ff-squad-arena-bd.web.app/player

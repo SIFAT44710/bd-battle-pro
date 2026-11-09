@@ -1,0 +1,328 @@
+import http from 'http';
+import { normalizePhone } from './firestore.js';
+
+export const botState = {
+  status: 'starting', // 'starting' | 'qr_ready' | 'pairing_ready' | 'connected' | 'disconnected'
+  qr: null,
+  pairingCode: null,
+  user: null,
+  connectedAt: null,
+  lastPing: new Date().toISOString()
+};
+
+let currentSock = null;
+
+export function registerSocket(sock) {
+  currentSock = sock;
+}
+
+export function startWebServer(port = process.env.PORT || 3000) {
+  const server = http.createServer(async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    const url = new URL(req.url, `http://${req.headers.host}`);
+
+    // 1. Health check & Ping endpoint (Keeps Render free tier 24/7 awake)
+    if (url.pathname === '/health' || url.pathname === '/ping') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        status: 'healthy',
+        botStatus: botState.status,
+        connected: botState.status === 'connected',
+        user: botState.user,
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString()
+      }));
+      return;
+    }
+
+    // 2. API to request WhatsApp Pairing Code (Mobile-Friendly, No QR needed!)
+    if (url.pathname === '/api/pair' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', async () => {
+        try {
+          const parsed = JSON.parse(body || '{}');
+          let phone = (parsed.phone || '').trim().replace(/\D/g, '');
+
+          if (!phone) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'সঠিক মোবাইল নম্বর প্রদান করুন' }));
+            return;
+          }
+
+          if (phone.startsWith('0')) {
+            phone = '88' + phone;
+          } else if (!phone.startsWith('880')) {
+            phone = '880' + phone;
+          }
+
+          if (!currentSock) {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'WhatsApp ক্লায়েন্ট এখনো ইনিশিয়ালাইজ হয়নি।' }));
+            return;
+          }
+
+          if (currentSock.authState?.creds?.registered) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'হোয়াটসঅ্যাপ ইতিমধ্যে কানেক্টেড আছে!' }));
+            return;
+          }
+
+          console.log(`[Web Pairing]: Requesting pairing code for phone: ${phone}...`);
+          const code = await currentSock.requestPairingCode(phone);
+          botState.pairingCode = code;
+          botState.status = 'pairing_ready';
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, pairingCode: code }));
+        } catch (err) {
+          console.error('[Web Pairing Error]:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, message: err.message || 'পেয়ারিং কোড তৈরি ব্যর্থ হয়েছে' }));
+        }
+      });
+      return;
+    }
+
+    // 3. API Status JSON
+    if (url.pathname === '/api/status') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(botState));
+      return;
+    }
+
+    // 4. Main HTML Dashboard (Mobile-First, Facebook Dark Aesthetic)
+    if (url.pathname === '/') {
+      const isConnected = botState.status === 'connected';
+      const qrImageUrl = botState.qr
+        ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(botState.qr)}&size=280x280`
+        : null;
+
+      const html = `<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARENA X — WhatsApp AI Cloud Controller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #18191a;
+      color: #e4e6eb;
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      background: #242526;
+      border: 1px solid #3a3b3c;
+      border-radius: 18px;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-green { background: rgba(37, 211, 102, 0.15); color: #25d366; border: 1px solid rgba(37, 211, 102, 0.3); }
+    .badge-yellow { background: rgba(255, 179, 0, 0.15); color: #ffb300; border: 1px solid rgba(255, 179, 0, 0.3); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-green { background: #25d366; box-shadow: 0 0 8px #25d366; }
+    .dot-yellow { background: #ffb300; }
+    .btn {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #25d366; color: #000; }
+    .btn-primary:hover { background: #20ba5a; }
+    .input-box {
+      width: 100%;
+      background: #18191a;
+      border: 1px solid #3a3b3c;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      font-family: monospace;
+      outline: none;
+    }
+    .input-box:focus { border-color: #25d366; }
+    .pairing-display {
+      background: #18191a;
+      border: 2px dashed #25d366;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 28px;
+      font-weight: 800;
+      color: #25d366;
+      letter-spacing: 4px;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div>
+        <h1 style="font-size:18px; font-weight:800; color:#fff;">ARENA X AI BOT</h1>
+        <p style="font-size:12px; color:#b0b3b8;">Autonomous Cloud Host (24/7)</p>
+      </div>
+      ${isConnected
+        ? `<span class="badge badge-green"><span class="dot dot-green"></span> ONLINE</span>`
+        : `<span class="badge badge-yellow"><span class="dot dot-yellow"></span> WAITING</span>`
+      }
+    </div>
+
+    ${isConnected ? `
+      <div style="background:#18191a; border-radius:14px; padding:18px; border:1px solid #3a3b3c; margin-bottom:16px; text-align:center;">
+        <div style="font-size:36px; margin-bottom:8px;">🟢</div>
+        <h3 style="font-size:16px; font-weight:700; color:#fff; margin-bottom:4px;">বট সফলভাবে অনলাইনে কানেক্টেড আছে!</h3>
+        <p style="font-size:12px; color:#b0b3b8; font-family:monospace; margin-bottom:12px;">ID: ${botState.user || 'Connected'}</p>
+        <p style="font-size:12px; color:#25d366; line-height:1.5;">
+          ✓ বিকাশ ও নগদ পেমেন্ট স্ক্রিনশট রিড করতে প্রস্তুত<br>
+          ✓ বাংলিশ মেসেজ থেকে স্লট বুকিং একটিভ<br>
+          ✓ ফায়ারবেস লাইভ সাইট ইনস্ট্যান্ট সিঙ্ক হচ্ছে
+        </p>
+      </div>
+      <a href="https://ff-squad-arena-bd.web.app/admin" style="text-decoration:none;">
+        <button class="btn btn-primary">অ্যাডমিন হেডকোয়ার্টারে যান ➔</button>
+      </a>
+    ` : `
+      <!-- MOBILE-FIRST PAIRING CODE (NO PC / NO QR NEEDED) -->
+      <div style="background:#18191a; border-radius:14px; padding:16px; border:1px solid #3a3b3c; margin-bottom:16px;">
+        <h3 style="font-size:14px; font-weight:700; color:#25d366; margin-bottom:6px;">📱 মোবাইল দিয়ে কানেক্ট করুন (Pairing Code)</h3>
+        <p style="font-size:11px; color:#b0b3b8; margin-bottom:12px;">পিসি বা কিউআর কোড স্ক্যান ছাড়াই সরাসরি আপনার ফোন নম্বর দিয়ে লিঙ্ক করুন:</p>
+        
+        <div id="pairForm">
+          <input type="tel" id="pairPhoneInput" class="input-box" placeholder="e.g. 01791357521" style="margin-bottom:8px;">
+          <button type="button" class="btn btn-primary" onclick="requestPairingCode()">
+            পেয়ারিং কোড পান (Get Code)
+          </button>
+        </div>
+
+        <div id="pairCodeArea" style="display:none;">
+          <p style="font-size:11px; color:#b0b3b8; margin-top:8px;">আপনার WhatsApp-এ নিচের কোডটি প্রবেশ করান:</p>
+          <div class="pairing-display" id="pairingCodeText">----</div>
+          <p style="font-size:11px; color:#e4e6eb; line-height:1.4;">
+            👉 আপনার ফোনের WhatsApp খুলুন > <strong>Linked Devices</strong> > <strong>Link with phone number instead</strong> > কোডটি টাইপ করুন।
+          </p>
+        </div>
+      </div>
+
+      <!-- ALTERNATIVE: QR CODE FOR DESKTOP -->
+      ${qrImageUrl ? `
+        <div style="text-align:center; padding:12px; border-top:1px solid #3a3b3c;">
+          <p style="font-size:11px; color:#b0b3b8; margin-bottom:8px;">অথবা অন্য ফোন থেকে QR কোড স্ক্যান করুন:</p>
+          <div style="background:#fff; padding:10px; border-radius:12px; display:inline-block;">
+            <img src="${qrImageUrl}" alt="WhatsApp QR Code" style="width:200px; height:200px; display:block;">
+          </div>
+        </div>
+      ` : `
+        <div style="text-align:center; padding:10px; font-size:12px; color:#888;">
+          কিউআর কোড জেনারেট হচ্ছে...
+        </div>
+      `}
+    `}
+
+    <div style="margin-top:16px; text-align:center; font-size:11px; color:#777;">
+      Free Fire Daily Squad Championship Engine • Author: Sifat Bin Shahjahan
+    </div>
+  </div>
+
+  <script>
+    async function requestPairingCode() {
+      const phoneInput = document.getElementById('pairPhoneInput');
+      const phone = (phoneInput.value || '').trim();
+      if (!phone) {
+        alert('অনুগ্রহ করে মোবাইল নম্বর লিখুন');
+        return;
+      }
+
+      phoneInput.disabled = true;
+      try {
+        const res = await fetch('/api/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (data.success && data.pairingCode) {
+          document.getElementById('pairForm').style.display = 'none';
+          document.getElementById('pairCodeArea').style.display = 'block';
+          document.getElementById('pairingCodeText').textContent = data.pairingCode;
+        } else {
+          alert('সমস্যা: ' + (data.message || 'কোড পাওয়া যায়নি'));
+          phoneInput.disabled = false;
+        }
+      } catch (err) {
+        alert('রিকোয়েস্ট ব্যর্থ: ' + err.message);
+        phoneInput.disabled = false;
+      }
+    }
+
+    // Auto-refresh when status becomes connected
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.status === 'connected' && !${isConnected}) {
+          window.location.reload();
+        }
+      } catch (e) {}
+    }, 4000);
+  </script>
+</body>
+</html>`;
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+      return;
+    }
+
+    // Fallback 404
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  });
+
+  server.listen(port, () => {
+    console.log(`🌐 [Web Dashboard & Healthcheck]: Server running at http://localhost:${port}`);
+  });
+
+  return server;
+}
