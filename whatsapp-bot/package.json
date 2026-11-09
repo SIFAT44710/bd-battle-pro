@@ -1,0 +1,33 @@
+{
+  "name": "arena-x-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "Autonomous WhatsApp Bot for Free Fire Tournaments integrating Baileys, Firebase Firestore, and Google Gemini 1.5 Flash Vision",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node test-bot.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@whiskeysockets/baileys": "^6.7.12",
+    "dotenv": "^16.4.7",
+    "firebase": "^11.0.2",
+    "firebase-admin": "^13.0.1",
+    "pino": "^9.6.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "gemini",
+    "firestore",
+    "free-fire",
+    "tournament",
+    "esports"
+  ],
+  "author": "Sifat Bin Shahjahan",
+  "license": "ISC"
+}
