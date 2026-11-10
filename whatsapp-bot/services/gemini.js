@@ -2,7 +2,126 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config.js';
 
 let genAI = null;
-const CANDIDATE_MODELS = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+let modelCallCounter = 0;
+// Two primary high-limit shifting models (split 50/50 quota) + failover pool
+const ROTATING_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
+  'gemini-flash-latest'
+];
+
+/**
+ * Bengali numeral converter (০-৯ -> 0-9)
+ */
+export function normalizeBengaliNumerals(str) {
+  if (!str) return '';
+  const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  return str.toString().replace(/[০-৯]/g, d => bn.indexOf(d));
+}
+
+/**
+ * Resilient Offline Heuristic & RegEx Parser (Zero API Dependency Fallback)
+ * Works when Gemini API is rate-limited, quota exhausted, or network is down.
+ */
+export function parseBookingWithRegex(rawText) {
+  if (!rawText || typeof rawText !== 'string') {
+    return {
+      match_query: null,
+      slot_number: null,
+      squad_name: null,
+      leader_name: null,
+      player_names: [],
+      trx_id: null,
+      amount: null,
+      payment_method: null,
+      is_valid_booking: false
+    };
+  }
+
+  const norm = normalizeBengaliNumerals(rawText).trim();
+  const lower = norm.toLowerCase();
+
+  // 1. Payment Method
+  let payment_method = null;
+  if (/bkash|বিকাশ/i.test(lower)) payment_method = 'bkash';
+  else if (/nagad|নগদ/i.test(lower)) payment_method = 'nagad';
+  else if (/rocket|রকেট/i.test(lower)) payment_method = 'rocket';
+  else if (/upay|উপায়|উপায়/i.test(lower)) payment_method = 'upay';
+
+  // 2. Trx ID (Uppercase clean)
+  let trx_id = null;
+  const trxMatch = norm.match(/(?:trx\s*id|trx|trnx|txid|trans(?:action)?\s*id)[\s:=#\-]+([a-zA-Z0-9]{6,14})/i) ||
+                   norm.match(/\b([A-Z0-9]{8,12})\b/);
+  if (trxMatch) {
+    const candidate = trxMatch[1].toUpperCase();
+    const blacklist = ['BERMUDA', 'PURGATORY', 'TOURNAMENT', 'CHAMPIONSHIP', 'WHATSAPP', 'SQUAD', 'LEADER', 'PAYMENT'];
+    if (!blacklist.includes(candidate)) {
+      trx_id = candidate;
+    }
+  }
+
+  // 3. Amount (BDT)
+  let amount = null;
+  const explicitAmt = norm.match(/(?:amount|taka|টাকা|ফি|fee|paid|পাঠাইছি|দিছি|দিসি)[\s:=#\-]*([0-9]{2,5})/i) ||
+                      norm.match(/([0-9]{2,5})\s*(?:tk|taka|টাকা|৳)/i) ||
+                      norm.match(/(?:৳)\s*([0-9]{2,5})/i);
+  if (explicitAmt) {
+    amount = parseInt(explicitAmt[1], 10);
+  }
+
+  // 4. Slot Number (1 to 12)
+  let slot_number = null;
+  const slotMatch = norm.match(/(?:slot|স্লট)\s*[:#\-]?\s*([0-9]{1,2})/i) ||
+                    norm.match(/([0-9]{1,2})\s*(?:no|number|নম্বর)?\s*(?:slot|স্লট)/i);
+  if (slotMatch) {
+    const sn = parseInt(slotMatch[1], 10);
+    if (sn >= 1 && sn <= 12) slot_number = sn;
+  }
+
+  // 5. Squad Name
+  let squad_name = null;
+  const squadMatch = norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,25})/i);
+  if (squadMatch) {
+    squad_name = squadMatch[1].replace(/\s+(er\s+jonno|slot|lead|trx|leader|bkash|nagad|taka|টাকা).*/i, '').trim();
+  }
+
+  // 6. Leader Name
+  let leader_name = null;
+  const leadMatch = norm.match(/(?:leader|লিডার|lead|অধিনায়ক)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,20})/i);
+  if (leadMatch) {
+    leader_name = leadMatch[1].replace(/\s+(book|koren|koro|bhai|vai|squad|slot|trx|fee|paid|er\s+jonno|team).*/i, '').trim();
+  }
+
+  // 7. Match Query (Match 1, Bermuda, 8:30 PM, etc.)
+  let match_query = null;
+  const matchNum = norm.match(/(?:match|ম্যাচ)\s*[:#\-]?\s*([0-9]+)/i) || norm.match(/([0-9]+)\s*(?:no|number|নম্বর)?\s*(?:match|ম্যাচ)/i);
+  const timeMatch = norm.match(/([0-9]{1,2}:[0-9]{2}\s*(?:am|pm)?|[0-9]{1,2}\s*(?:am|pm))/i);
+
+  if (matchNum) {
+    match_query = 'Match ' + matchNum[1];
+  } else if (timeMatch) {
+    match_query = timeMatch[1].trim();
+  } else if (/bermuda|বারমুডা/i.test(lower)) {
+    match_query = 'Bermuda';
+  } else if (/purgatory|পার্গেটরি/i.test(lower)) {
+    match_query = 'Purgatory';
+  }
+
+  const is_valid_booking = !!(trx_id || squad_name || slot_number || match_query);
+
+  return {
+    match_query,
+    slot_number,
+    squad_name,
+    leader_name,
+    player_names: [],
+    trx_id,
+    amount,
+    payment_method,
+    is_valid_booking
+  };
+}
 
 function getGenAI() {
   if (!genAI) {
@@ -15,13 +134,20 @@ function getGenAI() {
 }
 
 /**
- * Generate Content with automatic multi-model failover
+ * Generate Content with automatic multi-model rotation & quota load-balancing
  */
 async function generateWithFailover(promptOrParts) {
   const ai = getGenAI();
   let lastError = null;
 
-  for (const modelName of CANDIDATE_MODELS) {
+  // Alternate starting model every call to distribute quota evenly across 2+ models
+  const startIndex = modelCallCounter++ % ROTATING_MODELS.length;
+  const prioritizedModels = [
+    ...ROTATING_MODELS.slice(startIndex),
+    ...ROTATING_MODELS.slice(0, startIndex)
+  ];
+
+  for (const modelName of prioritizedModels) {
     try {
       const model = ai.getGenerativeModel({
         model: modelName,
@@ -78,18 +204,8 @@ Return ONLY valid JSON.
     const text = await generateWithFailover(prompt);
     return JSON.parse(text);
   } catch (err) {
-    console.error('[Gemini Text Parse Error]:', err.message);
-    return {
-      match_query: null,
-      slot_number: null,
-      squad_name: null,
-      leader_name: null,
-      player_names: [],
-      trx_id: null,
-      amount: null,
-      payment_method: null,
-      is_valid_booking: false
-    };
+    console.warn('[Gemini Text Parse]: AI unavailable (' + err.message + '). Activating offline RegEx parser fallback...');
+    return parseBookingWithRegex(rawText);
   }
 }
 
@@ -141,14 +257,20 @@ Return ONLY valid JSON.
     const text = await generateWithFailover([prompt, imagePart]);
     return JSON.parse(text);
   } catch (err) {
-    console.error('[Gemini Vision Parse Error]:', err.message);
+    console.warn('[Gemini Vision Parse]: Vision unavailable (' + err.message + '). Falling back to caption analysis...');
+    const parsedCaption = parseBookingWithRegex(captionText || '');
     return {
-      trx_id: null,
-      amount: null,
-      payment_method: 'unknown',
-      status: 'FAILED',
-      is_valid_payment: false,
-      caption_booking_info: {}
+      trx_id: parsedCaption.trx_id || null,
+      amount: parsedCaption.amount || null,
+      payment_method: parsedCaption.payment_method || 'unknown',
+      status: parsedCaption.trx_id ? 'SUCCESS' : 'FAILED',
+      is_valid_payment: !!parsedCaption.trx_id,
+      caption_booking_info: {
+        slot_number: parsedCaption.slot_number,
+        squad_name: parsedCaption.squad_name,
+        leader_name: parsedCaption.leader_name,
+        match_query: parsedCaption.match_query
+      }
     };
   }
 }

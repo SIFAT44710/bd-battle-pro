@@ -85,12 +85,21 @@ export async function getTournamentData() {
 /**
  * Find the most relevant match based on player request
  */
-export function findTargetMatch(matches, query) {
+export function findTargetMatch(matches, query, autoFallback = false) {
   if (!matches || !matches.length) return null;
 
   // 1. If query specified, match by title, time, map, or match number
   if (query) {
     const q = query.toString().toLowerCase().trim();
+
+    // Check direct match number like "1", "2", "3" or "match 1"
+    const matchNumMatch = q.match(/match\s*([0-9]+)/i) || q.match(/^([0-9]+)$/);
+    if (matchNumMatch) {
+      const num = parseInt(matchNumMatch[1], 10);
+      const byNum = matches.find(m => m.matchNumber === num || (m.title && m.title.toLowerCase().includes(`match ${num}`)));
+      if (byNum) return byNum;
+    }
+
     const found = matches.find(m => {
       const title = (m.title || '').toLowerCase();
       const time = (m.time || '').toLowerCase();
@@ -101,14 +110,16 @@ export function findTargetMatch(matches, query) {
     if (found) return found;
   }
 
-  // 2. Default to first upcoming match with free slots
-  const firstUpcomingWithSlots = matches.find(m => {
-    if (m.status !== 'upcoming') return false;
-    const slots = m.slots || [];
-    return slots.some(s => !s.booked);
-  });
+  if (autoFallback) {
+    const firstUpcomingWithSlots = matches.find(m => {
+      if (m.status !== 'upcoming') return false;
+      const slots = m.slots || [];
+      return slots.some(s => !s.booked);
+    });
+    return firstUpcomingWithSlots || matches[0];
+  }
 
-  return firstUpcomingWithSlots || matches[0];
+  return null;
 }
 
 /**

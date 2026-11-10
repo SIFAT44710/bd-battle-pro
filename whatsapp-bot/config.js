@@ -31,6 +31,10 @@ export const config = {
     defaultEntryFee: Number(process.env.DEFAULT_ENTRY_FEE || 100),
     websiteUrl: process.env.WEBSITE_URL || 'https://ff-squad-arena-bd.web.app/player'
   },
+  contact: {
+    email: process.env.CONTACT_EMAIL || 'sifrarchitect@gmail.com',
+    phone: process.env.CONTACT_PHONE || '01791357521'
+  },
   bot: {
     debug: process.env.DEBUG_LOGS === 'true'
   }

@@ -1,5 +1,11 @@
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { normalizePhone } from './firestore.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const botState = {
   status: 'starting', // 'starting' | 'qr_ready' | 'pairing_ready' | 'connected' | 'disconnected'
@@ -43,6 +49,43 @@ export function startWebServer(port = process.env.PORT || 3000) {
         timestamp: new Date().toISOString()
       }));
       return;
+    }
+
+    // Direct APK / Gateway Download routes
+    if (url.pathname === '/apk/sifr-pay.apk' || url.pathname === '/download/apk') {
+      const candidates = [
+        path.resolve(__dirname, '../../apk/sifr-pay.apk'),
+        path.resolve(__dirname, '../apk/sifr-pay.apk'),
+        path.resolve('./apk/sifr-pay.apk')
+      ];
+      const found = candidates.find(p => fs.existsSync(p));
+      if (found) {
+        res.writeHead(200, {
+          'Content-Type': 'application/vnd.android.package-archive',
+          'Content-Disposition': 'attachment; filename="sifr-pay.apk"',
+          'Content-Length': fs.statSync(found).size
+        });
+        fs.createReadStream(found).pipe(res);
+        return;
+      }
+    }
+
+    if (url.pathname === '/apk/sifr-pay-gateway.zip' || url.pathname === '/download/zip') {
+      const candidates = [
+        path.resolve(__dirname, '../../apk/sifr-pay-gateway.zip'),
+        path.resolve(__dirname, '../apk/sifr-pay-gateway.zip'),
+        path.resolve('./apk/sifr-pay-gateway.zip')
+      ];
+      const found = candidates.find(p => fs.existsSync(p));
+      if (found) {
+        res.writeHead(200, {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': 'attachment; filename="sifr-pay-gateway.zip"',
+          'Content-Length': fs.statSync(found).size
+        });
+        fs.createReadStream(found).pipe(res);
+        return;
+      }
     }
 
     // 2. API to request WhatsApp Pairing Code (Mobile-Friendly, No QR needed!)
@@ -260,8 +303,12 @@ export function startWebServer(port = process.env.PORT || 3000) {
       `}
     `}
 
-    <div style="margin-top:16px; text-align:center; font-size:11px; color:#777;">
-      Free Fire Daily Squad Championship Engine • Author: Sifat Bin Shahjahan
+    <div style="margin-top:16px; text-align:center; font-size:11px; color:#888; border-top:1px solid #333; pt-2; padding-top:10px;">
+      <div>Free Fire Daily Squad Championship Engine • Author: Sifat Bin Shahjahan</div>
+      <div style="margin-top:4px; color:#25d366;">
+        <span>📧 <a href="mailto:sifrarchitect@gmail.com" style="color:#25d366; text-decoration:none;">sifrarchitect@gmail.com</a></span> • 
+        <span>📱 WhatsApp: 01791357521</span>
+      </div>
     </div>
   </div>
 

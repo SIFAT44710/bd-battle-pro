@@ -8,7 +8,7 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'path';
 import { parseBookingText, parsePaymentScreenshot } from './gemini.js';
-import { bookSlotInFirestore, normalizePhone } from './firestore.js';
+import { bookSlotInFirestore, normalizePhone, getTournamentData, findTargetMatch } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
 import { botState, registerSocket } from './server.js';
@@ -169,58 +169,118 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
     if (textResult.player_names && textResult.player_names.length) parsedData.player_names = textResult.player_names;
   }
 
+  // 3. Fetch Live Tournament Data from Firestore
+  let matches = [];
+  try {
+    const tourney = await getTournamentData();
+    matches = (tourney && tourney.data && tourney.data.matches) || [];
+  } catch (err) {
+    console.error('[Bot Fetch Tournament Error]:', err.message);
+  }
+
+  // 4. Resolve Target Match dynamically based on player's request or previous session
+  let targetMatch = null;
+  if (parsedData.match_query) {
+    targetMatch = findTargetMatch(matches, parsedData.match_query, false);
+    if (targetMatch) {
+      parsedData.targetMatchId = targetMatch.id || targetMatch.matchNumber;
+    }
+  } else if (existingSession.targetMatchId) {
+    targetMatch = matches.find(m => (m.id && m.id === existingSession.targetMatchId) || m.matchNumber === existingSession.targetMatchId);
+  }
+
   // Save merged state into session
   sessionManager.set(senderPhone, parsedData);
 
-  // 3. Conversational Checks: Do we have all required information?
-  // We need at least: (TrxID or valid payment) AND (Squad Name or player intent)
-  const hasPayment = !!parsedData.trx_id;
-  const hasSquad = !!parsedData.squad_name;
+  // STEP A: If no specific tournament/match is selected yet, ask the player to choose!
+  if (!targetMatch) {
+    const upcoming = matches.filter(m => m.status === 'upcoming');
+    let matchListText = '';
+    if (upcoming.length > 0) {
+      matchListText = upcoming.map((m, idx) => {
+        const freeCount = (m.slots || []).filter(s => !s.booked).length;
+        const num = m.matchNumber || (idx + 1);
+        return `🎮 *Match ${num}:* ${m.title || 'Daily Squad Clash'}\n   🗺️ ম্যাপ: ${m.map || 'Bermuda'} | ⏰ সময়: ${m.time || '08:30 PM'}\n   💰 এন্ট্রি ফি: ৳${m.entryFee || 100} | 🎯 খালি স্লট: ${freeCount}টি`;
+      }).join('\n\n');
+    } else {
+      matchListText = 'বর্তমানে কোনো আপকামিং টুর্নামেন্ট শিডিউল নেই।';
+    }
 
-  // Case A: Missing Payment (Player wants to book but hasn't paid or given TrxID)
-  if (!hasPayment) {
     const reply = `👋 স্বাগতম *ARENA X* ফ্রি ফায়ার টুর্নামেন্ট প্ল্যাটফর্মে!
 
-🏆 আপনার স্কোয়াড বুকিং করতে অনুগ্রহ করে এন্ট্রি ফি (৳${config.tournament.defaultEntryFee}) নিচের যেকোনো নম্বরে *Send Money* করুন:
+🏆 *আজকের লাইভ টুর্নামেন্ট শিডিউল:*
+━━━━━━━━━━━━━━━━━━━━━━━
+${matchListText}
+━━━━━━━━━━━━━━━━━━━━━━━
+👉 অনুগ্রহ করে আপনি কোন ম্যাচে অংশগ্রহণ করতে চান তা লিখে জানান (যেমন: *Match 1* বা *Match 2*)।
 
-📱 *বিকাশ (Personal):* 01791357521
-📱 *নগদ (Personal):* 01791357521
-📱 *রকেট (Personal):* 01791357521
-
-Send Money করার পর ফিরতি SMS-এর *TrxID* লিখে পাঠান অথবা পেমেন্টের একটি *স্ক্রিনশট* দিন।
-(সাথে আপনার স্কোয়াডের নাম লিখে পাঠাবেন)।`;
+📧 হেল্পলাইন / ইমেইল: sifrarchitect@gmail.com`;
 
     await sock.sendMessage(remoteJid, { text: reply });
     return;
   }
 
-  // Case B: Payment found, but Missing Squad Name
-  if (hasPayment && !hasSquad) {
-    const reply = `✅ ধন্যবাদ! আপনার *৳${parsedData.amount || config.tournament.defaultEntryFee}* পেমেন্ট সফলভাবে শনাক্ত হয়েছে (TrxID: *${parsedData.trx_id}*)।
+  // STEP B: Target match is confirmed! Use its dynamic entry fee
+  const requiredFee = Number(targetMatch.entryFee || 100);
+  const hasPayment = !!parsedData.trx_id;
+  const hasSquad = !!parsedData.squad_name;
 
-🎯 এবার অনুগ্রহ করে আপনার *স্কোয়াড নাম* এবং আপনি *কত নম্বর স্লটে* খেলতে চান তা লিখে পাঠান:
+  // Case 1: Missing Payment (Player wants to book but hasn't paid or given TrxID)
+  if (!hasPayment) {
+    const freeSlots = (targetMatch.slots || []).filter(s => !s.booked).map(s => '#' + s.slotNumber);
+    const reply = `🎯 *${targetMatch.title}*
+🗺️ ম্যাপ: ${targetMatch.map || 'Bermuda'} | ⏰ সময়: ${targetMatch.time || '08:30 PM'}
+💰 এন্ট্রি ফি: *৳${requiredFee}*
+🎯 খালি স্লটসমূহ: *${freeSlots.join(', ')}*
+
+বুকিং করতে অনুগ্রহ করে এন্ট্রি ফি (৳${requiredFee}) নিচের যেকোনো নম্বরে *Send Money* করুন:
+📱 *বিকাশ (Personal):* 01791357521
+📱 *নগদ (Personal):* 01791357521
+📱 *রকেট (Personal):* 01791357521
+
+Send Money করার পর ফিরতি SMS-এর *TrxID* এবং আপনার *স্কোয়াডের নাম* লিখে পাঠান (অথবা পেমেন্ট স্ক্রিনশট দিন)।`;
+
+    await sock.sendMessage(remoteJid, { text: reply });
+    return;
+  }
+
+  // Case 2: Payment found, but Missing Squad Name
+  if (hasPayment && !hasSquad) {
+    const paidAmount = parsedData.amount || requiredFee;
+    let feeNote = '';
+    if (parsedData.amount && parsedData.amount < requiredFee) {
+      feeNote = `\n⚠️ *সতর্কতা:* এই ম্যাচের এন্ট্রি ফি ৳${requiredFee}, তবে আপনার পেমেন্টে ৳${parsedData.amount} শনাক্ত হয়েছে।`;
+    }
+
+    const freeSlots = (targetMatch.slots || []).filter(s => !s.booked).map(s => '#' + s.slotNumber);
+    const reply = `✅ ধন্যবাদ! আপনার *৳${paidAmount}* পেমেন্ট সফলভাবে শনাক্ত হয়েছে (TrxID: *${parsedData.trx_id}*)।${feeNote}
+
+🎮 *ম্যাচ:* ${targetMatch.title}
+🎯 খালি স্লটসমূহ: *${freeSlots.join(', ')}*
+
+এবার অনুগ্রহ করে আপনার *স্কোয়াড নাম* এবং আপনি *কত নম্বর স্লটে* খেলতে চান তা লিখে পাঠান:
 (যেমন: *Squad Vortex, Slot 3, Leader Tanvir*)`;
 
     await sock.sendMessage(remoteJid, { text: reply });
     return;
   }
 
-  // Case C: Both Payment & Squad Details are ready -> Perform Automatic Firestore Booking!
-  console.log(`[Bot]: All details ready for ${senderPhone}. Booking slot in Firestore...`);
+  // Case 3: Both Payment & Squad Details are ready -> Perform Automatic Firestore Booking!
+  console.log(`[Bot]: All details ready for ${senderPhone} in ${targetMatch.title}. Booking slot in Firestore...`);
 
   await sock.sendMessage(remoteJid, {
     react: { text: '⏳', key: msg.key }
   });
 
   const bookingResult = await bookSlotInFirestore({
-    matchQuery: parsedData.match_query,
+    matchQuery: targetMatch.title || parsedData.match_query,
     preferredSlot: parsedData.slot_number,
     squadName: parsedData.squad_name,
     leaderName: parsedData.leader_name,
     playerNames: parsedData.player_names || [],
     contactPhone: senderPhone,
     trxId: parsedData.trx_id,
-    amount: parsedData.amount,
+    amount: parsedData.amount || requiredFee,
     paymentMethod: parsedData.payment_method
   });
 
