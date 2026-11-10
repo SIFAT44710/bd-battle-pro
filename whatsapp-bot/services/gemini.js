@@ -70,7 +70,21 @@ export function parseBookingWithRegex(rawText) {
     amount = parseInt(explicitAmt[1], 10);
   }
 
-  // 4. Slot Number (1 to 12)
+  // 1. Match Query (Match 1, Match 2, Match 4, Match 5, m4, m5, ম্যাচ ৪, ইত্যাদি)
+  let match_query = null;
+  const matchNum = norm.match(/(?:match|ম্যাচ|m)\s*[:#\-]?\s*([0-9]+)/i) || 
+                   norm.match(/([0-9]+)\s*(?:no|number|নম্বর)?\s*(?:match|ম্যাচ)/i);
+  if (matchNum) {
+    match_query = 'Match ' + matchNum[1];
+  } else if (/bermuda|বারমুডা/i.test(lower)) {
+    match_query = 'Bermuda';
+  } else if (/purgatory|পার্গেটরি/i.test(lower)) {
+    match_query = 'Purgatory';
+  } else if (/kalahari|কালাহারি/i.test(lower)) {
+    match_query = 'Kalahari';
+  }
+
+  // 2. Slot Number (1 to 12)
   let slot_number = null;
   const slotMatch = norm.match(/(?:slot|স্লট)\s*[:#\-]?\s*([0-9]{1,2})/i) ||
                     norm.match(/([0-9]{1,2})\s*(?:no|number|নম্বর)?\s*(?:slot|স্লট)/i);
@@ -79,11 +93,34 @@ export function parseBookingWithRegex(rawText) {
     if (sn >= 1 && sn <= 12) slot_number = sn;
   }
 
-  // 5. Squad Name
+  // 3. Line-by-line fallback for single numbers
+  const lines = norm.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!match_query || !slot_number) {
+    for (const line of lines) {
+      if (/^[0-9]{1,2}$/.test(line)) {
+        const num = parseInt(line, 10);
+        if (!slot_number && num >= 1 && num <= 12) {
+          slot_number = num;
+        } else if (!match_query && num >= 1 && num <= 10) {
+          match_query = 'Match ' + num;
+        }
+      }
+    }
+  }
+
+  // 4. Squad Name
   let squad_name = null;
-  const squadMatch = norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,25})/i);
+  const squadMatch = norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)(?:\s*name)?\s*[:=\-]\s*([^\n,]+)/i) ||
+                     norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,25})/i);
   if (squadMatch) {
     squad_name = squadMatch[1].replace(/\s+(er\s+jonno|slot|lead|trx|leader|bkash|nagad|taka|টাকা).*/i, '').trim();
+  }
+
+  // 5. Players
+  let player_names = [];
+  const playersMatch = norm.match(/(?:player|প্লেয়ার)(?:\s*name)?s?\s*[:=\-]\s*([^\n]+)/i);
+  if (playersMatch) {
+    player_names = playersMatch[1].split(/[,/&]+/).map(s => s.trim()).filter(Boolean);
   }
 
   // 6. Leader Name
@@ -91,21 +128,8 @@ export function parseBookingWithRegex(rawText) {
   const leadMatch = norm.match(/(?:leader|লিডার|lead|অধিনায়ক)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,20})/i);
   if (leadMatch) {
     leader_name = leadMatch[1].replace(/\s+(book|koren|koro|bhai|vai|squad|slot|trx|fee|paid|er\s+jonno|team).*/i, '').trim();
-  }
-
-  // 7. Match Query (Match 1, Bermuda, 8:30 PM, etc.)
-  let match_query = null;
-  const matchNum = norm.match(/(?:match|ম্যাচ)\s*[:#\-]?\s*([0-9]+)/i) || norm.match(/([0-9]+)\s*(?:no|number|নম্বর)?\s*(?:match|ম্যাচ)/i);
-  const timeMatch = norm.match(/([0-9]{1,2}:[0-9]{2}\s*(?:am|pm)?|[0-9]{1,2}\s*(?:am|pm))/i);
-
-  if (matchNum) {
-    match_query = 'Match ' + matchNum[1];
-  } else if (timeMatch) {
-    match_query = timeMatch[1].trim();
-  } else if (/bermuda|বারমুডা/i.test(lower)) {
-    match_query = 'Bermuda';
-  } else if (/purgatory|পার্গেটরি/i.test(lower)) {
-    match_query = 'Purgatory';
+  } else if (player_names.length > 0) {
+    leader_name = player_names[0];
   }
 
   const is_valid_booking = !!(trx_id || squad_name || slot_number || match_query);
@@ -115,7 +139,7 @@ export function parseBookingWithRegex(rawText) {
     slot_number,
     squad_name,
     leader_name,
-    player_names: [],
+    player_names,
     trx_id,
     amount,
     payment_method,

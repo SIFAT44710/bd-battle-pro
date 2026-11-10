@@ -9,7 +9,7 @@ import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
 import { parseBookingText, parsePaymentScreenshot } from './gemini.js';
-import { bookSlotInFirestore, normalizePhone, getTournamentData, findTargetMatch } from './firestore.js';
+import { bookSlotInFirestore, normalizePhone, getTournamentData, findTargetMatch, findRecentSmsLog } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
 import { botState, registerSocket } from './server.js';
@@ -174,7 +174,22 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
     if (textResult.player_names && textResult.player_names.length) parsedData.player_names = textResult.player_names;
   }
 
-  // 3. Fetch Live Tournament Data from Firestore
+  // 3. Auto-match payment from sms_logs in Firestore (if TrxID not yet in session)
+  if (!parsedData.trx_id) {
+    try {
+      const recentSms = await findRecentSmsLog(senderPhone);
+      if (recentSms && recentSms.trx_id) {
+        parsedData.trx_id = recentSms.trx_id;
+        parsedData.amount = recentSms.amount;
+        parsedData.payment_method = recentSms.method;
+        console.log(`[Bot]: Auto-matched SMS log for ${senderPhone}: TrxID=${recentSms.trx_id}, ৳${recentSms.amount}`);
+      }
+    } catch (e) {
+      console.warn('[Bot]: Error checking recent SMS logs:', e.message);
+    }
+  }
+
+  // 4. Fetch Live Tournament Data from Firestore
   let matches = [];
   try {
     const tourney = await getTournamentData();
@@ -183,26 +198,40 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
     console.error('[Bot Fetch Tournament Error]:', err.message);
   }
 
-  // 4. Resolve Target Match dynamically based on player's request or previous session
+  // 5. Resolve Target Match dynamically based on player's request
   let targetMatch = null;
+  const upcomingMatches = matches.filter(m => m.status === 'upcoming');
+
+  // If player explicitly specified a match (e.g. "Match 4", "Match 5", "m4", "4", "Bermuda"):
   if (parsedData.match_query) {
     targetMatch = findTargetMatch(matches, parsedData.match_query, false);
     if (targetMatch) {
       parsedData.targetMatchId = targetMatch.id || targetMatch.matchNumber;
     }
-  } else if (existingSession.targetMatchId) {
-    targetMatch = matches.find(m => (m.id && m.id === existingSession.targetMatchId) || m.matchNumber === existingSession.targetMatchId);
+  }
+
+  // If still not found, check existing session (only if that match is still upcoming)
+  if (!targetMatch && existingSession.targetMatchId) {
+    const prev = matches.find(m => (m.id && m.id === existingSession.targetMatchId) || m.matchNumber === existingSession.targetMatchId);
+    if (prev && prev.status === 'upcoming') {
+      targetMatch = prev;
+    }
+  }
+
+  // If there is ONLY ONE upcoming match in the whole tournament, auto-pick it:
+  if (!targetMatch && upcomingMatches.length === 1) {
+    targetMatch = upcomingMatches[0];
+    parsedData.targetMatchId = targetMatch.id || targetMatch.matchNumber;
   }
 
   // Save merged state into session
   sessionManager.set(senderPhone, parsedData);
 
-  // STEP A: If no specific tournament/match is selected yet, ask the player to choose!
+  // STEP A: If targetMatch is still undefined (multiple matches exist and player hasn't chosen one):
   if (!targetMatch) {
-    const upcoming = matches.filter(m => m.status === 'upcoming');
     let matchListText = '';
-    if (upcoming.length > 0) {
-      matchListText = upcoming.map((m, idx) => {
+    if (upcomingMatches.length > 0) {
+      matchListText = upcomingMatches.map((m, idx) => {
         const freeCount = (m.slots || []).filter(s => !s.booked).length;
         const num = m.matchNumber || (idx + 1);
         return `🎮 *Match ${num}:* ${m.title || 'Daily Squad Clash'}\n   🗺️ ম্যাপ: ${m.map || 'Bermuda'} | ⏰ সময়: ${m.time || '08:30 PM'}\n   💰 এন্ট্রি ফি: ৳${m.entryFee || 100} | 🎯 খালি স্লট: ${freeCount}টি`;
@@ -213,13 +242,21 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
 
     const reply = `👋 স্বাগতম *ARENA X* ফ্রি ফায়ার টুর্নামেন্ট প্ল্যাটফর্মে!
 
-🏆 *আজকের লাইভ টুর্নামেন্ট শিডিউল:*
+🏆 *বর্তমানে একাধিক ম্যাচ চালু রয়েছে:*
 ━━━━━━━━━━━━━━━━━━━━━━━
 ${matchListText}
 ━━━━━━━━━━━━━━━━━━━━━━━
-👉 অনুগ্রহ করে আপনি কোন ম্যাচে অংশগ্রহণ করতে চান তা লিখে জানান (যেমন: *Match 1* বা *Match 2*)।
 
-📧 হেল্পলাইন / ইমেইল: sifrarchitect@gmail.com`;
+👉 *স্লট বুক করতে নিচের যেকোনো একটি ফরম্যাটে মেসেজ দিন:*
+
+📋 *বুকিং ফরম্যাট (কপি করে পাঠান):*
+ম্যাচ: Match 4 (অথবা Match 5)
+স্লট: ৫ (১-১২ এর মধ্যে)
+টিম: আপনার স্কোয়াড নাম
+প্লেয়ার: ১, ২, ৩, ৪
+TrxID: বিকাশ/নগদ ফিরতি SMS-এর ট্রানজেকশন আইডি
+
+*(অথবা এক লাইনে লিখুন: Match 4, Slot 5, Team Venom, TrxID XXXXXXXXX)*`;
 
     await sock.sendMessage(remoteJid, { text: reply });
     return;
@@ -243,7 +280,16 @@ ${matchListText}
 📱 *নগদ (Personal):* 01791357521
 📱 *রকেট (Personal):* 01791357521
 
-Send Money করার পর ফিরতি SMS-এর *TrxID* এবং আপনার *স্কোয়াডের নাম* লিখে পাঠান (অথবা পেমেন্ট স্ক্রিনশট দিন)।`;
+Send Money করার পর নিচের ফরম্যাটে ফিরতি SMS-এর *TrxID* এবং আপনার *স্কোয়াডের নাম* লিখে পাঠান:
+
+📋 *বুকিং ফরম্যাট (কপি করে পাঠান):*
+ম্যাচ: ${targetMatch.matchNumber || 4}
+স্লট: ${freeSlots[0] ? freeSlots[0].replace('#', '') : '১'}
+টিম: আপনার স্কোয়াড নাম
+প্লেয়ার: ১, ২, ৩, ৪
+TrxID: আপনার বিকাশ/নগদ TrxID
+
+*(অথবা সরাসরি পেমেন্ট স্ক্রিনশট সেন্ড করুন)*`;
 
     await sock.sendMessage(remoteJid, { text: reply });
     return;

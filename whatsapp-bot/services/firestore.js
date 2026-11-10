@@ -187,7 +187,7 @@ export async function bookSlotInFirestore({
   const { data, update } = await getTournamentData();
   const matches = data.matches || [];
 
-  const targetMatch = findTargetMatch(matches, matchQuery);
+  const targetMatch = findTargetMatch(matches, matchQuery, true);
   if (!targetMatch) {
     return {
       success: false,
@@ -278,4 +278,34 @@ export function normalizePhone(rawPhone) {
     clean = clean.slice(2);
   }
   return clean;
+}
+
+/**
+ * Find recent verified SMS payment from Firestore sms_logs for this player's phone
+ */
+export async function findRecentSmsLog(senderPhone) {
+  try {
+    const cleanPhone = normalizePhone(senderPhone);
+    const res = await fetch('https://firestore.googleapis.com/v1/projects/ff-squad-arena-bd/databases/(default)/documents/sms_logs');
+    if (!res.ok) return null;
+    const json = await res.json();
+    const docs = json.documents || [];
+    for (const d of docs) {
+      const fields = d.fields || {};
+      const sender = fields.sender?.stringValue || '';
+      const cleanSender = normalizePhone(sender);
+      if (cleanSender && (cleanSender === cleanPhone || cleanSender.includes(cleanPhone) || cleanPhone.includes(cleanSender))) {
+        return {
+          trx_id: fields.trxId?.stringValue,
+          amount: fields.amount?.doubleValue || 0,
+          method: fields.method?.stringValue || 'bKash',
+          sender: sender,
+          timestamp: fields.timestamp?.stringValue
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[Firestore findRecentSmsLog error]:', err.message);
+  }
+  return null;
 }
