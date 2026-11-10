@@ -1,0 +1,422 @@
+================================================================================
+          BD BATTLE PRO (ARENA X) — MASTER PRODUCT REQUIREMENTS DOCUMENT (PRD)
+                   & COMPLETE SYSTEM SPECIFICATION ARCHITECTURE
+================================================================================
+
+Document Version : 2.0.0 (Production Release)
+Project Codename : bd-battle-pro / ARENA X Esports Engine
+Lead Architect   : Sifat Bin Shahjahan (Bangladesh)
+Official Contact : sifrarchitect@gmail.com
+WhatsApp Contact : +8801791357521
+Official Web     : https://ff-squad-arena-bd.web.app
+GitHub Repository: https://github.com/SIFAT44710/bd-battle-pro.git
+Generated On     : November 10, 2026
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1. EXECUTIVE SUMMARY & MISSION STATEMENT
+2. BANGLADESH ESPORTS MARKET PROBLEM & UNIQUE SOLUTION MATRIX
+3. SYSTEM ARCHITECTURE & TECHNOLOGY STACK
+4. COMPLETE MODULE-BY-MODULE FUNCTIONAL REQUIREMENTS
+   - Module 1: Public Showcase & Sales Landing Page
+   - Module 2: Player Experience Portal (Live Slot Grid & Room Vault)
+   - Module 3: Organizer Admin Headquarters & Control Center
+   - Module 4: Autonomous WhatsApp AI Booking Bot (Baileys Engine)
+   - Module 5: SifrPay SMS Gateway Android Native Application (APK)
+   - Module 6: AI Scoreboard OCR & Automated FFWS Points Table Engine
+5. FIRESTORE DATABASE SCHEMA & DATA DICTIONARY
+6. SECURITY, OBFUSCATION & ANTI-FRAUD SPECIFICATIONS
+7. CLOUD DEPLOYMENT & 24/7 HOSTING INFRASTRUCTURE
+8. COMPLETE USER JOURNEYS (PLAYER & ORGANIZER)
+9. IMPLEMENTATION STATUS (COMPLETED VS ROADMAP)
+
+================================================================================
+1. EXECUTIVE SUMMARY & MISSION STATEMENT
+================================================================================
+BD Battle Pro (commercialized as ARENA X) is Bangladesh's first dedicated, 
+mobile-first tournament operating system tailored specifically for Free Fire 
+12-Squad competitive matches.
+
+In Bangladesh, over 10,000 independent gaming communities and organizers run 
+daily Free Fire custom room tournaments. Currently, 99% of these organizers 
+manage their matches manually through WhatsApp groups and Messenger chats. This 
+manual workflow is plagued by:
+- Hundreds of chaotic inbox messages per match.
+- Fraudulent players sending edited fake bKash/Nagad payment screenshots or 
+  recycled Transaction IDs (TrxID).
+- Slow, manual slot allocation prone to double-booking.
+- Leakage of Custom Room IDs and Passwords to non-paying players.
+- Manual end-game scoreboard counting, resulting in disputes and delayed prize payouts.
+
+BD Battle Pro eliminates this chaos by providing an end-to-end autonomous, 
+zero-commission tournament platform that automates payment verification, slot 
+reservation, room credential distribution, and scoreboard generation.
+
+================================================================================
+2. BANGLADESH ESPORTS MARKET PROBLEM & UNIQUE SOLUTION MATRIX
+================================================================================
++-------------------------------+----------------------------------------------+
+| TRADITIONAL PROBLEM           | BD BATTLE PRO / ARENA X ARCHITECTURAL FIX   |
++-------------------------------+----------------------------------------------+
+| 1. Fake Payment Screenshots   | SifrPay Android SMS Gateway intercepts raw   |
+|    & Recycled TrxIDs          | SMS from 16247 (bKash) and 16167 (Nagad),    |
+|                               | cryptographically validates TrxIDs in        |
+|                               | Firestore, rejecting duplicates instantly.   |
++-------------------------------+----------------------------------------------+
+| 2. Endless Manual Booking     | Autonomous 24/7 WhatsApp AI Bot greets       |
+|    Messages on WhatsApp       | players, dynamically displays live matches,  |
+|                               | validates specific entry fees, and books     |
+|                               | slots in Firestore automatically.            |
++-------------------------------+----------------------------------------------+
+| 3. Leaked Custom Room Pass    | Credentials are locked in a phone-verified   |
+|    to Random Players          | vault and released strictly 15 minutes before|
+|                               | match start ONLY to registered squad leaders.|
++-------------------------------+----------------------------------------------+
+| 4. Manual Scoreboard Math &   | Built-in Google Gemini Vision AI OCR parses  |
+|    Point Disputes             | Free Fire end-game result screenshots and    |
+|                               | calculates FFWS kill and placement points.   |
++-------------------------------+----------------------------------------------+
+| 5. High SaaS Gateway Fees     | Zero-commission model: Payments go directly  |
+|    (e.g., 2.5% to 4%)         | to the organizer's personal bKash/Nagad      |
+|                               | accounts with 0% intermediate deductions.    |
++-------------------------------+----------------------------------------------+
+
+================================================================================
+3. SYSTEM ARCHITECTURE & TECHNOLOGY STACK
+================================================================================
+3.1 Frontend & User Interface:
+- Framework: HTML5, Modern ECMAScript (ES2022+), Tailwind CSS (CDN-delivered).
+- Theme & Aesthetic: Facebook-Grade Sharp Dark UI (#18191a Canvas, #242526 Card 
+  Surfaces, #3a3b3c Borders, #1877f2 Primary Blue Accent, #25d366 Green Accents).
+- Responsive Design: 100dvh dynamic viewport height, optimized touch targets (48px+), 
+  bottom navigation bar on mobile phones (MobileNav).
+- Typography: Google Fonts "Hind Siliguri" (Bengali) + "Inter" (Latin/English).
+- Currency: Exclusively BDT (৳ / Taka), formatted with Bengali/English numerals.
+
+3.2 Backend, Realtime & Cloud Infrastructure:
+- Database: Google Cloud Firestore (Realtime snapshots via onSnapshot).
+- Authentication: Anonymous Firebase Auth + Session-based Admin Passcode Vault.
+- Hosting: Google Firebase Hosting (Spark Tier, Global SSD CDN, HTTP/2 & HTTP/3).
+- Bot Hosting: Render.com Cloud Web Service (Node.js 20 Linux Container).
+- Keepalive Engine: Cron keepalive ping (/ping) to keep free cloud host 24/7 awake.
+
+3.3 AI & Machine Learning:
+- Primary AI Engine: Google Generative AI (Gemini 2.0 Flash & Gemini 1.5 Flash).
+- Multi-Model Quota Balancing: 50/50 round-robin rotation to avoid 429 rate limits.
+- Vision OCR: Multimodal payment receipt and Free Fire scoreboard parsing.
+- Offline NLP Fallback: Zero-dependency Banglish/Bengali RegEx & Heuristic Parser.
+
+3.4 Mobile Native Gateway:
+- Runtime: Native Android (Kotlin, Gradle 8.13, Android SDK 34, Min SDK 23).
+- Architecture: Android Service, BroadcastReceiver, Room Database, WorkManager.
+- Security: Zero-setup automated credential generation; no merchant setup dialog.
+
+================================================================================
+4. COMPLETE MODULE-BY-MODULE FUNCTIONAL REQUIREMENTS
+================================================================================
+
+--------------------------------------------------------------------------------
+MODULE 1: PUBLIC SHOWCASE & SALES LANDING PAGE (index.html)
+--------------------------------------------------------------------------------
+1. Purpose: Showcases the tournament platform capabilities to prospective 
+   tournament organizers, esports teams, and platform buyers.
+2. Hero Section:
+   - Dynamic headline: "বাংলাদেশের সবচেয়ে দ্রুতগতির ও নির্ভরযোগ্য ফ্রি ফায়ার স্কোয়াড এরিনা"
+   - Subtitle emphasizing 12-Squad instant booking, zero-scam verification, and 
+     automated room release.
+   - Primary Call-to-Action (CTA):
+     * "📱 হোয়াটসঅ্যাপে যোগাযোগ ও অর্ডার" (direct link to WhatsApp +8801791357521).
+     * "📧 ইমেইল: sifrarchitect@gmail.com" (direct mailto link).
+   - Secondary Quick Links:
+     * "🎮 প্লেয়ার পোর্টাল ডেমো" -> links to /player.
+     * "🔐 অ্যাডমিন প্যানেল ডেমো" -> links to /admin.
+3. Feature Showcase Cards:
+   - 12-Squad Interactive Grid (Real-time slot lock/booking).
+   - SifrPay Android SMS Gateway (100% automated TrxID matching).
+   - Autonomous WhatsApp Bot (24/7 AI-powered player registration).
+   - AI Scoreboard OCR (Automatic FFWS points table).
+   - Phone-Locked Room Vault (Eliminates room pass leaks).
+4. Pricing & Packaging Section:
+   - Completely free of hardcoded price numbers (as per user directive).
+   - "Custom Starter Pack" & "Enterprise Full Suite" cards with direct contact CTAs.
+5. Footer:
+   - Copyright © 2026 ARENA X Bangladesh. Developed by Sifat Bin Shahjahan.
+   - Contact links: sifrarchitect@gmail.com | +8801791357521.
+
+--------------------------------------------------------------------------------
+MODULE 2: PLAYER EXPERIENCE PORTAL (player.html / /player)
+--------------------------------------------------------------------------------
+1. Purpose: The primary interface for competitive players to inspect match schedules, 
+   book squad slots, submit payment details, and retrieve Room IDs/passwords.
+2. Stacked Match Carousel / Feed:
+   - Displays all active matches for the day (e.g., Match 1, Match 2, Match 3).
+   - Displays match number, title, map (Bermuda, Purgatory, Alpine, etc.), time, 
+     entry fee (৳BDT), prize pool, and available slot count.
+   - Live status badges: "UPCOMING (শিডিউলড)", "LIVE (চলমান)", "FINISHED (সমাপ্ত)".
+3. 12-Squad Slot Grid:
+   - Renders exactly 12 squad slots in a responsive 2-column or 3-column layout.
+   - Each slot displays: Slot Number (#01 to #12), Status (Available / Booked), 
+     Squad Name (if booked), and Leader Name.
+   - Visual distinction: Free slots have glowing border with green "বুক করুন" button. 
+     Booked slots are muted with a lock icon.
+4. Instant Slot Booking Modal:
+   - Clicking an available slot opens the booking modal.
+   - Fields: Squad Name (required), Leader Name (required), Contact WhatsApp Phone 
+     (required for room password retrieval), Payment Method (bKash/Nagad/Rocket), 
+     Transaction ID (TrxID) (required).
+   - 1-Tap Copy Buttons: Allows player to copy organizer's bKash/Nagad personal 
+     number in one click.
+   - Dynamic Fee Display: Clearly shows the exact entry fee for the selected match.
+   - Instant Client-side Validation: Enforces uppercase TrxID, 11-digit phone numbers.
+5. Secure Room ID & Password Access Vault:
+   - Sits below the slot grid.
+   - Features a countdown timer: "রুম আইডি ও পাসওয়ার্ড ম্যাচ শুরুর ১৫ মিনিট আগে আনলক হবে।"
+   - Unlocking Mechanism: The player enters their 11-digit WhatsApp phone number.
+   - If that phone number matches an approved booking in the active match, the Room ID 
+     and Room Password are decrypted and displayed with 1-tap copy buttons.
+   - Non-registered numbers receive: "⚠️ এই নম্বরে কোনো ভেরিফাইড বুকিং পাওয়া যায়নি।"
+
+--------------------------------------------------------------------------------
+MODULE 3: ORGANIZER ADMIN HEADQUARTERS & CONTROL CENTER (admin.html / /admin)
+--------------------------------------------------------------------------------
+1. Security Access Gate:
+   - Protected by administrative passcode (default: ARENA2026).
+   - Stored in browser sessionStorage; invalid attempts are blocked.
+2. Real-Time Financial Ledger & Inflow Analytics:
+   - Live KPI cards: Total Registered Squads, Confirmed Cash Inflow (৳BDT), 
+     Total Prize Pool Committed (৳BDT), Net Organizer Profit (৳BDT).
+   - Automatic calculations update instantly when slots are booked or released.
+3. Match Management & Creation Engine:
+   - "Create New Match" modal: Allows admin to create Match 1, 2, 3, etc.
+   - Fields: Match Title, Map (dropdown: Bermuda, Purgatory, Alpine, Kalahari, Nexterra), 
+     Match Time (e.g., 08:30 PM), Entry Fee per Squad (৳), Prize Pool (৳).
+   - Edit / Delete existing matches with instantaneous Firestore sync.
+4. 12-Slot Operations Grid:
+   - Real-time list of all 12 slots for each match.
+   - Detailed inspection: View Squad Name, Leader Name, Phone, Payment Method, TrxID.
+   - Slot Actions:
+     * "স্লট খালি করুন (Kick / Reset Slot)" -> resets slot to available.
+     * "স্লট লক করুন (Lock Slot)" -> reserves slot for VIP / invited teams.
+5. Custom Room ID & Password Release Controller:
+   - Admin inputs the Room ID and Password once created in Free Fire game client.
+   - Toggle switch: "প্লেয়ারদের জন্য আনলক করুন (Show Credentials to Players)".
+   - When enabled, players can decrypt credentials on player.html using their phone.
+6. Payment Gateway Setup Card:
+   - Form to update organizer's bKash Personal Number, Nagad Personal Number, and 
+     Rocket Personal Number.
+   - Syncs to Firestore tournament document; changes reflect on player portal instantly.
+7. Android SMS Gateway APK Download Card:
+   - Provides 1-click download of the SifrPay SMS Gateway APK package:
+     URL: https://ff-squad-arena-bd.web.app/apk/sifr-pay-gateway.zip
+   - Explains installation on admin's phone for automatic SMS TrxID reconciliation.
+8. AI Scoreboard OCR & Points Table Generator:
+   - Admin uploads an end-game screenshot of the Free Fire match results.
+   - Gemini Vision analyzes the screenshot, extracts each squad's kills and final rank.
+   - Automatically computes FFWS standard points:
+     * Rank 1 = 12 pts, Rank 2 = 9 pts, Rank 3 = 8 pts, etc.
+     * Kill Points = 1 pt per kill.
+   - Renders a clean points table ready for broadcast and distribution.
+
+--------------------------------------------------------------------------------
+MODULE 4: AUTONOMOUS WHATSAPP AI BOOKING BOT (whatsapp-bot)
+--------------------------------------------------------------------------------
+1. Engine & Runtime:
+   - Built on @whiskeysockets/baileys (WhatsApp Web Multi-Device protocol).
+   - Standalone Node.js service running 24/7 on Render.com cloud container.
+2. Mobile-First Web Pairing Code Interface (server.js):
+   - Solves the mobile-only organizer challenge: Organizers who only have a 
+     smartphone do NOT need a PC or second camera to scan QR codes.
+   - Built-in web server exposes port 3000 (or $PORT) with a Facebook Dark UI.
+   - Organizer opens the URL on their phone, enters their WhatsApp phone number, 
+     and clicks "Get Pairing Code".
+   - Bot calls sock.requestPairingCode(phone) and displays an 8-character code.
+   - Organizer types the code into WhatsApp > Linked Devices > Link with phone number.
+3. Conversational Booking Flow (services/whatsapp.js):
+   - Step 1 (Match Discovery): When a player sends a message, bot fetches live 
+     matches from Firestore. If no match is specified, bot replies with a clean 
+     list of all active matches, maps, times, specific entry fees, and free slots.
+     It asks the player: "👉 আপনি কোন ম্যাচে অংশগ্রহণ করতে চান? (যেমন: Match 1 বা Match 2)"
+   - Step 2 (Fee & Payment): Once match is selected, bot requests Send Money for 
+     THAT specific match's entry fee (e.g. ৳100 or ৳150) to the organizer's numbers.
+   - Step 3 (Payment Verification): Accepts text TrxID or multimodal screenshot. 
+     Validates amount against match entry fee.
+   - Step 4 (Squad Details): Collects squad name, leader name, and preferred slot.
+   - Step 5 (Atomic Booking): Calls bookSlotInFirestore. If slot is occupied, bot 
+     politely lists all remaining free slots. If successful, bot returns full 
+     ticket confirmation and website link for room password retrieval.
+4. Resilient Multi-Model AI & Offline Fallback:
+   - 50/50 round-robin rotation between gemini-2.0-flash and gemini-1.5-flash to 
+     distribute API call volume and avoid rate limits.
+   - Built-in parseBookingWithRegex fallback: If Gemini API quota expires or returns 
+     401/429, bot automatically parses Banglish text, extracting slot numbers, squad 
+     names, leader names, and TrxIDs with zero downtime.
+
+--------------------------------------------------------------------------------
+MODULE 5: SIFRPAY SMS GATEWAY ANDROID APPLICATION (APK)
+--------------------------------------------------------------------------------
+1. Package: com.sifr.ruxspeed (SifrPay / RuxSpeed Gateway Engine).
+2. Key Features:
+   - Android NotificationListenerService intercepts notifications from bKash (16247) 
+     and Nagad (16167).
+   - BroadcastReceiver listens for incoming SMS messages even when screen is off.
+   - MFS Parser extracts TrxID and numerical amount using high-precision regex.
+   - Room Database persists all intercepted transactions locally.
+   - Zero-Setup Experience: Setup dialog and merchant ID/secret key inputs are 
+     completely bypassed; app opens directly to active monitoring screen.
+   - Dual-SIM support (SIM 1 and SIM 2 detection).
+   - OEM Battery optimization bypass guidance for Xiaomi, Samsung, Vivo, Oppo.
+
+--------------------------------------------------------------------------------
+MODULE 6: ANTI-THEFT SOURCE CODE PROTECTION (protect-build.js)
+--------------------------------------------------------------------------------
+1. Workflow:
+   - Source code maintained cleanly in src_backup/ (unminified, fully commented).
+   - Node.js script protect-build.js compiles src_backup/ into public HTML files.
+   - Inlines and obfuscates all JavaScript modules using javascript-obfuscator 
+     with control flow flattening and string encoding.
+   - Injects Safe Client Guard: Disables desktop right-click and DevTools hotkeys 
+     (F12, Ctrl+Shift+I, Ctrl+U) to deter casual script copying.
+   - Mobile exemption: NEVER interferes with mobile touch, scrolling, or responsiveness.
+
+================================================================================
+5. FIRESTORE DATABASE SCHEMA & DATA DICTIONARY
+================================================================================
+Collection : tournaments
+Document ID: ff-daily-squad
+
+{
+  "tournamentName": "Free Fire Daily Squad Championship",
+  "bannerUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e",
+  "adminPasscode": "ARENA2026",
+  "paymentSettings": {
+    "bkash": "01791357521",
+    "nagad": "01791357521",
+    "rocket": "01791357521",
+    "manualFee": 100
+  },
+  "matches": [
+    {
+      "id": "match-1",
+      "matchNumber": 1,
+      "title": "Match 1: Bermuda Squad Championship",
+      "map": "Bermuda",
+      "time": "08:30 PM",
+      "entryFee": 100,
+      "prizePool": 800,
+      "roomId": "9283741",
+      "roomPass": "7788",
+      "showIdPass": false,
+      "status": "upcoming",
+      "slots": [
+        {
+          "slotNumber": 1,
+          "booked": true,
+          "squadName": "Vortex Elite",
+          "leaderName": "Tanvir",
+          "contactPhone": "01791357521",
+          "trxId": "BL9204918",
+          "feePaid": 100,
+          "paymentMethod": "bkash",
+          "bookedAt": "2026-11-10T08:00:00Z"
+        },
+        {
+          "slotNumber": 2,
+          "booked": false,
+          "squadName": null,
+          "leaderName": null,
+          "contactPhone": null,
+          "trxId": null,
+          "feePaid": 0,
+          "paymentMethod": null,
+          "bookedAt": null
+        }
+        // ... slots 3 through 12
+      ]
+    }
+  ]
+}
+
+================================================================================
+6. SECURITY, OBFUSCATION & ANTI-FRAUD SPECIFICATIONS
+================================================================================
+1. TrxID Duplicate Detection:
+   - When a slot booking is submitted, firestore.js queries all existing slots 
+     across all matches for the submitted TrxID.
+   - If a match is found, the transaction is rejected with error DUPLICATE_TRXID, 
+     preventing fraudulent multiple bookings with one payment.
+2. Phone Verification for Room Access:
+   - Room credentials are never broadcast globally.
+   - The player client requires matching the exact 11-digit mobile number registered 
+     at the time of slot booking.
+3. Obfuscation & Build Isolation:
+   - Developer maintains readable code in src_backup/.
+   - Production build outputs encrypted scripts into root index.html, player.html, 
+     and admin.html.
+
+================================================================================
+7. CLOUD DEPLOYMENT & 24/7 HOSTING INFRASTRUCTURE
+================================================================================
+1. Web Hosting (Firebase):
+   - Project ID: ff-squad-arena-bd
+   - Hosting URL: https://ff-squad-arena-bd.web.app
+   - Config: firebase.json rewrites /player to /player.html and /admin to /admin.html.
+   - Static Gateway Download: /apk/sifr-pay-gateway.zip served directly via CDN.
+2. Bot Hosting (Render.com):
+   - Service: Web Service running on Node.js Docker container (node:20-alpine).
+   - Source: GitHub SIFAT44710/bd-battle-pro (branch: main).
+   - Keepalive: GET /ping returns 200 OK to prevent spin-down on Render free tier.
+   - Environment Variables:
+     * PORT: 10000
+     * GEMINI_API_KEY: Configured for dual-model rotation
+     * TOURNAMENT_DOC_ID: ff-daily-squad
+     * DEFAULT_ENTRY_FEE: 100
+     * CONTACT_EMAIL: sifrarchitect@gmail.com
+     * CONTACT_PHONE: 01791357521
+
+================================================================================
+8. COMPLETE USER JOURNEYS
+================================================================================
+8.1 Player Registration Journey:
+1. Player clicks tournament link or messages the WhatsApp Bot.
+2. Player views active matches, entry fees, and open slots.
+3. Player chooses match, sends entry fee via bKash/Nagad Send Money.
+4. Player submits TrxID and Squad Name on website or via WhatsApp Bot.
+5. System verifies TrxID, locks the chosen slot, and updates realtime grid.
+6. 15 minutes before match, player visits website, enters phone number, unlocks 
+   Room ID & Password, and joins the custom room in Free Fire.
+
+8.2 Organizer Operations Journey:
+1. Organizer logs into /admin with passcode ARENA2026.
+2. Creates daily matches (e.g. Match 1 Bermuda at 8:30 PM, Match 2 Purgatory at 9:30 PM).
+3. Connects WhatsApp Bot in 1 minute using 8-digit mobile pairing code.
+4. Keeps SifrPay Gateway APK running on bKash phone to verify SMS in background.
+5. Monitors live inflow and squad registrations on the admin dashboard.
+6. Enters Room ID & Password at 8:15 PM and toggles reveal switch.
+7. Uploads end-game screenshot at 9:00 PM; AI generates official points table.
+
+================================================================================
+9. IMPLEMENTATION STATUS (COMPLETED VS ROADMAP)
+================================================================================
+[COMPLETED & LIVE IN PRODUCTION]
+✓ Responsive Facebook Dark UI for Player & Admin interfaces.
+✓ Realtime Firestore synchronization across all connected clients.
+✓ Phone-locked Custom Room ID & Password release countdown.
+✓ SifrPay Android SMS Gateway APK (zero-dialog clean build v1.3).
+✓ Direct .zip download of Gateway APK from Firebase Hosting.
+✓ Autonomous WhatsApp Bot with Baileys client.
+✓ Mobile-First 8-digit WhatsApp Pairing Code interface (no PC/QR required).
+✓ Dynamic match selection & match-specific entry fee prompt in WhatsApp bot.
+✓ Dual-model Gemini AI rotation (Gemini 2.0 Flash + 1.5 Flash) with offline 
+  Banglish RegEx NLP fallback.
+✓ Anti-theft JavaScript obfuscation and client-side protection build.
+✓ Clean pricing representation & official contact (sifrarchitect@gmail.com).
+
+[FUTURE ENHANCEMENTS / ROADMAP]
+- Automated WhatsApp broadcast message with Room ID/Pass directly to squad leaders.
+- Knockout tournament bracket visualizer (for 24-squad or 48-squad mega cups).
+- Automated bKash Merchant API integration for automated prize pool disbursement.
+
+================================================================================
+END OF SPECIFICATION DOCUMENT
+================================================================================

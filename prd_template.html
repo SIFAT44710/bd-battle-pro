@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>BD Battle Pro (ARENA X) — Master PRD & System Architecture</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 16mm 16mm 16mm;
+  }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #ffffff;
+    line-height: 1.5;
+    font-size: 11pt;
+  }
+  h1 {
+    font-size: 20pt;
+    color: #0d47a1;
+    margin-bottom: 2px;
+    border-bottom: 3px solid #0d47a1;
+    padding-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 12pt;
+    color: #455a64;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .meta-box {
+    background: #f0f4f8;
+    border-left: 4px solid #1976d2;
+    padding: 10px 14px;
+    font-size: 9.5pt;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+  .meta-box table { width: 100%; border-collapse: collapse; }
+  .meta-box td { padding: 3px 0; }
+  h2 {
+    font-size: 13pt;
+    color: #1565c0;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #cfd8dc;
+    padding-bottom: 4px;
+  }
+  h3 {
+    font-size: 11pt;
+    color: #263238;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  p, li {
+    font-size: 9.5pt;
+    color: #263238;
+    text-align: justify;
+  }
+  ul {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 9pt;
+  }
+  table.data-table th, table.data-table td {
+    border: 1px solid #b0bec5;
+    padding: 6px 8px;
+    text-align: left;
+  }
+  table.data-table th {
+    background: #eceff1;
+    color: #1a237e;
+    font-weight: 700;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: 700;
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .code-block {
+    background: #263238;
+    color: #eceff1;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 8.5pt;
+    white-space: pre-wrap;
+    margin: 8px 0;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<h1>BD BATTLE PRO (ARENA X)</h1>
+<div class="subtitle">Master Product Requirements Document (PRD) &amp; Technical Architecture Specification</div>
+
+<div class="meta-box">
+  <table>
+    <tr>
+      <td><strong>Lead Architect &amp; Owner:</strong> Sifat Bin Shahjahan (Bangladesh)</td>
+      <td><strong>Platform Codename:</strong> bd-battle-pro / ARENA X</td>
+    </tr>
+    <tr>
+      <td><strong>Official Email:</strong> sifrarchitect@gmail.com</td>
+      <td><strong>WhatsApp Contact:</strong> +8801791357521</td>
+    </tr>
+    <tr>
+      <td><strong>Live Production URL:</strong> https://ff-squad-arena-bd.web.app</td>
+      <td><strong>GitHub Repository:</strong> SIFAT44710/bd-battle-pro</td>
+    </tr>
+    <tr>
+      <td><strong>Document Version:</strong> 2.0.0 (Production Master)</td>
+      <td><strong>Release Date:</strong> November 10, 2026</td>
+    </tr>
+  </table>
+</div>
+
+<h2>1. Executive Summary &amp; Market Opportunity</h2>
+<p>
+  <strong>BD Battle Pro (ARENA X)</strong> is Bangladesh's first dedicated, autonomous, mobile-first esports operating system specifically designed for Free Fire 12-Squad competitive tournaments. Over 10,000 independent tournament organizers in Bangladesh run daily custom room matches. Currently, 99% of organizers manually operate through WhatsApp and Messenger, suffering from massive chat chaos, fake bKash/Nagad payment screenshots, recycled Transaction IDs (TrxID), room password leakage to non-payers, and tedious manual scoreboard counting.
+</p>
+<p>
+  BD Battle Pro solves every friction point by introducing automated SMS gateway payment verification, an autonomous 24/7 WhatsApp AI booking bot, phone-locked room credential release countdowns, and an automated AI scoreboard OCR engine with 0% gateway commission fees.
+</p>
+
+<h2>2. Core Problem vs. Architectural Solution Matrix</h2>
+<table class="data-table">
+  <tr>
+    <th style="width: 40%;">Traditional Organizer Bottlenecks</th>
+    <th style="width: 60%;">BD Battle Pro / ARENA X Automated Solution</th>
+  </tr>
+  <tr>
+    <td><strong>Fake / Reused bKash &amp; Nagad TrxIDs:</strong> Players edit screenshots or submit old TrxIDs to get free slots.</td>
+    <td><strong>SifrPay SMS Gateway APK:</strong> Intercepts raw SMS from 16247/16167, performs cryptographic Firestore deduplication, rejecting duplicates instantly.</td>
+  </tr>
+  <tr>
+    <td><strong>Chaotic WhatsApp Booking Volume:</strong> Organizers answer hundreds of repetitive DMs every day.</td>
+    <td><strong>Autonomous WhatsApp AI Bot (Baileys):</strong> Greets players, dynamically presents active match schedules, validates match-specific fees, and books slots 24/7.</td>
+  </tr>
+  <tr>
+    <td><strong>Custom Room Passwords Leaked:</strong> Password shared in group chats gets entered by non-paying outsiders.</td>
+    <td><strong>Phone-Locked Room Vault:</strong> Credentials released strictly 15 minutes before match start ONLY to registered squad leader phone numbers.</td>
+  </tr>
+  <tr>
+    <td><strong>Manual Points Table Math:</strong> Calculating kills and placements manually causes disputes and delays.</td>
+    <td><strong>AI Scoreboard Analyzer:</strong> Google Gemini Vision OCR reads end-game Free Fire screenshots and calculates official FFWS points tables automatically.</td>
+  </tr>
+  <tr>
+    <td><strong>Heavy SaaS Commission Fees:</strong> Payment gateways deduct 2.5% to 4% per transaction.</td>
+    <td><strong>0% Platform Commission:</strong> Direct P2P Send Money to organizer's personal bKash/Nagad accounts.</td>
+  </tr>
+</table>
+
+<h2>3. System Technology Stack</h2>
+<ul>
+  <li><strong>Frontend &amp; UX:</strong> Next-gen HTML5, Vanilla ES2022 modules, Tailwind CSS, Facebook-grade dark UI (#18191a canvas, #242526 surfaces, #1877f2 primary accent), 100dvh dynamic viewport, touch-first mobile navigation.</li>
+  <li><strong>Typography &amp; Currency:</strong> Hind Siliguri (Bengali) + Inter (Latin). Exclusively BDT (৳ / Taka).</li>
+  <li><strong>Backend &amp; Database:</strong> Google Cloud Firebase Firestore with realtime snapshot listeners (<code>onSnapshot</code>).</li>
+  <li><strong>Cloud Hosting:</strong> Google Firebase Hosting (SSD CDN, global edge distribution, HTTP/2 &amp; HTTP/3).</li>
+  <li><strong>Autonomous WhatsApp Bot:</strong> Node.js 20, Baileys Web multi-device socket, Render.com 24/7 cloud container with keepalive ping.</li>
+  <li><strong>AI Core:</strong> Google Gemini 2.0 Flash + 1.5 Flash dual-model quota balancing + Offline Banglish RegEx NLP parser.</li>
+  <li><strong>Native Android App:</strong> Kotlin, Gradle 8.13, Android SDK 34, NotificationListenerService, Room SQLite.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>4. Module-by-Module Functional Architecture</h2>
+
+<h3>Module 1: Public Showcase &amp; Sales Landing Page (index.html)</h3>
+<ul>
+  <li><strong>Hero Section:</strong> High-conversion headline, direct WhatsApp chat CTA (+8801791357521), and official email contact (sifrarchitect@gmail.com).</li>
+  <li><strong>Live Interactive Demos:</strong> One-tap access to live Player Portal (/player) and Admin Panel (/admin).</li>
+  <li><strong>Clean Pricing Architecture:</strong> Removed hardcoded numbers (৳4,999/৳9,999), replacing with Custom Starter and Enterprise Suite packaging.</li>
+</ul>
+
+<h3>Module 2: Player Experience Portal (player.html / /player)</h3>
+<ul>
+  <li><strong>Stacked Match Feed:</strong> Carousel of daily matches with dynamic time, map, fee (৳BDT), prize pool, and status badges (Upcoming, Live, Finished).</li>
+  <li><strong>12-Squad Slot Grid:</strong> Realtime 12-slot visual grid showing Free Slots vs Booked Squads.</li>
+  <li><strong>Instant Booking Modal:</strong> Input Squad Name, Leader Name, WhatsApp Phone, Payment Method, and TrxID with 1-tap copy of organizer's bKash/Nagad number.</li>
+  <li><strong>Room ID &amp; Password Vault:</strong> Secured by phone verification; decrypts room credentials only for confirmed players 15 minutes before game start.</li>
+</ul>
+
+<h3>Module 3: Organizer Admin Headquarters (admin.html / /admin)</h3>
+<ul>
+  <li><strong>Security Gate:</strong> Passcode-protected access (default: ARENA2026).</li>
+  <li><strong>Financial KPI Ledger:</strong> Realtime calculation of Confirmed Inflow, Prize Pool Committed, and Net Profit in BDT.</li>
+  <li><strong>Match Manager:</strong> Create, edit, and delete matches with maps (Bermuda, Purgatory, Alpine, Kalahari, Nexterra), times, and fees.</li>
+  <li><strong>12-Slot Controller:</strong> Kick/reset slots or manually lock slots for VIP squads.</li>
+  <li><strong>Room Credentials Switch:</strong> Store Room ID &amp; Password and toggle visibility to players.</li>
+  <li><strong>SifrPay APK Download:</strong> 1-click download of the clean Android SMS Gateway APK (.zip package).</li>
+  <li><strong>AI Scoreboard OCR:</strong> Upload end-game screenshot to auto-generate FFWS points table.</li>
+</ul>
+
+<h3>Module 4: Autonomous WhatsApp AI Bot (whatsapp-bot)</h3>
+<ul>
+  <li><strong>Mobile Pairing Code (server.js):</strong> 8-digit mobile pairing code interface; organizers connect WhatsApp directly from mobile without scanning QR codes.</li>
+  <li><strong>Dynamic Tournament &amp; Fee Selector:</strong> Bot greets players, displays live match schedule with exact fees, and requires players to choose a match before asking for payment.</li>
+  <li><strong>Dual-Model Quota Balancing:</strong> 50/50 round-robin rotation between Gemini 2.0 Flash and 1.5 Flash to eliminate rate limits.</li>
+  <li><strong>Offline RegEx Fallback:</strong> Zero-dependency Banglish NLP parser that guarantees 100% booking uptime even if Gemini API quota is exhausted.</li>
+</ul>
+
+<h3>Module 5: SifrPay Android SMS Gateway APK</h3>
+<ul>
+  <li><strong>Zero-Setup Experience:</strong> Completely removed Merchant ID and Secret Key setup dialogs; app opens directly to listening dashboard.</li>
+  <li><strong>Automated Interception:</strong> Reads incoming SMS notifications from bKash (16247) and Nagad (16167) in background, syncing verified TrxIDs to Firestore.</li>
+</ul>
+
+<h3>Module 6: Production Build &amp; Anti-Theft Guard (protect-build.js)</h3>
+<ul>
+  <li>Source code preserved in <code>src_backup/</code>; compiled HTML obfuscates scripts and disables desktop DevTools inspection while keeping mobile 100% lightweight.</li>
+</ul>
+
+<h2>5. Current Status &amp; Deliverables Summary</h2>
+<table class="data-table">
+  <tr><th>Milestone / Feature</th><th>Status</th><th>Notes</th></tr>
+  <tr><td>Facebook-Grade Dark UI (Player &amp; Admin)</td><td><span class="badge">COMPLETED</span></td><td>Live on Firebase Hosting</td></tr>
+  <tr><td>Realtime Firestore Slot Sync &amp; Phone Vault</td><td><span class="badge">COMPLETED</span></td><td>12-squad atomic locking</td></tr>
+  <tr><td>SifrPay APK (Zero-Setup Clean Build)</td><td><span class="badge">COMPLETED</span></td><td>v1.3 released; no merchant dialog</td></tr>
+  <tr><td>APK Download from Firebase CDN (.zip)</td><td><span class="badge">COMPLETED</span></td><td>Verified 200 OK download</td></tr>
+  <tr><td>WhatsApp Bot 24/7 Cloud Host &amp; Pairing Code</td><td><span class="badge">COMPLETED</span></td><td>Render Docker container ready</td></tr>
+  <tr><td>Dynamic Tournament &amp; Fee Selector Bot</td><td><span class="badge">COMPLETED</span></td><td>Asks match first, gets exact fee</td></tr>
+  <tr><td>Dual-Model Gemini Rotation + Offline Fallback</td><td><span class="badge">COMPLETED</span></td><td>50/50 quota split + RegEx parser</td></tr>
+  <tr><td>Anti-Theft Obfuscation (protect-build.js)</td><td><span class="badge">COMPLETED</span></td><td>Protected production build</td></tr>
+  <tr><td>Official Contact &amp; Pricing Update</td><td><span class="badge">COMPLETED</span></td><td>sifrarchitect@gmail.com updated</td></tr>
+</table>
+
+<div style="margin-top: 30px; text-align: center; font-size: 8.5pt; color: #78909c; border-top: 1px solid #cfd8dc; padding-top: 10px;">
+  BD Battle Pro (ARENA X) Specification Document • Author: Sifat Bin Shahjahan (sifrarchitect@gmail.com) • All Rights Reserved © 2026
+</div>
+
+</body>
+</html>
