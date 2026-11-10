@@ -7,6 +7,7 @@ import makeWASocket, {
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'path';
+import fs from 'fs';
 import { parseBookingText, parsePaymentScreenshot } from './gemini.js';
 import { bookSlotInFirestore, normalizePhone, getTournamentData, findTargetMatch } from './firestore.js';
 import { sessionManager } from './session.js';
@@ -59,7 +60,11 @@ export async function startWhatsAppBot() {
       if (shouldReconnect) {
         setTimeout(startWhatsAppBot, 3000);
       } else {
-        console.log('[WhatsApp]: Logged out. Delete auth_info_baileys and restart to generate new QR.');
+        console.log('[WhatsApp]: Session unauthenticated/logged out. Clearing stale credentials and refreshing...');
+        try {
+          fs.rmSync(authDir, { recursive: true, force: true });
+        } catch (e) {}
+        setTimeout(startWhatsAppBot, 2000);
       }
     } else if (connection === 'open') {
       botState.status = 'connected';
