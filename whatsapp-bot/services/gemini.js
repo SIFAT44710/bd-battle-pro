@@ -1,151 +1,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config.js';
+import { getTournamentData, findTargetMatch, checkSlotStatus, isDuplicateTrxId, bookSlotInFirestore, findRecentSmsLog, normalizePhone } from './firestore.js';
 
 let genAI = null;
 let modelCallCounter = 0;
-// Two primary high-limit shifting models (split 50/50 quota) + failover pool
+
+// High-limit rotating model pool for zero-downtime execution
 const ROTATING_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-2.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-3.7-flash',
   'gemini-flash-latest'
 ];
-
-/**
- * Bengali numeral converter (০-৯ -> 0-9)
- */
-export function normalizeBengaliNumerals(str) {
-  if (!str) return '';
-  const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-  return str.toString().replace(/[০-৯]/g, d => bn.indexOf(d));
-}
-
-/**
- * Resilient Offline Heuristic & RegEx Parser (Zero API Dependency Fallback)
- * Works when Gemini API is rate-limited, quota exhausted, or network is down.
- */
-export function parseBookingWithRegex(rawText) {
-  if (!rawText || typeof rawText !== 'string') {
-    return {
-      match_query: null,
-      slot_number: null,
-      squad_name: null,
-      leader_name: null,
-      player_names: [],
-      trx_id: null,
-      amount: null,
-      payment_method: null,
-      is_valid_booking: false
-    };
-  }
-
-  const norm = normalizeBengaliNumerals(rawText).trim();
-  const lower = norm.toLowerCase();
-
-  // 1. Payment Method
-  let payment_method = null;
-  if (/bkash|বিকাশ/i.test(lower)) payment_method = 'bkash';
-  else if (/nagad|নগদ/i.test(lower)) payment_method = 'nagad';
-  else if (/rocket|রকেট/i.test(lower)) payment_method = 'rocket';
-  else if (/upay|উপায়|উপায়/i.test(lower)) payment_method = 'upay';
-
-  // 2. Trx ID (Uppercase clean)
-  let trx_id = null;
-  const trxMatch = norm.match(/(?:trx\s*id|trx|trnx|txid|trans(?:action)?\s*id)[\s:=#\-]+([a-zA-Z0-9]{6,14})/i) ||
-                   norm.match(/\b([A-Z0-9]{8,12})\b/);
-  if (trxMatch) {
-    const candidate = trxMatch[1].toUpperCase();
-    const blacklist = ['BERMUDA', 'PURGATORY', 'TOURNAMENT', 'CHAMPIONSHIP', 'WHATSAPP', 'SQUAD', 'LEADER', 'PAYMENT'];
-    if (!blacklist.includes(candidate)) {
-      trx_id = candidate;
-    }
-  }
-
-  // 3. Amount (BDT)
-  let amount = null;
-  const explicitAmt = norm.match(/(?:amount|taka|টাকা|ফি|fee|paid|পাঠাইছি|দিছি|দিসি)[\s:=#\-]*([0-9]{2,5})/i) ||
-                      norm.match(/([0-9]{2,5})\s*(?:tk|taka|টাকা|৳)/i) ||
-                      norm.match(/(?:৳)\s*([0-9]{2,5})/i);
-  if (explicitAmt) {
-    amount = parseInt(explicitAmt[1], 10);
-  }
-
-  // 1. Match Query (Match 1, Match 2, Match 4, Match 5, m4, m5, ম্যাচ ৪, ইত্যাদি)
-  let match_query = null;
-  const matchNum = norm.match(/(?:match|ম্যাচ|m)\s*[:#\-]?\s*([0-9]+)/i) || 
-                   norm.match(/([0-9]+)\s*(?:no|number|নম্বর)?\s*(?:match|ম্যাচ)/i);
-  if (matchNum) {
-    match_query = 'Match ' + matchNum[1];
-  } else if (/bermuda|বারমুডা/i.test(lower)) {
-    match_query = 'Bermuda';
-  } else if (/purgatory|পার্গেটরি/i.test(lower)) {
-    match_query = 'Purgatory';
-  } else if (/kalahari|কালাহারি/i.test(lower)) {
-    match_query = 'Kalahari';
-  }
-
-  // 2. Slot Number (1 to 12)
-  let slot_number = null;
-  const slotMatch = norm.match(/(?:slot|স্লট)\s*[:#\-]?\s*([0-9]{1,2})/i) ||
-                    norm.match(/([0-9]{1,2})\s*(?:no|number|নম্বর)?\s*(?:slot|স্লট)/i);
-  if (slotMatch) {
-    const sn = parseInt(slotMatch[1], 10);
-    if (sn >= 1 && sn <= 12) slot_number = sn;
-  }
-
-  // 3. Line-by-line fallback for single numbers
-  const lines = norm.split('\n').map(l => l.trim()).filter(Boolean);
-  if (!match_query || !slot_number) {
-    for (const line of lines) {
-      if (/^[0-9]{1,2}$/.test(line)) {
-        const num = parseInt(line, 10);
-        if (!slot_number && num >= 1 && num <= 12) {
-          slot_number = num;
-        } else if (!match_query && num >= 1 && num <= 10) {
-          match_query = 'Match ' + num;
-        }
-      }
-    }
-  }
-
-  // 4. Squad Name
-  let squad_name = null;
-  const squadMatch = norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)(?:\s*name)?\s*[:=\-]\s*([^\n,]+)/i) ||
-                     norm.match(/(?:squad|স্কোয়াড|স্কয়াড|team|টিম|দল)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,25})/i);
-  if (squadMatch) {
-    squad_name = squadMatch[1].replace(/\s+(er\s+jonno|slot|lead|trx|leader|bkash|nagad|taka|টাকা).*/i, '').trim();
-  }
-
-  // 5. Players
-  let player_names = [];
-  const playersMatch = norm.match(/(?:player|প্লেয়ার)(?:\s*name)?s?\s*[:=\-]\s*([^\n]+)/i);
-  if (playersMatch) {
-    player_names = playersMatch[1].split(/[,/&]+/).map(s => s.trim()).filter(Boolean);
-  }
-
-  // 6. Leader Name
-  let leader_name = null;
-  const leadMatch = norm.match(/(?:leader|লিডার|lead|অধিনায়ক)\s*[:=\-]?\s*([A-Za-z0-9_\-\u0980-\u09FF\s]{2,20})/i);
-  if (leadMatch) {
-    leader_name = leadMatch[1].replace(/\s+(book|koren|koro|bhai|vai|squad|slot|trx|fee|paid|er\s+jonno|team).*/i, '').trim();
-  } else if (player_names.length > 0) {
-    leader_name = player_names[0];
-  }
-
-  const is_valid_booking = !!(trx_id || squad_name || slot_number || match_query);
-
-  return {
-    match_query,
-    slot_number,
-    squad_name,
-    leader_name,
-    player_names,
-    trx_id,
-    amount,
-    payment_method,
-    is_valid_booking
-  };
-}
 
 function getGenAI() {
   if (!genAI) {
@@ -158,143 +24,301 @@ function getGenAI() {
 }
 
 /**
- * Generate Content with automatic multi-model rotation & quota load-balancing
+ * Tool Declarations for DokanAI-Style Function Calling
  */
-async function generateWithFailover(promptOrParts) {
-  const ai = getGenAI();
-  let lastError = null;
-
-  // Alternate starting model every call to distribute quota evenly across 2+ models
-  const startIndex = modelCallCounter++ % ROTATING_MODELS.length;
-  const prioritizedModels = [
-    ...ROTATING_MODELS.slice(startIndex),
-    ...ROTATING_MODELS.slice(0, startIndex)
-  ];
-
-  for (const modelName of prioritizedModels) {
-    try {
-      const model = ai.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json'
+const BOT_TOOLS = [
+  {
+    functionDeclarations: [
+      {
+        name: 'checkAvailableSlots',
+        description: 'Checks upcoming Free Fire tournament matches, map names, start times, entry fees, and free slots.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            matchQuery: {
+              type: 'STRING',
+              description: 'Optional match title, number (e.g. "Match 4", "4", "Bermuda") or empty to list all upcoming matches.'
+            }
+          }
         }
-      });
-      const result = await model.generateContent(promptOrParts);
-      return result.response.text();
+      },
+      {
+        name: 'verifyAndBookSlot',
+        description: 'Verifies MFS bKash/Nagad payment and registers the squad slot into Cloud Firestore.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            matchQuery: { type: 'STRING', description: 'Target match number or name, e.g. "Match 4" or "Match 2".' },
+            slotNumber: { type: 'INTEGER', description: 'Slot number 1 to 12.' },
+            squadName: { type: 'STRING', description: 'Name of the squad/team.' },
+            leaderName: { type: 'STRING', description: 'Squad leader name or IGN.' },
+            playerNames: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Player IGNs (up to 4).' },
+            contactPhone: { type: 'STRING', description: 'WhatsApp / mobile phone number.' },
+            trxId: { type: 'STRING', description: 'bKash/Nagad/Rocket Transaction ID (e.g. DKA1AJX4FF).' },
+            amount: { type: 'NUMBER', description: 'Amount paid in BDT Taka.' },
+            paymentMethod: { type: 'STRING', description: 'bkash, nagad, rocket, or upay.' }
+          },
+          required: ['matchQuery', 'slotNumber', 'squadName', 'trxId']
+        }
+      }
+    ]
+  }
+];
+
+const SYSTEM_INSTRUCTION = `
+You are the ARENA X Autonomous Tournament AI Manager for Bangladesh Free Fire Esports.
+You chat naturally and politely in conversational Bengali / Banglish (casual, friendly, professional).
+
+Rules for your behavior:
+1. You represent ARENA X Free Fire tournament platform.
+2. If player asks which matches or slots are free, or if they send a booking inquiry, call the 'checkAvailableSlots' tool to get live real-time match data. Then explain clearly which matches are open, their entry fees, and that they should Send Money to 01791357521 (bKash/Nagad Personal).
+3. If player sends their squad name and slot number along with a TrxID or after sending a payment receipt, call 'verifyAndBookSlot'.
+4. If player sends a payment receipt or TrxID but HAS NOT given their Squad Name or Slot number, acknowledge the payment warmly and explain: "ভাই, আপনার পেমেন্ট পেয়েছি! নিচের বুকিং ফরম্যাটটি পূরণ করে পাঠিয়ে দিন, আমি এক্ষুনি স্লট কনফার্ম করে দিচ্ছি।"
+5. When guiding a player on how to book or if they ask for format/rules, answer conversationally in Bengali. Do NOT output large raw template code blocks inside your text, as our messaging system will automatically send the clean, 1-tap copyable booking template as a separate WhatsApp message right after your reply.
+6. If player sends less money than the match entry fee (e.g. fee is ৳100, but player sent ৳50), tell them politely: "ভাই, এই ম্যাচের এন্ট্রি ফি ৳১০০, কিন্তু পেয়েছি ৳৫০। অনুগ্রহ করে বাকি ৳৫০ পরিশোধ করে TrxID দিন, আমি স্লট কনফার্ম করে দিচ্ছি।"
+7. Keep your answers concise, human, and direct. Use appropriate emojis (🎮, 🎯, ৳, ✅, 🛡️).
+`;
+
+/**
+ * Execute tool calls against Cloud Firestore
+ */
+export async function executeToolCall(toolName, args, playerSession = {}) {
+  console.log(`[DokanAI Tool Execute]: ${toolName}`, args);
+
+  if (toolName === 'checkAvailableSlots') {
+    try {
+      const tourney = await getTournamentData();
+      const matches = (tourney && tourney.data && tourney.data.matches) || [];
+      const upcoming = matches.filter(m => m.status === 'upcoming');
+
+      if (args.matchQuery) {
+        const target = findTargetMatch(matches, args.matchQuery, false);
+        if (target) {
+          const freeSlots = (target.slots || []).filter(s => !s.booked).map(s => s.slotNumber);
+          return {
+            found: true,
+            title: target.title,
+            matchNumber: target.matchNumber,
+            map: target.map || 'Bermuda',
+            time: target.time || '08:30 PM',
+            entryFee: target.entryFee || 10,
+            prizePool: target.prizePool || 100,
+            freeSlots,
+            totalFree: freeSlots.length,
+            paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
+          };
+        }
+      }
+
+      return {
+        found: true,
+        upcomingMatches: upcoming.map(m => ({
+          matchNumber: m.matchNumber,
+          title: m.title,
+          map: m.map || 'Bermuda',
+          time: m.time || '08:30 PM',
+          entryFee: m.entryFee || 10,
+          prizePool: m.prizePool || 100,
+          freeSlots: (m.slots || []).filter(s => !s.booked).map(s => s.slotNumber)
+        })),
+        paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
+      };
     } catch (err) {
-      lastError = err;
-      console.warn(`[Gemini Failover]: Model ${modelName} encountered error: ${err.message}. Trying next candidate...`);
+      return { error: 'Failed to retrieve tournament data: ' + err.message };
     }
   }
 
-  throw lastError || new Error('All candidate Gemini models failed.');
+  if (toolName === 'verifyAndBookSlot') {
+    try {
+      const { data } = await getTournamentData();
+      const matches = data.matches || [];
+      const targetMatch = findTargetMatch(matches, args.matchQuery, true);
+
+      if (!targetMatch) {
+        return { success: false, reason: 'MATCH_NOT_FOUND', message: 'ম্যাচটি খুঁজে পাওয়া যায়নি।' };
+      }
+
+      const requiredFee = Number(targetMatch.entryFee || 10);
+      const cleanTrx = (args.trxId || '').toUpperCase().trim();
+
+      // 1. Anti-Fraud Duplicate TrxID check
+      if (isDuplicateTrxId(matches, cleanTrx)) {
+        return {
+          success: false,
+          reason: 'DUPLICATE_TRXID',
+          message: `এই TrxID (${cleanTrx}) ইতিমধ্যে অন্য একটি স্লট বুকিংয়ে ব্যবহার করা হয়েছে!`
+        };
+      }
+
+      // 2. Check Firestore sms_logs
+      let verifiedAmount = Number(args.amount || requiredFee);
+      try {
+        const smsRes = await fetch(`https://firestore.googleapis.com/v1/projects/ff-squad-arena-bd/databases/(default)/documents/sms_logs/${cleanTrx}`);
+        if (smsRes.ok) {
+          const smsDoc = await smsRes.json();
+          const logAmount = Number(smsDoc.fields?.amount?.doubleValue || smsDoc.fields?.amount?.integerValue || 0);
+          if (logAmount > 0) verifiedAmount = logAmount;
+        }
+      } catch (e) {}
+
+      // 3. Under-payment check
+      if (verifiedAmount < requiredFee) {
+        return {
+          success: false,
+          reason: 'INSUFFICIENT_AMOUNT',
+          required: requiredFee,
+          received: verifiedAmount,
+          message: `পেমেন্টের পরিমাণ কম হয়েছে! এই ম্যাচের এন্ট্রি ফি ৳${requiredFee}, কিন্তু পেয়েছি ৳${verifiedAmount}।`
+        };
+      }
+
+      // 4. Perform atomic booking
+      const bookRes = await bookSlotInFirestore({
+        matchQuery: targetMatch.title,
+        preferredSlot: args.slotNumber,
+        squadName: args.squadName,
+        leaderName: args.leaderName || (args.playerNames && args.playerNames[0]) || `${args.squadName}_Lead`,
+        playerNames: args.playerNames || [],
+        contactPhone: args.contactPhone || playerSession.phone || '01791357521',
+        trxId: cleanTrx,
+        amount: verifiedAmount,
+        paymentMethod: args.paymentMethod || 'bkash'
+      });
+
+      return bookRes;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  return { error: 'Unknown tool declaration: ' + toolName };
 }
 
 /**
- * 1. Parse Raw Text Booking Request (Banglish / Bengali / English)
+ * DokanAI-Style Conversational Agent Loop with Function Calling
  */
-export async function parseBookingText(rawText) {
-  const prompt = `
-You are an intelligent booking parser for a Bangladeshi Free Fire esports tournament platform (ARENA X).
-Players write messages in Bengali, Banglish (phonetic Bengali written in Latin letters), or English.
+export async function runDokanAiAgent({
+  userMessage,
+  senderPhone,
+  chatHistory = [],
+  sessionData = {},
+  imageContext = null
+}) {
+  const ai = getGenAI();
+  let modelInstance = null;
 
-Input message from player:
-"${rawText}"
+  // Rotation with failover
+  for (let i = 0; i < ROTATING_MODELS.length; i++) {
+    const idx = (modelCallCounter + i) % ROTATING_MODELS.length;
+    const modelName = ROTATING_MODELS[idx];
+    try {
+      modelInstance = ai.getGenerativeModel({
+        model: modelName,
+        systemInstruction: SYSTEM_INSTRUCTION,
+        tools: BOT_TOOLS
+      });
+      break;
+    } catch (e) {
+      console.warn(`Model ${modelName} init failed, trying next...`);
+    }
+  }
 
-Extract tournament registration details into strict JSON matching this schema:
-{
-  "match_query": string or null (e.g., "Match 1", "08:30 PM", "9:15 PM", "Bermuda", "Purgatory"),
-  "slot_number": integer (1 to 12) or null if unspecified,
-  "squad_name": string or null (the team name),
-  "leader_name": string or null (the player or leader name),
-  "player_names": array of strings (individual player IGNs if provided, or empty array),
-  "trx_id": string or null (Transaction ID, convert to uppercase, clean spaces),
-  "amount": number or null (amount in BDT Taka, e.g., 100, 75),
-  "payment_method": "bkash" | "nagad" | "rocket" | "upay" or null,
-  "is_valid_booking": boolean (true if it has squad name or trx_id or slot request, false if casual unrelated greeting)
-}
+  modelCallCounter++;
 
-Notes for Banglish understanding:
-- "vai slot 3 te book koren" -> slot_number: 3
-- "squad vortex / amader team vortex" -> squad_name: "Vortex"
-- "lead tanvir / leader boss" -> leader_name: "Tanvir"
-- "trxid BL9204918 / trx BL9204918" -> trx_id: "BL9204918"
-- "100 taka pathaisi / bkash korsi" -> amount: 100, payment_method: "bkash"
-Return ONLY valid JSON.
-`;
+  // Build conversational context
+  let fullPrompt = `Sender WhatsApp: ${senderPhone}\n`;
+  if (sessionData.trx_id) {
+    fullPrompt += `[Session State: Player already provided TrxID: ${sessionData.trx_id}, Amount: ৳${sessionData.amount || 10}, Method: ${sessionData.payment_method || 'bKash'}]\n`;
+  }
+  if (imageContext) {
+    fullPrompt += `[System Notice: Player uploaded payment receipt screenshot. Extracted details: TrxID: ${imageContext.trx_id || 'UNKNOWN'}, Amount: ৳${imageContext.amount || 'UNKNOWN'}, Method: ${imageContext.payment_method || 'bKash'}, Receiver: ${imageContext.receiver_number || '01791357521'}]\n`;
+  }
+  fullPrompt += `Player Message: ${userMessage || '(User sent payment screenshot)'}`;
 
   try {
-    const text = await generateWithFailover(prompt);
-    return JSON.parse(text);
+    const chat = modelInstance.startChat({
+      history: chatHistory.slice(-6)
+    });
+
+    let response = await chat.sendMessage(fullPrompt);
+    let functionCalls = response.response.functionCalls();
+
+    // If Gemini wants to call a tool (Function Calling)
+    if (functionCalls && functionCalls.length > 0) {
+      const call = functionCalls[0];
+      const toolResult = await executeToolCall(call.name, call.args, { phone: senderPhone, ...sessionData });
+
+      // Feed tool result back to Gemini so it speaks to the user
+      const secondResponse = await chat.sendMessage([
+        {
+          functionResponse: {
+            name: call.name,
+            response: toolResult
+          }
+        }
+      ]);
+
+      return {
+        replyText: secondResponse.response.text(),
+        toolExecuted: call.name,
+        toolResult
+      };
+    }
+
+    return {
+      replyText: response.response.text(),
+      toolExecuted: null,
+      toolResult: null
+    };
+
   } catch (err) {
-    console.warn('[Gemini Text Parse]: AI unavailable (' + err.message + '). Activating offline RegEx parser fallback...');
-    return parseBookingWithRegex(rawText);
+    console.error('[DokanAI Agent Error]:', err.message);
+    // Graceful offline fallback
+    return {
+      replyText: `👋 আসসালামু আলাইকুম! ARENA X টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান এবং বিকাশ TrxID টা একটু লিখে দিন, আমি কনফার্ম করে দিচ্ছি!`,
+      toolExecuted: null,
+      toolResult: null
+    };
   }
 }
 
 /**
- * 2. Parse Payment Screenshot (bKash / Nagad / Rocket / Upay) via Gemini Multimodal Vision
+ * Multimodal Screenshot Parser via Gemini Vision
  */
 export async function parsePaymentScreenshot(imageBuffer, mimeType = 'image/jpeg', captionText = '') {
   const prompt = `
-You are an expert OCR and financial fraud detection system for Bangladeshi Mobile Financial Services (MFS): bKash, Nagad, Rocket, and Upay.
-Analyze this payment receipt screenshot.
-
-Optional caption provided with the image:
-"${captionText}"
-
-Extract all payment and booking data into strict JSON:
+Analyze this Bangladeshi MFS payment receipt screenshot (bKash, Nagad, Rocket).
+Extract JSON matching:
 {
-  "trx_id": string or null (Clean uppercase Transaction ID without spaces, e.g. "BL9204918", "9K827419"),
-  "amount": number or null (numerical amount in BDT, e.g. 100, 75, 135),
-  "payment_method": "bkash" | "nagad" | "rocket" | "upay" | "unknown",
-  "sender_number": string or null (sender mobile number if visible),
-  "receiver_number": string or null (receiver / agent / personal number),
-  "timestamp": string or null (date and time visible on screenshot),
-  "status": "SUCCESS" | "PENDING" | "FAILED",
-  "is_valid_payment": boolean (true if screenshot clearly shows a completed Send Money / Payment transaction),
-  "caption_booking_info": {
-    "slot_number": integer or null,
-    "squad_name": string or null,
-    "leader_name": string or null,
-    "match_query": string or null
-  }
+  "trx_id": string or null (Clean uppercase TrxID, e.g. "DKA1AJX4FF"),
+  "amount": number or null (Amount in BDT, e.g. 10, 100),
+  "payment_method": "bkash" | "nagad" | "rocket" | "upay",
+  "receiver_number": string or null,
+  "sender_number": string or null,
+  "timestamp": string or null,
+  "is_valid_payment": boolean
 }
-
-Important Guidelines:
-1. Normalize Bengali numerals (০-৯) to standard Western digits (0-9).
-2. bKash TrxID is usually 10 alphanumeric characters (e.g., "BH72K9M12P").
-3. Nagad TrxID is usually 8 alphanumeric characters (e.g., "71K829XA").
-4. If the caption has squad details (e.g. "slot 4 squad venom"), extract them into caption_booking_info.
+Caption: "${captionText}"
 Return ONLY valid JSON.
 `;
 
-  try {
-    const imagePart = {
-      inlineData: {
-        data: imageBuffer.toString('base64'),
-        mimeType: mimeType
-      }
-    };
+  const ai = getGenAI();
+  const imagePart = {
+    inlineData: {
+      data: imageBuffer.toString('base64'),
+      mimeType: mimeType
+    }
+  };
 
-    const text = await generateWithFailover([prompt, imagePart]);
-    return JSON.parse(text);
-  } catch (err) {
-    console.warn('[Gemini Vision Parse]: Vision unavailable (' + err.message + '). Falling back to caption analysis...');
-    const parsedCaption = parseBookingWithRegex(captionText || '');
-    return {
-      trx_id: parsedCaption.trx_id || null,
-      amount: parsedCaption.amount || null,
-      payment_method: parsedCaption.payment_method || 'unknown',
-      status: parsedCaption.trx_id ? 'SUCCESS' : 'FAILED',
-      is_valid_payment: !!parsedCaption.trx_id,
-      caption_booking_info: {
-        slot_number: parsedCaption.slot_number,
-        squad_name: parsedCaption.squad_name,
-        leader_name: parsedCaption.leader_name,
-        match_query: parsedCaption.match_query
-      }
-    };
+  for (const m of ROTATING_MODELS) {
+    try {
+      const model = ai.getGenerativeModel({ model: m, generationConfig: { responseMimeType: 'application/json' } });
+      const res = await model.generateContent([prompt, imagePart]);
+      return JSON.parse(res.response.text());
+    } catch (err) {
+      console.warn(`Vision model ${m} failed (${err.message}), trying next candidate...`);
+    }
   }
+
+  return { trx_id: null, amount: null, payment_method: 'bkash', is_valid_payment: false };
 }

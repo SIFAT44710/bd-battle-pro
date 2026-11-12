@@ -1,6 +1,5 @@
 import makeWASocket, {
   DisconnectReason,
-  useMultiFileAuthState,
   fetchLatestBaileysVersion,
   downloadMediaMessage
 } from '@whiskeysockets/baileys';
@@ -8,17 +7,36 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
-import { parseBookingText, parsePaymentScreenshot } from './gemini.js';
-import { bookSlotInFirestore, normalizePhone, getTournamentData, findTargetMatch, findRecentSmsLog } from './firestore.js';
+import { runDokanAiAgent, parsePaymentScreenshot, executeToolCall } from './gemini.js';
+import { useFirestoreAuthState } from './firestoreAuth.js';
+import { normalizePhone } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
 import { botState, registerSocket } from './server.js';
 
 const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 
+// Tournament keywords for Smart Trigger & Silent Filter
+const TOURNAMENT_KEYWORDS = [
+  '[arena-booking]', 'arena', 'বুকিং', 'booking', 'ম্যাচ', 'match',
+  'slot', 'স্লট', 'squad', 'স্কোয়াড', 'টিম', 'team', 'trxid', 'trx',
+  'বিকাশ', 'bkash', 'নগদ', 'nagad', 'রকেট', 'rocket', 'রুম আইডি',
+  'room id', 'password', 'পাসওয়ার্ড', 'রেজিস্ট্রেশন', 'registration',
+  'টুর্নামেন্ট', 'tournament', 'ফ্রি ফায়ার', 'free fire', 'টাকা', 'taka',
+  'pathaisi', 'পাঠাইছি', 'send money', 'সেন্ড মানি', 'পেমেন্ট', 'payment', 'khali'
+];
+
+function isTournamentRelatedText(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return TOURNAMENT_KEYWORDS.some(kw => lower.includes(kw));
+}
+
 export async function startWhatsAppBot() {
-  const authDir = path.resolve('./auth_info_baileys');
-  const { state, saveCreds } = await useMultiFileAuthState(authDir);
+  const clientId = process.env.CLIENT_ID || 'default_client';
+  
+  // Cloud-Resilient Firestore Auth State (Survives Render / Docker restarts)
+  const { state, saveCreds } = await useFirestoreAuthState(clientId);
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
   console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest})...`);
@@ -28,13 +46,13 @@ export async function startWhatsAppBot() {
     logger,
     printQRInTerminal: false,
     auth: state,
-    browser: ['ARENA X Bot', 'Chrome', '1.0.0'],
+    browser: ['ARENA X DokanAI Agent', 'Chrome', '1.0.0'],
     generateHighQualityLinkPreview: true
   });
 
   registerSocket(sock);
 
-  // Save auth state changes
+  // Save auth state changes directly to Firestore & local cache
   sock.ev.on('creds.update', saveCreds);
 
   // Connection Updates
@@ -60,11 +78,8 @@ export async function startWhatsAppBot() {
       if (shouldReconnect) {
         setTimeout(startWhatsAppBot, 3000);
       } else {
-        console.log('[WhatsApp]: Session unauthenticated/logged out. Clearing stale credentials and refreshing...');
-        try {
-          fs.rmSync(authDir, { recursive: true, force: true });
-        } catch (e) {}
-        setTimeout(startWhatsAppBot, 2000);
+        console.log('[WhatsApp]: Session unauthenticated/logged out.');
+        setTimeout(startWhatsAppBot, 3000);
       }
     } else if (connection === 'open') {
       botState.status = 'connected';
@@ -78,7 +93,7 @@ export async function startWhatsAppBot() {
     }
   });
 
-  // Incoming Messages Handler
+  // Incoming Messages Handler with Smart Trigger & Silent Filter
   sock.ev.on('messages.upsert', async (m) => {
     if (m.type !== 'notify') return;
 
@@ -86,19 +101,15 @@ export async function startWhatsAppBot() {
       if (!msg.message || msg.key.fromMe) continue;
 
       const remoteJid = msg.key.remoteJid;
-      // Filter out status broadcast or group messages if only handling private DMs
+      // Filter out status broadcasts or group chats
       if (remoteJid.includes('@g.us') || remoteJid === 'status@broadcast') continue;
 
       const senderPhone = normalizePhone(remoteJid.split('@')[0]);
-      console.log(`\n[Incoming Message] from: ${senderPhone}`);
 
       try {
         await handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone);
       } catch (err) {
         console.error('[Error handling message]:', err);
-        await sock.sendMessage(remoteJid, {
-          text: '⚠️ একটি টেকনিক্যাল সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন অথবা অর্গানাইজারের সাথে সরাসরি যোগাযোগ করুন।'
-        });
       }
     }
   });
@@ -106,8 +117,87 @@ export async function startWhatsAppBot() {
   return sock;
 }
 
+const BANGLA_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+function convertBengaliDigits(str) {
+  if (!str) return '';
+  return str.replace(/[০-৯]/g, d => BANGLA_DIGITS.indexOf(d));
+}
+
 /**
- * Core Message Processing & Automated Response Pipeline
+ * Universal Parser for Player Booking Messages (Format, Key-Value, or Conversational)
+ */
+export function parseStructuredBookingMessage(rawText) {
+  if (!rawText) return {};
+  const normalized = convertBengaliDigits(rawText);
+  const lines = normalized.split('\n');
+  const extracted = {};
+
+  for (const line of lines) {
+    const match = line.match(/^([^:=-]+)[:=-]\s*(.*)$/);
+    if (match) {
+      const key = match[1].trim().toLowerCase();
+      const val = match[2].trim();
+      if (!val) continue;
+
+      if (key.length <= 25 && key.split(/\s+/).length <= 4) {
+        if (key.includes('match') || key.includes('ম্যাচ')) {
+          extracted.matchQuery = val;
+        } else if (key.includes('squad') || key.includes('team') || key.includes('স্কোয়াড') || key.includes('টিম') || key.includes('দল')) {
+          extracted.squadName = val;
+        } else if (key.includes('leader') || key.includes('লিডার') || key.includes('ign')) {
+          extracted.leaderName = val;
+        } else if (key.includes('slot') || key.includes('স্লট')) {
+          const num = parseInt(val.replace(/\D/g, ''));
+          if (num) extracted.slotNumber = num;
+        } else if (key.includes('trx') || key.includes('টিআরএক্স') || key.includes('ট্রানজেকশন') || key.includes('txn')) {
+          const trxMatch = val.match(/[A-Za-z0-9]{8,14}/);
+          if (trxMatch) extracted.trxId = trxMatch[0].toUpperCase();
+        }
+      }
+    }
+  }
+
+  // Fallbacks for inline/unstructured sentences
+  if (!extracted.squadName) {
+    const teamMatch = normalized.match(/(?:team|squad|টিম|স্কোয়াড)\s*[:=-]?\s*([A-Za-z0-9_\u0980-\u09FF ]+?)(?=\s*(?:slot|স্লট|trx|টিআরএক্স|txn|ম্যাচ|match|$))/i);
+    if (teamMatch && teamMatch[1].trim()) extracted.squadName = teamMatch[1].trim();
+  }
+  if (!extracted.slotNumber) {
+    const slotMatch = normalized.match(/(?:slot|স্লট)\s*[:=-]?\s*#?\s*([0-9]{1,2})/i);
+    if (slotMatch) extracted.slotNumber = parseInt(slotMatch[1]);
+  }
+  if (!extracted.trxId) {
+    const trxMatch = normalized.match(/(?:trxid|trx|টিআরএক্স|txn)\s*[:=-]?\s*([A-Za-z0-9]{8,14})/i);
+    if (trxMatch) extracted.trxId = trxMatch[1].toUpperCase();
+  }
+  if (!extracted.matchQuery) {
+    const matchMatch = normalized.match(/(?:match|ম্যাচ)\s*#?\s*([0-9]{1,2}|bermuda|purgatory|kalahari)/i);
+    if (matchMatch) extracted.matchQuery = matchMatch[0].trim();
+  }
+
+  return extracted;
+}
+
+/**
+ * Clean 1-Tap Copyable Booking Template (Sent as a Separate Message)
+ */
+export function generateCopyableBookingTemplate({
+  matchQuery = 'Match 4',
+  slotNumber = '',
+  trxId = '',
+  squadName = '',
+  leaderName = ''
+} = {}) {
+  return `[ARENA-BOOKING]
+Match: ${matchQuery || 'Match 4'}
+Squad Name: ${squadName || ''}
+Leader Name: ${leaderName || ''}
+Slot No: ${slotNumber || ''}
+TrxID: ${trxId || ''}`;
+}
+
+/**
+ * Smart Message Handler with DokanAI Brain & Silent Filter
  */
 async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
   const isImage = !!msg.message.imageMessage;
@@ -116,280 +206,211 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
                   msg.message.imageMessage?.caption ||
                   '';
 
-  // Mark message as read
-  await sock.readMessages([msg.key]);
+  // Retrieve player session
+  const existingSession = sessionManager.get(senderPhone) || {
+    chatHistory: [],
+    lastActivity: 0
+  };
 
-  // Retrieve any existing session data for this player
-  const existingSession = sessionManager.get(senderPhone) || {};
+  const isRecentBookingActive = existingSession.lastActivity && (Date.now() - existingSession.lastActivity < 30 * 60 * 1000);
+  const isMatchInquiry = isTournamentRelatedText(rawText);
 
-  let parsedData = { ...existingSession };
+  // 1. SMART TRIGGER & SILENT FILTER:
+  // If message has no tournament keywords AND player hasn't been in an active booking session within 30m:
+  // IGNORE COMPLETELY! Do not disturb personal / family conversations!
+  if (!isMatchInquiry && !(isImage && isRecentBookingActive)) {
+    console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
+    return;
+  }
 
-  // 1. Process Image (bKash/Nagad Screenshot)
+  console.log(`\n[DokanAI Active Trigger]: Player ${senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
+
+  // Mark message as read & send typing presence
+  try {
+    await sock.readMessages([msg.key]);
+    await sock.sendPresenceUpdate('composing', remoteJid);
+  } catch (e) {}
+
+  let imageDetails = null;
+
+  // 2. Multimodal OCR if image was sent (bKash/Nagad receipt)
   if (isImage) {
-    console.log('[Bot]: Player sent an image attachment. Downloading & analyzing with Gemini Vision...');
-    await sock.sendMessage(remoteJid, {
-      react: { text: '🔍', key: msg.key }
-    });
-
-    const buffer = await downloadMediaMessage(
-      msg,
-      'buffer',
-      {},
-      { logger }
-    );
-
-    const visionResult = await parsePaymentScreenshot(
-      buffer,
-      msg.message.imageMessage.mimetype || 'image/jpeg',
-      rawText
-    );
-
-    console.log('[Gemini Vision Result]:', visionResult);
-
-    if (visionResult.trx_id) parsedData.trx_id = visionResult.trx_id;
-    if (visionResult.amount) parsedData.amount = visionResult.amount;
-    if (visionResult.payment_method) parsedData.payment_method = visionResult.payment_method;
-
-    if (visionResult.caption_booking_info) {
-      if (visionResult.caption_booking_info.squad_name) parsedData.squad_name = visionResult.caption_booking_info.squad_name;
-      if (visionResult.caption_booking_info.slot_number) parsedData.slot_number = visionResult.caption_booking_info.slot_number;
-      if (visionResult.caption_booking_info.leader_name) parsedData.leader_name = visionResult.caption_booking_info.leader_name;
-      if (visionResult.caption_booking_info.match_query) parsedData.match_query = visionResult.caption_booking_info.match_query;
-    }
-  }
-
-  // 2. Process Text (if text provided or image caption)
-  if (rawText && !isImage) {
-    console.log(`[Bot]: Player sent text: "${rawText}". Parsing with Gemini 1.5 Flash...`);
-    const textResult = await parseBookingText(rawText);
-    console.log('[Gemini Text Result]:', textResult);
-
-    if (textResult.trx_id) parsedData.trx_id = textResult.trx_id;
-    if (textResult.amount) parsedData.amount = textResult.amount;
-    if (textResult.payment_method) parsedData.payment_method = textResult.payment_method;
-    if (textResult.squad_name) parsedData.squad_name = textResult.squad_name;
-    if (textResult.slot_number) parsedData.slot_number = textResult.slot_number;
-    if (textResult.leader_name) parsedData.leader_name = textResult.leader_name;
-    if (textResult.match_query) parsedData.match_query = textResult.match_query;
-    if (textResult.player_names && textResult.player_names.length) parsedData.player_names = textResult.player_names;
-  }
-
-  // 3. Auto-match payment from sms_logs in Firestore (if TrxID not yet in session)
-  if (!parsedData.trx_id) {
     try {
-      const recentSms = await findRecentSmsLog(senderPhone);
-      if (recentSms && recentSms.trx_id) {
-        parsedData.trx_id = recentSms.trx_id;
-        parsedData.amount = recentSms.amount;
-        parsedData.payment_method = recentSms.method;
-        console.log(`[Bot]: Auto-matched SMS log for ${senderPhone}: TrxID=${recentSms.trx_id}, ৳${recentSms.amount}`);
+      await sock.sendMessage(remoteJid, { react: { text: '🔍', key: msg.key } });
+      const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger });
+      imageDetails = await parsePaymentScreenshot(
+        buffer,
+        msg.message.imageMessage.mimetype || 'image/jpeg',
+        rawText
+      );
+      console.log('[DokanAI Vision Extracted]:', imageDetails);
+
+      if (imageDetails.trx_id) {
+        existingSession.trx_id = imageDetails.trx_id;
+        existingSession.amount = imageDetails.amount;
+        existingSession.payment_method = imageDetails.payment_method;
       }
     } catch (e) {
-      console.warn('[Bot]: Error checking recent SMS logs:', e.message);
+      console.warn('[DokanAI Vision Error]:', e.message);
     }
   }
 
-  // 4. Fetch Live Tournament Data from Firestore
-  let matches = [];
-  try {
-    const tourney = await getTournamentData();
-    matches = (tourney && tourney.data && tourney.data.matches) || [];
-  } catch (err) {
-    console.error('[Bot Fetch Tournament Error]:', err.message);
-  }
+  // Update session activity timestamp
+  existingSession.lastActivity = Date.now();
 
-  // 5. Resolve Target Match dynamically based on player's request
-  let targetMatch = null;
-  const upcomingMatches = matches.filter(m => m.status === 'upcoming');
+  // 3. Parse structured booking details from text
+  const parsedBooking = parseStructuredBookingMessage(rawText);
 
-  // If player explicitly specified a match (e.g. "Match 4", "Match 5", "m4", "4", "Bermuda"):
-  if (parsedData.match_query) {
-    targetMatch = findTargetMatch(matches, parsedData.match_query, false);
-    if (targetMatch) {
-      parsedData.targetMatchId = targetMatch.id || targetMatch.matchNumber;
-    }
-  }
+  // Update session with any extracted tokens
+  if (parsedBooking.squadName) existingSession.squadName = parsedBooking.squadName;
+  if (parsedBooking.slotNumber) existingSession.preferredSlot = parsedBooking.slotNumber;
+  if (parsedBooking.leaderName) existingSession.leaderName = parsedBooking.leaderName;
+  if (parsedBooking.matchQuery) existingSession.preferredMatch = parsedBooking.matchQuery;
+  if (parsedBooking.trxId) existingSession.trx_id = parsedBooking.trxId;
+  sessionManager.set(senderPhone, existingSession);
 
-  // If still not found, check existing session (only if that match is still upcoming)
-  if (!targetMatch && existingSession.targetMatchId) {
-    const prev = matches.find(m => (m.id && m.id === existingSession.targetMatchId) || m.matchNumber === existingSession.targetMatchId);
-    if (prev && prev.status === 'upcoming') {
-      targetMatch = prev;
-    }
-  }
+  // 4. FAST BOOKING PATH: If user already provided Squad, Slot, and TrxID (from text, session, or OCR)
+  const effectiveSquad = parsedBooking.squadName || existingSession.squadName;
+  const effectiveSlot = parsedBooking.slotNumber || existingSession.preferredSlot;
+  const effectiveTrx = parsedBooking.trxId || imageDetails?.trx_id || existingSession.trx_id;
+  const effectiveMatch = parsedBooking.matchQuery || existingSession.preferredMatch || 'Match 4';
 
-  // If there is ONLY ONE upcoming match in the whole tournament, auto-pick it:
-  if (!targetMatch && upcomingMatches.length === 1) {
-    targetMatch = upcomingMatches[0];
-    parsedData.targetMatchId = targetMatch.id || targetMatch.matchNumber;
-  }
+  if (effectiveSquad && effectiveSlot && effectiveTrx) {
+    console.log(`[Fast Booking Executing]: Squad "${effectiveSquad}", Slot #${effectiveSlot}, TrxID "${effectiveTrx}" on ${effectiveMatch}`);
+    const bookResult = await executeToolCall('verifyAndBookSlot', {
+      matchQuery: effectiveMatch,
+      slotNumber: effectiveSlot,
+      squadName: effectiveSquad,
+      leaderName: parsedBooking.leaderName || existingSession.leaderName || `${effectiveSquad}_Lead`,
+      contactPhone: senderPhone,
+      trxId: effectiveTrx,
+      amount: existingSession.amount || 10,
+      paymentMethod: existingSession.payment_method || 'bkash'
+    }, { phone: senderPhone, ...existingSession });
 
-  // Save merged state into session
-  sessionManager.set(senderPhone, parsedData);
-
-  // STEP A: If targetMatch is still undefined (multiple matches exist and player hasn't chosen one):
-  if (!targetMatch) {
-    let matchListText = '';
-    if (upcomingMatches.length > 0) {
-      matchListText = upcomingMatches.map((m, idx) => {
-        const freeCount = (m.slots || []).filter(s => !s.booked).length;
-        const num = m.matchNumber || (idx + 1);
-        return `🎮 *Match ${num}:* ${m.title || 'Daily Squad Clash'}\n   🗺️ ম্যাপ: ${m.map || 'Bermuda'} | ⏰ সময়: ${m.time || '08:30 PM'}\n   💰 এন্ট্রি ফি: ৳${m.entryFee || 100} | 🎯 খালি স্লট: ${freeCount}টি`;
-      }).join('\n\n');
-    } else {
-      matchListText = 'বর্তমানে কোনো আপকামিং টুর্নামেন্ট শিডিউল নেই।';
-    }
-
-    const reply = `👋 স্বাগতম *ARENA X* ফ্রি ফায়ার টুর্নামেন্ট প্ল্যাটফর্মে!
-
-🏆 *বর্তমানে একাধিক ম্যাচ চালু রয়েছে:*
+    if (bookResult && bookResult.success) {
+      await sock.sendMessage(remoteJid, { react: { text: '✅', key: msg.key } });
+      const b = bookResult;
+      const confirmationSlip = `🎮 *ARENA X TOURNAMENT CONFIRMATION* 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━
-${matchListText}
-━━━━━━━━━━━━━━━━━━━━━━━
+✅ *আপনার স্কোয়াড সফলভাবে কনফার্ম হয়েছে!*
 
-👉 *স্লট বুক করতে নিচের যেকোনো একটি ফরম্যাটে মেসেজ দিন:*
-
-📋 *বুকিং ফরম্যাট (কপি করে পাঠান):*
-ম্যাচ: Match 4 (অথবা Match 5)
-স্লট: ৫ (১-১২ এর মধ্যে)
-টিম: আপনার স্কোয়াড নাম
-প্লেয়ার: ১, ২, ৩, ৪
-TrxID: বিকাশ/নগদ ফিরতি SMS-এর ট্রানজেকশন আইডি
-
-*(অথবা এক লাইনে লিখুন: Match 4, Slot 5, Team Venom, TrxID XXXXXXXXX)*`;
-
-    await sock.sendMessage(remoteJid, { text: reply });
-    return;
-  }
-
-  // STEP B: Target match is confirmed! Use its dynamic entry fee
-  const requiredFee = Number(targetMatch.entryFee || 100);
-  const hasPayment = !!parsedData.trx_id;
-  const hasSquad = !!parsedData.squad_name;
-
-  // Case 1: Missing Payment (Player wants to book but hasn't paid or given TrxID)
-  if (!hasPayment) {
-    const freeSlots = (targetMatch.slots || []).filter(s => !s.booked).map(s => '#' + s.slotNumber);
-    const reply = `🎯 *${targetMatch.title}*
-🗺️ ম্যাপ: ${targetMatch.map || 'Bermuda'} | ⏰ সময়: ${targetMatch.time || '08:30 PM'}
-💰 এন্ট্রি ফি: *৳${requiredFee}*
-🎯 খালি স্লটসমূহ: *${freeSlots.join(', ')}*
-
-বুকিং করতে অনুগ্রহ করে এন্ট্রি ফি (৳${requiredFee}) নিচের যেকোনো নম্বরে *Send Money* করুন:
-📱 *বিকাশ (Personal):* 01791357521
-📱 *নগদ (Personal):* 01791357521
-📱 *রকেট (Personal):* 01791357521
-
-Send Money করার পর নিচের ফরম্যাটে ফিরতি SMS-এর *TrxID* এবং আপনার *স্কোয়াডের নাম* লিখে পাঠান:
-
-📋 *বুকিং ফরম্যাট (কপি করে পাঠান):*
-ম্যাচ: ${targetMatch.matchNumber || 4}
-স্লট: ${freeSlots[0] ? freeSlots[0].replace('#', '') : '১'}
-টিম: আপনার স্কোয়াড নাম
-প্লেয়ার: ১, ২, ৩, ৪
-TrxID: আপনার বিকাশ/নগদ TrxID
-
-*(অথবা সরাসরি পেমেন্ট স্ক্রিনশট সেন্ড করুন)*`;
-
-    await sock.sendMessage(remoteJid, { text: reply });
-    return;
-  }
-
-  // Case 2: Payment found, but Missing Squad Name
-  if (hasPayment && !hasSquad) {
-    const paidAmount = parsedData.amount || requiredFee;
-    let feeNote = '';
-    if (parsedData.amount && parsedData.amount < requiredFee) {
-      feeNote = `\n⚠️ *সতর্কতা:* এই ম্যাচের এন্ট্রি ফি ৳${requiredFee}, তবে আপনার পেমেন্টে ৳${parsedData.amount} শনাক্ত হয়েছে।`;
-    }
-
-    const freeSlots = (targetMatch.slots || []).filter(s => !s.booked).map(s => '#' + s.slotNumber);
-    const reply = `✅ ধন্যবাদ! আপনার *৳${paidAmount}* পেমেন্ট সফলভাবে শনাক্ত হয়েছে (TrxID: *${parsedData.trx_id}*)।${feeNote}
-
-🎮 *ম্যাচ:* ${targetMatch.title}
-🎯 খালি স্লটসমূহ: *${freeSlots.join(', ')}*
-
-এবার অনুগ্রহ করে আপনার *স্কোয়াড নাম* এবং আপনি *কত নম্বর স্লটে* খেলতে চান তা লিখে পাঠান:
-(যেমন: *Squad Vortex, Slot 3, Leader Tanvir*)`;
-
-    await sock.sendMessage(remoteJid, { text: reply });
-    return;
-  }
-
-  // Case 3: Both Payment & Squad Details are ready -> Perform Automatic Firestore Booking!
-  console.log(`[Bot]: All details ready for ${senderPhone} in ${targetMatch.title}. Booking slot in Firestore...`);
-
-  await sock.sendMessage(remoteJid, {
-    react: { text: '⏳', key: msg.key }
-  });
-
-  const bookingResult = await bookSlotInFirestore({
-    matchQuery: targetMatch.title || parsedData.match_query,
-    preferredSlot: parsedData.slot_number,
-    squadName: parsedData.squad_name,
-    leaderName: parsedData.leader_name,
-    playerNames: parsedData.player_names || [],
-    contactPhone: senderPhone,
-    trxId: parsedData.trx_id,
-    amount: parsedData.amount || requiredFee,
-    paymentMethod: parsedData.payment_method
-  });
-
-  // Handle Slot Occupied
-  if (!bookingResult.success && bookingResult.reason === 'SLOT_OCCUPIED') {
-    const reply = `⚠️ দুঃখিত! স্লট *#${parsedData.slot_number}* ইতিমধ্যে অন্য দল বুক করে নিয়েছে।
-
-খালি স্লটসমূহ: *${bookingResult.freeSlots.map(s => '#' + s).join(', ')}*
-
-অনুগ্রহ করে ওপরের যেকোনো একটি খালি স্লট নম্বর লিখে পাঠান (যেমন: *Slot ${bookingResult.freeSlots[0]}*)।`;
-
-    await sock.sendMessage(remoteJid, { text: reply });
-    return;
-  }
-
-  // Handle Duplicate TrxID Fraud
-  if (!bookingResult.success && bookingResult.reason === 'DUPLICATE_TRXID') {
-    const reply = `🚫 *পেমেন্ট ভেরিফিকেশন ব্যর্থ!*
-আপনার দেওয়া TrxID (*${parsedData.trx_id}*) ইতিমধ্যে অন্য একটি বুকিংয়ে ব্যবহার করা হয়েছে। অনুগ্রহ করে সঠিক TrxID অথবা ফ্রেশ পেমেন্ট স্ক্রিনশট পাঠান।`;
-
-    await sock.sendMessage(remoteJid, { text: reply });
-    sessionManager.clear(senderPhone);
-    return;
-  }
-
-  // Handle No Active Match
-  if (!bookingResult.success) {
-    await sock.sendMessage(remoteJid, { text: `⚠️ ${bookingResult.message}` });
-    return;
-  }
-
-  // SUCCESS! Slot Booked & Realtime Firestore Updated!
-  sessionManager.clear(senderPhone);
-
-  await sock.sendMessage(remoteJid, {
-    react: { text: '✅', key: msg.key }
-  });
-
-  const m = bookingResult.match;
-  const confirmationMessage = `🎮 *ARENA X TOURNAMENT CONFIRMATION* 🎮
-━━━━━━━━━━━━━━━━━━━━━━━
-✅ *আপনার স্কোয়াড সফলভাবে রেজিস্টার্ড হয়েছে!*
-
-🏆 *ম্যাচ:* ${m.title || 'Match'}
-🗺️ *ম্যাপ:* ${m.map || 'Bermuda'}
-⏰ *সময়:* Today ${m.time || '08:30 PM'}
-🎯 *স্লট নম্বর:* Slot #${bookingResult.slotNumber < 10 ? '0' + bookingResult.slotNumber : bookingResult.slotNumber}
-🛡️ *স্কোয়াড:* ${bookingResult.squadName}
-👑 *লিডার:* ${bookingResult.leaderName}
-📱 *ভেরিফাইড নম্বর:* ${bookingResult.contactPhone}
-💰 *পেমেন্ট:* ৳${bookingResult.amount} (${(bookingResult.paymentMethod || 'bKash').toUpperCase()} - ${bookingResult.trxId})
+🏆 *ম্যাচ:* ${b.match?.title || 'Daily Squad Clash'}
+🎯 *স্লট নম্বর:* Slot #${b.slotNumber < 10 ? '0' + b.slotNumber : b.slotNumber}
+🛡️ *স্কোয়াড:* ${b.squadName}
+👑 *লিডার:* ${b.leaderName}
+📱 *ভেরিফাইড নম্বর:* ${b.contactPhone}
+💰 *পেমেন্ট:* ৳${b.amount} (${(b.paymentMethod || 'bKash').toUpperCase()} - ${b.trxId})
 ━━━━━━━━━━━━━━━━━━━━━━━
 🔑 *রুম আইডি ও পাসওয়ার্ড অ্যাক্সেস:*
-ম্যাচ শুরুর ১৫ মিনিট আগে সরাসরি ওয়েবসাইটে গিয়ে আপনার এই হোয়াটসঅ্যাপ নম্বরটি (*${bookingResult.contactPhone}*) ভেরিফাই করলেই কাস্টম রুম আইডি ও পাসওয়ার্ড আনলক হয়ে যাবে!
+ম্যাচ শুরুর ১৫ মিনিট আগে সরাসরি ওয়েবসাইটে গিয়ে আপনার এই হোয়াটসঅ্যাপ নম্বরটি (*${b.contactPhone}*) ভেরিফাই করলেই কাস্টম রুম আইডি ও পাসওয়ার্ড আনলক হয়ে যাবে!
 
 🌐 *লাইভ ওয়েবসাইট:*
 ${config.tournament.websiteUrl}`;
 
-  await sock.sendMessage(remoteJid, { text: confirmationMessage });
-  console.log(`[Bot]: Successfully booked Slot #${bookingResult.slotNumber} for Squad ${bookingResult.squadName} (${senderPhone})!`);
+      await sock.sendMessage(remoteJid, { text: confirmationSlip });
+      sessionManager.clear(senderPhone);
+      return;
+    } else if (bookResult && !bookResult.success) {
+      await sock.sendMessage(remoteJid, {
+        text: `⚠️ *বুকিং ব্যর্থ হয়েছে!*\n\n${bookResult.message || bookResult.reason || 'স্লটটি ইতিমধ্যে অন্য কেউ বুক করেছে অথবা TrxID টি ভুল।'}\n\nঅনুগ্রহ করে অন্য একটি স্লট বেছে নিয়ে নিচের ফরম্যাটটি পূরণ করে পাঠান:`
+      });
+      // Send separate booking format with prefilled TrxID so they can easily pick another slot!
+      await new Promise(r => setTimeout(r, 500));
+      await sock.sendMessage(remoteJid, {
+        text: generateCopyableBookingTemplate({
+          matchQuery: effectiveMatch,
+          squadName: effectiveSquad,
+          trxId: effectiveTrx
+        })
+      });
+      return;
+    }
+  }
+
+  // 5. Run DokanAI Agent Brain (with Tools) for inquiries or partial details
+  const agentOutput = await runDokanAiAgent({
+    userMessage: rawText,
+    senderPhone,
+    chatHistory: existingSession.chatHistory || [],
+    sessionData: existingSession,
+    imageContext: imageDetails
+  });
+
+  // Save conversation turn in history (up to last 10 turns)
+  if (!existingSession.chatHistory) existingSession.chatHistory = [];
+  existingSession.chatHistory.push(
+    { role: 'user', parts: [{ text: rawText || '(Sent payment screenshot)' }] },
+    { role: 'model', parts: [{ text: agentOutput.replyText }] }
+  );
+  if (existingSession.chatHistory.length > 10) existingSession.chatHistory = existingSession.chatHistory.slice(-10);
+  sessionManager.set(senderPhone, existingSession);
+
+  // 6. Handle Separate Booking Format Message Dispatch
+  const isFormatInquiry = /(?:format|ফরম্যাট|কিভাবে|কীভাবে|নিয়ম|rules|process|বুক করব|বুকিং করব|রেজিস্ট্রেশন)/i.test(rawText);
+  const isSlotInquiry = agentOutput.toolExecuted === 'checkAvailableSlots';
+  const hasPaymentMissingDetails = (imageDetails?.trx_id || existingSession.trx_id) && (!existingSession.squadName || !existingSession.preferredSlot);
+
+  let conversationalText = agentOutput.replyText || '';
+  let separateTemplate = null;
+
+  // Extract template if AI included it in reply text
+  if (conversationalText.includes('[ARENA-BOOKING]') || conversationalText.includes('[ARENA BOOKING]')) {
+    const splitRegex = /\[ARENA-?BOOKING\][\s\S]*/i;
+    const match = conversationalText.match(splitRegex);
+    if (match) {
+      separateTemplate = match[0].trim();
+      conversationalText = conversationalText.replace(splitRegex, '').trim();
+    }
+  }
+
+  // Generate clean template if needed and not already extracted
+  if (!separateTemplate && (isFormatInquiry || isSlotInquiry || hasPaymentMissingDetails)) {
+    separateTemplate = generateCopyableBookingTemplate({
+      matchQuery: existingSession.preferredMatch || 'Match 4',
+      slotNumber: existingSession.preferredSlot || '',
+      squadName: existingSession.squadName || '',
+      leaderName: existingSession.leaderName || '',
+      trxId: imageDetails?.trx_id || existingSession.trx_id || ''
+    });
+  }
+
+  // Send Message 1: Conversational friendly explanation
+  if (conversationalText) {
+    await sock.sendMessage(remoteJid, { text: conversationalText });
+  }
+
+  // Send Message 2: Standalone 1-Tap Copyable Booking Template (SENT SEPARATELY)
+  if (separateTemplate && (!agentOutput.toolExecuted || agentOutput.toolExecuted !== 'verifyAndBookSlot')) {
+    await new Promise(r => setTimeout(r, 600)); // Natural 600ms gap
+    await sock.sendMessage(remoteJid, { text: separateTemplate });
+  }
+
+  // 7. If a slot was successfully booked via Gemini's verifyAndBookSlot tool:
+  if (agentOutput.toolExecuted === 'verifyAndBookSlot' && agentOutput.toolResult?.success) {
+    await sock.sendMessage(remoteJid, { react: { text: '✅', key: msg.key } });
+
+    const b = agentOutput.toolResult;
+    const confirmationSlip = `🎮 *ARENA X TOURNAMENT CONFIRMATION* 🎮
+━━━━━━━━━━━━━━━━━━━━━━━
+✅ *আপনার স্কোয়াড সফলভাবে কনফার্ম হয়েছে!*
+
+🏆 *ম্যাচ:* ${b.match?.title || 'Daily Squad Clash'}
+🎯 *স্লট নম্বর:* Slot #${b.slotNumber < 10 ? '0' + b.slotNumber : b.slotNumber}
+🛡️ *স্কোয়াড:* ${b.squadName}
+👑 *লিডার:* ${b.leaderName}
+📱 *ভেরিফাইড নম্বর:* ${b.contactPhone}
+💰 *পেমেন্ট:* ৳${b.amount} (${(b.paymentMethod || 'bKash').toUpperCase()} - ${b.trxId})
+━━━━━━━━━━━━━━━━━━━━━━━
+🔑 *রুম আইডি ও পাসওয়ার্ড অ্যাক্সেস:*
+ম্যাচ শুরুর ১৫ মিনিট আগে সরাসরি ওয়েবসাইটে গিয়ে আপনার এই হোয়াটসঅ্যাপ নম্বরটি (*${b.contactPhone}*) ভেরিফাই করলেই কাস্টম রুম আইডি ও পাসওয়ার্ড আনলক হয়ে যাবে!
+
+🌐 *লাইভ ওয়েবসাইট:*
+${config.tournament.websiteUrl}`;
+
+    await sock.sendMessage(remoteJid, { text: confirmationSlip });
+
+    // Clear session after successful booking
+    sessionManager.clear(senderPhone);
+  }
 }

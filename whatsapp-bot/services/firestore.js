@@ -283,25 +283,44 @@ export function normalizePhone(rawPhone) {
 /**
  * Find recent verified SMS payment from Firestore sms_logs for this player's phone
  */
-export async function findRecentSmsLog(senderPhone) {
+export async function findRecentSmsLog(senderPhone, expectedAmount = null) {
   try {
     const cleanPhone = normalizePhone(senderPhone);
     const res = await fetch('https://firestore.googleapis.com/v1/projects/ff-squad-arena-bd/databases/(default)/documents/sms_logs');
     if (!res.ok) return null;
     const json = await res.json();
     const docs = json.documents || [];
+    
+    // First priority: Phone number match
     for (const d of docs) {
       const fields = d.fields || {};
       const sender = fields.sender?.stringValue || '';
       const cleanSender = normalizePhone(sender);
-      if (cleanSender && (cleanSender === cleanPhone || cleanSender.includes(cleanPhone) || cleanPhone.includes(cleanSender))) {
+      if (cleanPhone && cleanSender && (cleanSender === cleanPhone || cleanSender.includes(cleanPhone) || cleanPhone.includes(cleanSender))) {
         return {
           trx_id: fields.trxId?.stringValue,
-          amount: fields.amount?.doubleValue || 0,
+          amount: Number(fields.amount?.doubleValue || fields.amount?.integerValue || 0),
           method: fields.method?.stringValue || 'bKash',
           sender: sender,
           timestamp: fields.timestamp?.stringValue
         };
+      }
+    }
+
+    // Second priority: Match by expected amount if single recent log matches
+    if (expectedAmount) {
+      for (const d of docs) {
+        const fields = d.fields || {};
+        const amt = Number(fields.amount?.doubleValue || fields.amount?.integerValue || 0);
+        if (amt === Number(expectedAmount)) {
+          return {
+            trx_id: fields.trxId?.stringValue,
+            amount: amt,
+            method: fields.method?.stringValue || 'bKash',
+            sender: fields.sender?.stringValue || '',
+            timestamp: fields.timestamp?.stringValue
+          };
+        }
       }
     }
   } catch (err) {

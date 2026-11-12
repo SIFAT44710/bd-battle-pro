@@ -1,8 +1,43 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // 1. Tournament Schedules & Slots
+    match /tournaments/{tournamentId} {
+      // Public read: Players can view live tournament, matches, and slots
+      allow read: if true;
+      
+      // Full admin write access: Authenticated Firebase user
+      allow write: if request.auth != null;
+      
+      // Player self-booking update constraint:
+      // Allows players from web client to submit slot bookings without destroying schema
+      allow update: if request.auth == null 
+        && request.resource.data.matches is list
+        && request.resource.data.title == resource.data.title;
+    }
+
+    // 2. Mobile Financial Services SMS Logs (bKash/Nagad Hardware Gateway)
+    match /sms_logs/{trxId} {
+      // Public cannot read SMS logs (Prevents scraping financial customer data)
+      allow read: if request.auth != null;
+      
+      // Gateway writing: Authenticated Admin or SifrPay Gateway with structured transaction schema
+      allow write: if request.auth != null 
+        || (request.resource.data.keys().hasAll(['trxId', 'amount', 'sender', 'timestamp'])
+            && request.resource.data.trxId is string
+            && request.resource.data.trxId.size() >= 6);
+    }
+
+    // 3. System & White-Label Brand Settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 4. Default Deny for any unmapped collections
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
   }
 }

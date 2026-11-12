@@ -3,7 +3,7 @@ services:
     name: arena-x-whatsapp-bot
     env: node
     plan: free
-    region: oregon
+    region: singapore
     rootDir: whatsapp-bot
     buildCommand: npm install
     startCommand: npm start
@@ -12,6 +12,10 @@ services:
     envVars:
       - key: PORT
         value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ID
+        value: default_client
       - key: GEMINI_API_KEY
         value: AQ.Ab8RN6JPMJBewHtj4jRfbQnYxW8zYBLxbhmOOisisOS7eF2xHg
       - key: TOURNAMENT_DOC_ID

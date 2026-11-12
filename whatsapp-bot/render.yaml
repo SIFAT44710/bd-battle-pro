@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: arena-x-whatsapp-bot
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ID
+        value: default_client
+      - key: TOURNAMENT_DOC_ID
+        value: ff-daily-squad
+      - key: GEMINI_API_KEY
+        sync: false

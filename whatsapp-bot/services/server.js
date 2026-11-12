@@ -88,59 +88,101 @@ export function startWebServer(port = process.env.PORT || 3000) {
       }
     }
 
-    // 2. API to request WhatsApp Pairing Code (Mobile-Friendly, No QR needed!)
-    if (url.pathname === '/api/pair' && req.method === 'POST') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; });
-      req.on('end', async () => {
+    // 2. API to request WhatsApp Pairing Code (Supports POST body or GET query ?phone=)
+    if (url.pathname === '/api/pair') {
+      const handlePair = async (rawPhone) => {
+        let phone = (rawPhone || '').trim().replace(/\D/g, '');
+        if (!phone) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, message: 'সঠিক মোবাইল নম্বর প্রদান করুন (যেমন: 01791357521)' }));
+          return;
+        }
+
+        if (phone.startsWith('0')) {
+          phone = '88' + phone;
+        } else if (!phone.startsWith('880')) {
+          phone = '880' + phone;
+        }
+
+        if (!currentSock) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, message: 'WhatsApp ক্লায়েন্ট এখনো প্রস্তুত হয়নি। ১ সেকেন্ড পর আবার চেষ্টা করুন।' }));
+          return;
+        }
+
+        if (currentSock.authState?.creds?.registered) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            alreadyConnected: true,
+            user: currentSock.user?.id,
+            message: 'হোয়াটসঅ্যাপ ইতিমধ্যে কানেক্টেড রয়েছে! পুনরায় পেয়ার করার প্রয়োজন নেই।'
+          }));
+          return;
+        }
+
         try {
-          const parsed = JSON.parse(body || '{}');
-          let phone = (parsed.phone || '').trim().replace(/\D/g, '');
-
-          if (!phone) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, message: 'সঠিক মোবাইল নম্বর প্রদান করুন' }));
-            return;
-          }
-
-          if (phone.startsWith('0')) {
-            phone = '88' + phone;
-          } else if (!phone.startsWith('880')) {
-            phone = '880' + phone;
-          }
-
-          if (!currentSock) {
-            res.writeHead(503, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, message: 'WhatsApp ক্লায়েন্ট এখনো ইনিশিয়ালাইজ হয়নি।' }));
-            return;
-          }
-
-          if (currentSock.authState?.creds?.registered) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, message: 'হোয়াটসঅ্যাপ ইতিমধ্যে কানেক্টেড আছে!' }));
-            return;
-          }
-
           console.log(`[Web Pairing]: Requesting pairing code for phone: ${phone}...`);
           const code = await currentSock.requestPairingCode(phone);
-          botState.pairingCode = code;
+          const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+          botState.pairingCode = formattedCode;
           botState.status = 'pairing_ready';
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, pairingCode: code }));
+          res.end(JSON.stringify({
+            success: true,
+            pairingCode: formattedCode,
+            rawCode: code,
+            instructions: 'হোয়াটসঅ্যাপ ওপেন করুন > Linked Devices > Link with phone number-এ গিয়ে এই কোডটি লিখুন।'
+          }));
         } catch (err) {
           console.error('[Web Pairing Error]:', err);
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: false, message: err.message || 'পেয়ারিং কোড তৈরি ব্যর্থ হয়েছে' }));
         }
-      });
-      return;
+      };
+
+      if (req.method === 'GET') {
+        const phone = url.searchParams.get('phone');
+        return handlePair(phone);
+      } else if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+          const parsed = JSON.parse(body || '{}');
+          handlePair(parsed.phone);
+        });
+        return;
+      }
     }
 
     // 3. API Status JSON
     if (url.pathname === '/api/status') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(botState));
+      return;
+    }
+
+    // 3b. API Direct Send Message
+    if (url.pathname === '/api/send' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', async () => {
+        try {
+          const { jid, text } = JSON.parse(body || '{}');
+          if (!currentSock || !jid || !text) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Missing jid or text or bot not ready' }));
+            return;
+          }
+          await currentSock.sendMessage(jid, { text });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, message: err.message }));
+        }
+      });
       return;
     }
 
