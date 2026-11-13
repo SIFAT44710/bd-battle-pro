@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { config } from '../config.js';
+import { addLog } from './server.js';
 import {
   getTournamentData,
   findTargetMatch,
@@ -303,6 +304,7 @@ export async function runDokanAiAgent({
 
   } catch (err) {
     console.error('[ARENA X Host Agent Error]:', err.message);
+    try { addLog('AGENT_ERROR', { error: err.message }); } catch (e) {}
     return {
       replyText: `👋 আসসালামু আলাইকুম ভাই! ARENA X ফ্রি ফায়ার টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান জানান, আমি এখনই চেক করে দিচ্ছি!`,
       toolExecuted: null,

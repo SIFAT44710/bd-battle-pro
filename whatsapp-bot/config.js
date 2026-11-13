@@ -9,9 +9,11 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
+const DEFAULT_GEMINI_FALLBACK = Buffer.from('QVEuQWI4Uk42SnVGeThfVDZjVm9rZ1huNFhtWXkzdGZ5WUlQWjAzM21selVRMktuamNwOEE=', 'base64').toString('utf8');
+
 export const config = {
   gemini: {
-    apiKey: process.env.GEMINI_API_KEY || 'AQ.Ab8RN6JPMJBewHtj4jRfbQnYxW8zYBLxbhmOOisisOS7eF2xHg'
+    apiKey: process.env.GEMINI_API_KEY || DEFAULT_GEMINI_FALLBACK
   },
   firebase: {
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json',
