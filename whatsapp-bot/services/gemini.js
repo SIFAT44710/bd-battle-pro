@@ -1,42 +1,41 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { config } from '../config.js';
-import { getTournamentData, findTargetMatch, checkSlotStatus, isDuplicateTrxId, bookSlotInFirestore, findRecentSmsLog, normalizePhone } from './firestore.js';
+import {
+  getTournamentData,
+  findTargetMatch,
+  checkSlotStatus,
+  isDuplicateTrxId,
+  bookSlotInFirestore,
+  findRecentSmsLog,
+  normalizePhone
+} from './firestore.js';
 
 let genAI = null;
-let modelCallCounter = 0;
-
-// High-limit rotating model pool for zero-downtime execution
-const ROTATING_MODELS = [
-  'gemini-3.5-flash-lite',
-  'gemini-3.5-flash',
-  'gemini-3.7-flash',
-  'gemini-flash-latest'
-];
 
 function getGenAI() {
   if (!genAI) {
     if (!config.gemini.apiKey) {
       throw new Error('GEMINI_API_KEY is not defined in environment variables or .env file!');
     }
-    genAI = new GoogleGenerativeAI(config.gemini.apiKey);
+    genAI = new GoogleGenAI({ apiKey: config.gemini.apiKey });
   }
   return genAI;
 }
 
 /**
- * Tool Declarations for DokanAI-Style Function Calling
+ * Tool Declarations for Arena X Tournament Host (DokanAI-Style Function Calling)
  */
-const BOT_TOOLS = [
+export const BOT_TOOLS = [
   {
     functionDeclarations: [
       {
         name: 'checkAvailableSlots',
-        description: 'Checks upcoming Free Fire tournament matches, map names, start times, entry fees, and free slots.',
+        description: 'Checks upcoming Free Fire tournament matches, map names, start times, entry fees, prize pools, and free slots from Player Panel database. Always call this when player asks about matches or slots.',
         parameters: {
-          type: 'OBJECT',
+          type: Type.OBJECT,
           properties: {
             matchQuery: {
-              type: 'STRING',
+              type: Type.STRING,
               description: 'Optional match title, number (e.g. "Match 4", "4", "Bermuda") or empty to list all upcoming matches.'
             }
           }
@@ -46,17 +45,17 @@ const BOT_TOOLS = [
         name: 'verifyAndBookSlot',
         description: 'Verifies MFS bKash/Nagad payment and registers the squad slot into Cloud Firestore.',
         parameters: {
-          type: 'OBJECT',
+          type: Type.OBJECT,
           properties: {
-            matchQuery: { type: 'STRING', description: 'Target match number or name, e.g. "Match 4" or "Match 2".' },
-            slotNumber: { type: 'INTEGER', description: 'Slot number 1 to 12.' },
-            squadName: { type: 'STRING', description: 'Name of the squad/team.' },
-            leaderName: { type: 'STRING', description: 'Squad leader name or IGN.' },
-            playerNames: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Player IGNs (up to 4).' },
-            contactPhone: { type: 'STRING', description: 'WhatsApp / mobile phone number.' },
-            trxId: { type: 'STRING', description: 'bKash/Nagad/Rocket Transaction ID (e.g. DKA1AJX4FF).' },
-            amount: { type: 'NUMBER', description: 'Amount paid in BDT Taka.' },
-            paymentMethod: { type: 'STRING', description: 'bkash, nagad, rocket, or upay.' }
+            matchQuery: { type: Type.STRING, description: 'Target match number or name, e.g. "Match 4" or "Match 2".' },
+            slotNumber: { type: Type.INTEGER, description: 'Slot number 1 to 12.' },
+            squadName: { type: Type.STRING, description: 'Name of the squad/team.' },
+            leaderName: { type: Type.STRING, description: 'Squad leader name or IGN.' },
+            playerNames: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Player IGNs (up to 4).' },
+            contactPhone: { type: Type.STRING, description: 'WhatsApp / mobile phone number.' },
+            trxId: { type: Type.STRING, description: 'bKash/Nagad/Rocket Transaction ID (e.g. DKA1AJX4FF).' },
+            amount: { type: Type.NUMBER, description: 'Amount paid in BDT Taka.' },
+            paymentMethod: { type: Type.STRING, description: 'bkash, nagad, rocket, or upay.' }
           },
           required: ['matchQuery', 'slotNumber', 'squadName', 'trxId']
         }
@@ -66,24 +65,46 @@ const BOT_TOOLS = [
 ];
 
 const SYSTEM_INSTRUCTION = `
-You are the ARENA X Autonomous Tournament AI Manager for Bangladesh Free Fire Esports.
-You chat naturally and politely in conversational Bengali / Banglish (casual, friendly, professional).
+You are the official ARENA X Tournament Host & Scrims Manager on WhatsApp for Bangladesh Free Fire Esports.
+You are a warm, energetic, and polite human esports tournament host and room moderator — NOT an AI bot, and NEVER sound like an automated answering machine or robot.
+You talk in natural, friendly, conversational Bengali / Banglish (e.g., "আসসালামু আলাইকুম ভাই", "ওয়ালাইকুমুস সালাম ভাইয়া", "হ্যাঁ ভাইয়া", "অসাধারণ!").
 
-Rules for your behavior:
-1. You represent ARENA X Free Fire tournament platform.
-2. If player asks which matches or slots are free, or if they send a booking inquiry, call the 'checkAvailableSlots' tool to get live real-time match data. Then explain clearly which matches are open, their entry fees, and that they should Send Money to 01791357521 (bKash/Nagad Personal).
-3. If player sends their squad name and slot number along with a TrxID or after sending a payment receipt, call 'verifyAndBookSlot'.
-4. If player sends a payment receipt or TrxID but HAS NOT given their Squad Name or Slot number, acknowledge the payment warmly and explain: "ভাই, আপনার পেমেন্ট পেয়েছি! নিচের বুকিং ফরম্যাটটি পূরণ করে পাঠিয়ে দিন, আমি এক্ষুনি স্লট কনফার্ম করে দিচ্ছি।"
-5. When guiding a player on how to book or if they ask for format/rules, answer conversationally in Bengali. Do NOT output large raw template code blocks inside your text, as our messaging system will automatically send the clean, 1-tap copyable booking template as a separate WhatsApp message right after your reply.
-6. If player sends less money than the match entry fee (e.g. fee is ৳100, but player sent ৳50), tell them politely: "ভাই, এই ম্যাচের এন্ট্রি ফি ৳১০০, কিন্তু পেয়েছি ৳৫০। অনুগ্রহ করে বাকি ৳৫০ পরিশোধ করে TrxID দিন, আমি স্লট কনফার্ম করে দিচ্ছি।"
-7. Keep your answers concise, human, and direct. Use appropriate emojis (🎮, 🎯, ৳, ✅, 🛡️).
+YOUR CORE BEHAVIOR & RULES:
+1. GREETING & CASUAL INQUIRIES:
+   - When a player chats (e.g. "আজকে কি ম্যাচ আছে?", "স্লট খালি আছে?", "খেলবো"), greet them warmly and call 'checkAvailableSlots' to retrieve live real-time matches from the Player Panel.
+   - Explain which matches are open, the map name (Bermuda/Purgatory/Kalahari), start time, entry fee (৳), prize pool (৳), and how many slots are vacant.
+   - Excite them to book a slot for their squad before it fills up!
+
+2. REAL-TIME DATA ACCURACY:
+   - Always call 'checkAvailableSlots' to get the latest live match and slot state.
+   - If player asks about a specific slot (e.g. "স্লট ৫ খালি আছে?"), check if 5 is in freeSlots. If yes, tell them enthusiastically: "হ্যাঁ ভাইয়া, ৫ নম্বর স্লট একদম খালি আছে! আপনার স্কোয়াডের নামটা কি? বিকাশ/নগদে এন্ট্রি ফি পাঠিয়ে TrxID দিলে আমি এখনি কনফার্ম করে দিচ্ছি।"
+   - If that slot is already occupied, tell them politely which other slot numbers are still open.
+
+3. AUTONOMOUS PAYMENT VERIFICATION & BOOKING:
+   - Official payment number: 01791357521 (bKash & Nagad Personal).
+   - If player sends their Squad Name, Slot Number, and TrxID (or sends a payment receipt):
+     Immediately call 'verifyAndBookSlot'.
+   - If player sends a payment receipt or TrxID FIRST without their team name or slot:
+     Acknowledge the payment warmly (e.g., "ভাই, আপনার ৳১০ পেমেন্ট (TrxID: ...) পেয়ে গেছি! আপনার Squad Name আর কোন স্লটটা নেবেন একটু লিখে দিন, আমি সাথে সাথে কনফার্ম করে দিচ্ছি!").
+   - If player pays less than the required entry fee (e.g. sent ৳50 for a ৳100 match):
+     Politely explain the difference and ask for the remaining amount.
+
+4. ABSOLUTE SECURITY & DATA SHIELD (PLAYER PANEL ONLY):
+   - You ONLY have access to public Player Panel match data.
+   - NEVER disclose admin passcodes, organizer revenue/earnings, total balance, other players' private phone numbers, or backend keys.
+   - Custom Room ID & Password are only accessible to confirmed squads on the website (ff-squad-arena-bd.web.app/player) 15 minutes before the match starts.
+
+5. CONVERSATION QUALITY:
+   - Keep answers natural, short, engaging, and to the point.
+   - Use gaming emojis appropriately (🎮, 🎯, ৳, ✅, 🛡️, 🔥).
+   - Never output cold, rigid code-blocks in general chat. Chat like an awesome, trustworthy human tournament admin hosting scrims on WhatsApp!
 `;
 
 /**
  * Execute tool calls against Cloud Firestore
  */
 export async function executeToolCall(toolName, args, playerSession = {}) {
-  console.log(`[DokanAI Tool Execute]: ${toolName}`, args);
+  console.log(`[ARENA X Tool Execute]: ${toolName}`, args);
 
   if (toolName === 'checkAvailableSlots') {
     try {
@@ -95,6 +116,10 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
         const target = findTargetMatch(matches, args.matchQuery, false);
         if (target) {
           const freeSlots = (target.slots || []).filter(s => !s.booked).map(s => s.slotNumber);
+          const bookedSquads = (target.slots || []).filter(s => s.booked).map(s => ({
+            slotNumber: s.slotNumber,
+            squadName: s.squadName || 'Squad'
+          }));
           return {
             found: true,
             title: target.title,
@@ -105,6 +130,8 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             prizePool: target.prizePool || 100,
             freeSlots,
             totalFree: freeSlots.length,
+            bookedSquads,
+            totalBooked: bookedSquads.length,
             paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
           };
         }
@@ -112,15 +139,20 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
 
       return {
         found: true,
-        upcomingMatches: upcoming.map(m => ({
-          matchNumber: m.matchNumber,
-          title: m.title,
-          map: m.map || 'Bermuda',
-          time: m.time || '08:30 PM',
-          entryFee: m.entryFee || 10,
-          prizePool: m.prizePool || 100,
-          freeSlots: (m.slots || []).filter(s => !s.booked).map(s => s.slotNumber)
-        })),
+        upcomingMatches: upcoming.map(m => {
+          const free = (m.slots || []).filter(s => !s.booked).map(s => s.slotNumber);
+          return {
+            matchNumber: m.matchNumber,
+            title: m.title,
+            map: m.map || 'Bermuda',
+            time: m.time || '08:30 PM',
+            entryFee: m.entryFee || 10,
+            prizePool: m.prizePool || 100,
+            freeSlots: free,
+            totalFree: free.length,
+            totalBooked: 12 - free.length
+          };
+        }),
         paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
       };
     } catch (err) {
@@ -195,7 +227,7 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
 }
 
 /**
- * DokanAI-Style Conversational Agent Loop with Function Calling
+ * ARENA X Host Conversational Agent Loop with Modern @google/genai Function Calling
  */
 export async function runDokanAiAgent({
   userMessage,
@@ -205,25 +237,6 @@ export async function runDokanAiAgent({
   imageContext = null
 }) {
   const ai = getGenAI();
-  let modelInstance = null;
-
-  // Rotation with failover
-  for (let i = 0; i < ROTATING_MODELS.length; i++) {
-    const idx = (modelCallCounter + i) % ROTATING_MODELS.length;
-    const modelName = ROTATING_MODELS[idx];
-    try {
-      modelInstance = ai.getGenerativeModel({
-        model: modelName,
-        systemInstruction: SYSTEM_INSTRUCTION,
-        tools: BOT_TOOLS
-      });
-      break;
-    } catch (e) {
-      console.warn(`Model ${modelName} init failed, trying next...`);
-    }
-  }
-
-  modelCallCounter++;
 
   // Build conversational context
   let fullPrompt = `Sender WhatsApp: ${senderPhone}\n`;
@@ -235,47 +248,88 @@ export async function runDokanAiAgent({
   }
   fullPrompt += `Player Message: ${userMessage || '(User sent payment screenshot)'}`;
 
+  const currentHistory = [];
+
+  // Convert previous turns into @google/genai format
+  for (const h of chatHistory.slice(-6)) {
+    if (h.role && h.parts) {
+      currentHistory.push({
+        role: h.role === 'model' ? 'model' : 'user',
+        parts: h.parts.map(p => ({ text: p.text || '' }))
+      });
+    }
+  }
+
+  currentHistory.push({
+    role: 'user',
+    parts: [{ text: fullPrompt }]
+  });
+
+  const selectedModel = 'gemini-3.5-flash-lite';
+  let executedToolName = null;
+  let executedToolResult = null;
+
   try {
-    const chat = modelInstance.startChat({
-      history: chatHistory.slice(-6)
+    let response = await ai.models.generateContent({
+      model: selectedModel,
+      contents: currentHistory,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        tools: BOT_TOOLS
+      }
     });
 
-    let response = await chat.sendMessage(fullPrompt);
-    let functionCalls = response.response.functionCalls();
+    if (response.candidates?.[0]?.content) {
+      currentHistory.push(response.candidates[0].content);
+    }
 
-    // If Gemini wants to call a tool (Function Calling)
-    if (functionCalls && functionCalls.length > 0) {
-      const call = functionCalls[0];
-      const toolResult = await executeToolCall(call.name, call.args, { phone: senderPhone, ...sessionData });
+    let loopLimit = 3;
+    while (response.functionCalls && response.functionCalls.length > 0 && loopLimit > 0) {
+      loopLimit--;
+      const toolParts = [];
 
-      // Feed tool result back to Gemini so it speaks to the user
-      const secondResponse = await chat.sendMessage([
-        {
+      for (const call of response.functionCalls) {
+        executedToolName = call.name;
+        const result = await executeToolCall(call.name, call.args || {}, { phone: senderPhone, ...sessionData });
+        executedToolResult = result;
+
+        toolParts.push({
           functionResponse: {
             name: call.name,
-            response: toolResult
+            response: { output: result }
           }
-        }
-      ]);
+        });
+      }
 
-      return {
-        replyText: secondResponse.response.text(),
-        toolExecuted: call.name,
-        toolResult
-      };
+      currentHistory.push({
+        role: 'user',
+        parts: toolParts
+      });
+
+      response = await ai.models.generateContent({
+        model: selectedModel,
+        contents: currentHistory,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          tools: BOT_TOOLS
+        }
+      });
+
+      if (response.candidates?.[0]?.content) {
+        currentHistory.push(response.candidates[0].content);
+      }
     }
 
     return {
-      replyText: response.response.text(),
-      toolExecuted: null,
-      toolResult: null
+      replyText: response.text || 'আপনার মেসেজটি পেয়েছি ভাই। আর কিভাবে সাহায্য করতে পারি?',
+      toolExecuted: executedToolName,
+      toolResult: executedToolResult
     };
 
   } catch (err) {
-    console.error('[DokanAI Agent Error]:', err.message);
-    // Graceful offline fallback
+    console.error('[ARENA X Host Agent Error]:', err.message);
     return {
-      replyText: `👋 আসসালামু আলাইকুম! ARENA X টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান এবং বিকাশ TrxID টা একটু লিখে দিন, আমি কনফার্ম করে দিচ্ছি!`,
+      replyText: `👋 আসসালামু আলাইকুম ভাই! ARENA X ফ্রি ফায়ার টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান জানান, আমি এখনই চেক করে দিচ্ছি!`,
       toolExecuted: null,
       toolResult: null
     };
@@ -283,7 +337,7 @@ export async function runDokanAiAgent({
 }
 
 /**
- * Multimodal Screenshot Parser via Gemini Vision
+ * Multimodal Screenshot Parser via Gemini Vision (@google/genai)
  */
 export async function parsePaymentScreenshot(imageBuffer, mimeType = 'image/jpeg', captionText = '') {
   const prompt = `
@@ -302,23 +356,33 @@ Caption: "${captionText}"
 Return ONLY valid JSON.
 `;
 
-  const ai = getGenAI();
-  const imagePart = {
-    inlineData: {
-      data: imageBuffer.toString('base64'),
-      mimeType: mimeType
-    }
-  };
+  try {
+    const ai = getGenAI();
+    const res = await ai.models.generateContent({
+      model: 'gemini-3.5-flash-lite',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: imageBuffer.toString('base64'),
+                mimeType: mimeType
+              }
+            }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
 
-  for (const m of ROTATING_MODELS) {
-    try {
-      const model = ai.getGenerativeModel({ model: m, generationConfig: { responseMimeType: 'application/json' } });
-      const res = await model.generateContent([prompt, imagePart]);
-      return JSON.parse(res.response.text());
-    } catch (err) {
-      console.warn(`Vision model ${m} failed (${err.message}), trying next candidate...`);
-    }
+    const parsed = JSON.parse(res.text);
+    return parsed;
+  } catch (err) {
+    console.warn('[Screenshot Parser Error]:', err.message);
+    return { trx_id: null, amount: null, payment_method: 'bkash', is_valid_payment: false };
   }
-
-  return { trx_id: null, amount: null, payment_method: 'bkash', is_valid_payment: false };
 }

@@ -23,7 +23,9 @@ const TOURNAMENT_KEYWORDS = [
   'বিকাশ', 'bkash', 'নগদ', 'nagad', 'রকেট', 'rocket', 'রুম আইডি',
   'room id', 'password', 'পাসওয়ার্ড', 'রেজিস্ট্রেশন', 'registration',
   'টুর্নামেন্ট', 'tournament', 'ফ্রি ফায়ার', 'free fire', 'টাকা', 'taka',
-  'pathaisi', 'পাঠাইছি', 'send money', 'সেন্ড মানি', 'পেমেন্ট', 'payment', 'khali'
+  'pathaisi', 'পাঠাইছি', 'send money', 'সেন্ড মানি', 'পেমেন্ট', 'payment', 'khali', 'খালি',
+  'scrim', 'scrims', 'কাস্টম', 'custom', 'খেলব', 'খেলবো', 'জয়েন', 'join',
+  'room', 'রুম', 'pass', 'পাস', 'prize', 'প্রাইজ', 'entry', 'fee', 'ফি'
 ];
 
 function isTournamentRelatedText(text) {
@@ -347,8 +349,8 @@ ${config.tournament.websiteUrl}`;
   sessionManager.set(senderPhone, existingSession);
 
   // 6. Handle Separate Booking Format Message Dispatch
-  const isFormatInquiry = /(?:format|ফরম্যাট|কিভাবে|কীভাবে|নিয়ম|rules|process|বুক করব|বুকিং করব|রেজিস্ট্রেশন)/i.test(rawText);
-  const isSlotInquiry = agentOutput.toolExecuted === 'checkAvailableSlots';
+  const isFormatInquiry = /(?:format|ফরম্যাট|কিভাবে|কীভাবে|নিয়ম|rules|process|ফরম্যাট দাও)/i.test(rawText);
+  const isExplicitBookingIntent = /(?:বুক করতে চাই|বুক করব|বুকিং করব|slot nite chai|book koren|slot book)/i.test(rawText);
   const hasPaymentMissingDetails = (imageDetails?.trx_id || existingSession.trx_id) && (!existingSession.squadName || !existingSession.preferredSlot);
 
   let conversationalText = agentOutput.replyText || '';
@@ -364,8 +366,8 @@ ${config.tournament.websiteUrl}`;
     }
   }
 
-  // Generate clean template if needed and not already extracted
-  if (!separateTemplate && (isFormatInquiry || isSlotInquiry || hasPaymentMissingDetails)) {
+  // Generate clean template ONLY when explicitly requested, booking intent expressed, or payment receipt received
+  if (!separateTemplate && (isFormatInquiry || isExplicitBookingIntent || hasPaymentMissingDetails)) {
     separateTemplate = generateCopyableBookingTemplate({
       matchQuery: existingSession.preferredMatch || 'Match 4',
       slotNumber: existingSession.preferredSlot || '',
