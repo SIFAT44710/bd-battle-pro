@@ -112,6 +112,7 @@ export async function startWhatsAppBot() {
 
   // Incoming Messages Handler with Smart Trigger & Silent Filter
   sock.ev.on('messages.upsert', async (m) => {
+    addLog('UPSERT_EVENT_RAW', { type: m.type, count: m.messages?.length });
     if (m.type !== 'notify') return;
 
     for (const msg of m.messages) {

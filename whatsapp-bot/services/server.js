@@ -75,6 +75,52 @@ export function startWebServer(port = process.env.PORT || 3000) {
       return;
     }
 
+    // 1c. Test Send Message directly to phone
+    if (url.pathname === '/api/send-test') {
+      const phone = (url.searchParams.get('phone') || '01791357521').replace(/\D/g, '');
+      const fullPhone = phone.startsWith('880') ? phone : (phone.startsWith('0') ? '88' + phone : '880' + phone);
+      const jid = `${fullPhone}@s.whatsapp.net`;
+      try {
+        if (!currentSock) throw new Error('WhatsApp Socket not initialized yet');
+        const sendResult = await currentSock.sendMessage(jid, {
+          text: `🎮 *ARENA X BOT TEST*: আপনার হোয়াটসঅ্যাপ বট সফলভাবে কানেক্টেড রয়েছে এবং মেসেজ পাঠাতে পারছে! (Time: ${new Date().toLocaleTimeString()})`
+        });
+        addLog('TEST_SEND_SUCCESS', { jid, messageId: sendResult.key?.id });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, messageId: sendResult.key?.id, jid }));
+      } catch (err) {
+        addLog('TEST_SEND_ERROR', { error: err.message });
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
+    // 1d. Reset Session endpoint (Clears stale session to allow clean re-pairing)
+    if (url.pathname === '/api/reset-session') {
+      try {
+        const { initFirestore } = await import('./firestore.js');
+        const { clientDbInstance } = initFirestore();
+        const { doc, deleteDoc } = await import('firebase/firestore');
+        const clientId = process.env.CLIENT_ID || 'default_client';
+        await deleteDoc(doc(clientDbInstance, `bot_sessions/${clientId}/data`, 'creds'));
+
+        // Clear local cache
+        const localCreds = path.resolve('./auth_info_baileys/creds.json');
+        if (fs.existsSync(localCreds)) fs.unlinkSync(localCreds);
+
+        addLog('SESSION_RESET_TRIGGERED', { clientId });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'সেশন রিসেট হয়েছে। সার্ভার নতুন কিউআর/পেয়ারিং কোড তৈরি করছে...' }));
+
+        setTimeout(() => { process.exit(0); }, 1000);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
     // Direct APK / Gateway Download routes
     if (url.pathname === '/apk/sifr-pay.apk' || url.pathname === '/download/apk') {
       const candidates = [
