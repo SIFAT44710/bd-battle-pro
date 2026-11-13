@@ -12,7 +12,7 @@ import { useFirestoreAuthState } from './firestoreAuth.js';
 import { normalizePhone } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
-import { botState, registerSocket } from './server.js';
+import { botState, registerSocket, addLog } from './server.js';
 
 const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 
@@ -25,13 +25,28 @@ const TOURNAMENT_KEYWORDS = [
   'টুর্নামেন্ট', 'tournament', 'ফ্রি ফায়ার', 'free fire', 'টাকা', 'taka',
   'pathaisi', 'পাঠাইছি', 'send money', 'সেন্ড মানি', 'পেমেন্ট', 'payment', 'khali', 'খালি',
   'scrim', 'scrims', 'কাস্টম', 'custom', 'খেলব', 'খেলবো', 'জয়েন', 'join',
-  'room', 'রুম', 'pass', 'পাস', 'prize', 'প্রাইজ', 'entry', 'fee', 'ফি'
+  'room', 'রুম', 'pass', 'পাস', 'prize', 'প্রাইজ', 'entry', 'fee', 'ফি',
+  'test', 'hi', 'hello', 'vai', 'ভাই', 'bro', 'সালাম', 'assalamu alaikum'
 ];
 
 function isTournamentRelatedText(text) {
   if (!text) return false;
   const lower = text.toLowerCase();
   return TOURNAMENT_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+function extractMessageText(message) {
+  if (!message) return '';
+  const m = message.ephemeralMessage?.message ||
+            message.viewOnceMessage?.message ||
+            message.viewOnceMessageV2?.message ||
+            message.documentWithCaptionMessage?.message ||
+            message;
+  return m.conversation ||
+         m.extendedTextMessage?.text ||
+         m.imageMessage?.caption ||
+         m.documentMessage?.caption ||
+         '';
 }
 
 export async function startWhatsAppBot() {
@@ -100,17 +115,23 @@ export async function startWhatsAppBot() {
     if (m.type !== 'notify') return;
 
     for (const msg of m.messages) {
-      if (!msg.message || msg.key.fromMe) continue;
+      if (!msg.message) continue;
 
       const remoteJid = msg.key.remoteJid;
       // Filter out status broadcasts or group chats
       if (remoteJid.includes('@g.us') || remoteJid === 'status@broadcast') continue;
+
+      // Allow self-chat testing (message to oneself)
+      const botPhone = (sock.user?.id || '').split(':')[0].split('@')[0];
+      const isSelfChat = remoteJid.startsWith(botPhone);
+      if (msg.key.fromMe && !isSelfChat) continue;
 
       const senderPhone = normalizePhone(remoteJid.split('@')[0]);
 
       try {
         await handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone);
       } catch (err) {
+        addLog('MESSAGE_ERROR', { senderPhone, error: err.message });
         console.error('[Error handling message]:', err);
       }
     }
@@ -202,11 +223,22 @@ TrxID: ${trxId || ''}`;
  * Smart Message Handler with DokanAI Brain & Silent Filter
  */
 async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
-  const isImage = !!msg.message.imageMessage;
-  const rawText = msg.message.conversation ||
-                  msg.message.extendedTextMessage?.text ||
-                  msg.message.imageMessage?.caption ||
-                  '';
+  const unwrapped = msg.message?.ephemeralMessage?.message ||
+                    msg.message?.viewOnceMessage?.message ||
+                    msg.message?.viewOnceMessageV2?.message ||
+                    msg.message?.documentWithCaptionMessage?.message ||
+                    msg.message;
+
+  const isImage = !!unwrapped?.imageMessage;
+  const rawText = extractMessageText(msg.message);
+
+  addLog('INCOMING_MESSAGE', {
+    senderPhone,
+    remoteJid,
+    fromMe: msg.key?.fromMe,
+    isImage,
+    rawText: rawText.slice(0, 80)
+  });
 
   // Retrieve player session
   const existingSession = sessionManager.get(senderPhone) || {
@@ -219,13 +251,13 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
 
   // 1. SMART TRIGGER & SILENT FILTER:
   // If message has no tournament keywords AND player hasn't been in an active booking session within 30m:
-  // IGNORE COMPLETELY! Do not disturb personal / family conversations!
   if (!isMatchInquiry && !(isImage && isRecentBookingActive)) {
+    addLog('FILTER_IGNORED', { senderPhone, rawText: rawText.slice(0, 50) });
     console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
     return;
   }
 
-  console.log(`\n[DokanAI Active Trigger]: Player ${senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
+  console.log(`\n[ARENA X Host Active]: Player ${senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
 
   // Mark message as read & send typing presence
   try {
@@ -379,11 +411,13 @@ ${config.tournament.websiteUrl}`;
 
   // Send Message 1: Conversational friendly explanation
   if (conversationalText) {
+    addLog('SENDING_REPLY', { remoteJid, text: conversationalText.slice(0, 100) });
     await sock.sendMessage(remoteJid, { text: conversationalText });
   }
 
   // Send Message 2: Standalone 1-Tap Copyable Booking Template (SENT SEPARATELY)
   if (separateTemplate && (!agentOutput.toolExecuted || agentOutput.toolExecuted !== 'verifyAndBookSlot')) {
+    addLog('SENDING_TEMPLATE', { remoteJid, template: separateTemplate.slice(0, 60) });
     await new Promise(r => setTimeout(r, 600)); // Natural 600ms gap
     await sock.sendMessage(remoteJid, { text: separateTemplate });
   }

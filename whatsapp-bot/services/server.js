@@ -16,6 +16,18 @@ export const botState = {
   lastPing: new Date().toISOString()
 };
 
+export const recentLogs = [];
+export function addLog(type, data) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    type,
+    data
+  };
+  recentLogs.unshift(entry);
+  if (recentLogs.length > 50) recentLogs.pop();
+  console.log(`[${type}]:`, JSON.stringify(data));
+}
+
 let currentSock = null;
 
 export function registerSocket(sock) {
@@ -48,6 +60,18 @@ export function startWebServer(port = process.env.PORT || 3000) {
         uptime: Math.floor(process.uptime()),
         timestamp: new Date().toISOString()
       }));
+      return;
+    }
+
+    // 1b. Live Debug Logs endpoint
+    if (url.pathname === '/logs') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        status: botState.status,
+        user: botState.user,
+        uptime: Math.floor(process.uptime()),
+        recentLogs
+      }, null, 2));
       return;
     }
 
