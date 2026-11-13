@@ -1,7 +1,10 @@
 import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
-  downloadMediaMessage
+  downloadMediaMessage,
+  makeCacheableSignalKeyStore,
+  isJidBroadcast,
+  isJidNewsletter
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
@@ -15,6 +18,26 @@ import { config } from '../config.js';
 import { botState, registerSocket, addLog } from './server.js';
 
 const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
+
+// Track message IDs dispatched by this bot instance to avoid self-reply loops
+const botSentMessageIds = new Set();
+
+export async function sendBotMessage(sock, jid, content) {
+  try {
+    const result = await sock.sendMessage(jid, content);
+    if (result?.key?.id) {
+      botSentMessageIds.add(result.key.id);
+      if (botSentMessageIds.size > 300) {
+        const first = botSentMessageIds.values().next().value;
+        botSentMessageIds.delete(first);
+      }
+    }
+    return result;
+  } catch (err) {
+    console.error(`[sendBotMessage Error to ${jid}]:`, err.message);
+    throw err;
+  }
+}
 
 // Tournament keywords for Smart Trigger & Silent Filter
 const TOURNAMENT_KEYWORDS = [
@@ -62,9 +85,18 @@ export async function startWhatsAppBot() {
     version,
     logger,
     printQRInTerminal: false,
-    auth: state,
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, logger)
+    },
+    markOnlineOnConnect: true,
+    syncFullHistory: false,
+    generateHighQualityLinkPreview: true,
     browser: ['ARENA X DokanAI Agent', 'Chrome', '1.0.0'],
-    generateHighQualityLinkPreview: true
+    getMessage: async (key) => {
+      return { conversation: 'ARENA X Bot' };
+    },
+    shouldIgnoreJid: (jid) => isJidBroadcast(jid) || isJidNewsletter(jid) || jid.endsWith('@newsletter')
   });
 
   registerSocket(sock);
@@ -75,6 +107,11 @@ export async function startWhatsAppBot() {
   // Connection Updates
   sock.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect, qr } = update;
+
+    addLog('CONNECTION_UPDATE', {
+      connection: connection || 'status_update',
+      isNewLogin: update.isNewLogin
+    });
 
     if (qr) {
       botState.qr = qr;
@@ -113,24 +150,31 @@ export async function startWhatsAppBot() {
   // Incoming Messages Handler with Smart Trigger & Silent Filter
   sock.ev.on('messages.upsert', async (m) => {
     addLog('UPSERT_EVENT_RAW', { type: m.type, count: m.messages?.length });
-    if (m.type !== 'notify') return;
+    if (m.type !== 'notify' && m.type !== 'append') return;
 
     for (const msg of m.messages) {
       if (!msg.message) continue;
 
+      const msgId = msg.key?.id;
+      // Skip if this message was sent by the bot itself
+      if (msgId && botSentMessageIds.has(msgId)) {
+        continue;
+      }
+
       const remoteJid = msg.key.remoteJid;
+      if (!remoteJid) continue;
       // Filter out status broadcasts or group chats
-      if (remoteJid.includes('@g.us') || remoteJid === 'status@broadcast') continue;
+      if (remoteJid.includes('@g.us') || remoteJid.includes('@broadcast') || remoteJid.includes('@newsletter')) continue;
 
       // Allow self-chat testing (message to oneself)
       const botPhone = (sock.user?.id || '').split(':')[0].split('@')[0];
-      const isSelfChat = remoteJid.startsWith(botPhone);
+      const isSelfChat = botPhone && remoteJid.startsWith(botPhone);
       if (msg.key.fromMe && !isSelfChat) continue;
 
       const senderPhone = normalizePhone(remoteJid.split('@')[0]);
 
       try {
-        await handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone);
+        await handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, isSelfChat);
       } catch (err) {
         addLog('MESSAGE_ERROR', { senderPhone, error: err.message });
         console.error('[Error handling message]:', err);
@@ -223,7 +267,7 @@ TrxID: ${trxId || ''}`;
 /**
  * Smart Message Handler with DokanAI Brain & Silent Filter
  */
-async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
+async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, isSelfChat = false) {
   const unwrapped = msg.message?.ephemeralMessage?.message ||
                     msg.message?.viewOnceMessage?.message ||
                     msg.message?.viewOnceMessageV2?.message ||
@@ -237,6 +281,7 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
     senderPhone,
     remoteJid,
     fromMe: msg.key?.fromMe,
+    isSelfChat,
     isImage,
     rawText: rawText.slice(0, 80)
   });
@@ -251,14 +296,15 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
   const isMatchInquiry = isTournamentRelatedText(rawText);
 
   // 1. SMART TRIGGER & SILENT FILTER:
-  // If message has no tournament keywords AND player hasn't been in an active booking session within 30m:
-  if (!isMatchInquiry && !(isImage && isRecentBookingActive)) {
+  // If owner is testing (self-chat), ALWAYS respond!
+  // For external players: only respond if tournament-related OR active booking session:
+  if (!isSelfChat && !isMatchInquiry && !(isImage && isRecentBookingActive)) {
     addLog('FILTER_IGNORED', { senderPhone, rawText: rawText.slice(0, 50) });
     console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
     return;
   }
 
-  console.log(`\n[ARENA X Host Active]: Player ${senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
+  console.log(`\n[ARENA X Host Active]: ${isSelfChat ? '👑 Owner Test' : 'Player ' + senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
 
   // Mark message as read & send typing presence
   try {
@@ -271,7 +317,7 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
   // 2. Multimodal OCR if image was sent (bKash/Nagad receipt)
   if (isImage) {
     try {
-      await sock.sendMessage(remoteJid, { react: { text: '🔍', key: msg.key } });
+      await sendBotMessage(sock, remoteJid, { react: { text: '🔍', key: msg.key } });
       const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger });
       imageDetails = await parsePaymentScreenshot(
         buffer,
@@ -324,7 +370,7 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
     }, { phone: senderPhone, ...existingSession });
 
     if (bookResult && bookResult.success) {
-      await sock.sendMessage(remoteJid, { react: { text: '✅', key: msg.key } });
+      await sendBotMessage(sock, remoteJid, { react: { text: '✅', key: msg.key } });
       const b = bookResult;
       const confirmationSlip = `🎮 *ARENA X TOURNAMENT CONFIRMATION* 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -343,16 +389,16 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone) {
 🌐 *লাইভ ওয়েবসাইট:*
 ${config.tournament.websiteUrl}`;
 
-      await sock.sendMessage(remoteJid, { text: confirmationSlip });
+      await sendBotMessage(sock, remoteJid, { text: confirmationSlip });
       sessionManager.clear(senderPhone);
       return;
     } else if (bookResult && !bookResult.success) {
-      await sock.sendMessage(remoteJid, {
+      await sendBotMessage(sock, remoteJid, {
         text: `⚠️ *বুকিং ব্যর্থ হয়েছে!*\n\n${bookResult.message || bookResult.reason || 'স্লটটি ইতিমধ্যে অন্য কেউ বুক করেছে অথবা TrxID টি ভুল।'}\n\nঅনুগ্রহ করে অন্য একটি স্লট বেছে নিয়ে নিচের ফরম্যাটটি পূরণ করে পাঠান:`
       });
       // Send separate booking format with prefilled TrxID so they can easily pick another slot!
       await new Promise(r => setTimeout(r, 500));
-      await sock.sendMessage(remoteJid, {
+      await sendBotMessage(sock, remoteJid, {
         text: generateCopyableBookingTemplate({
           matchQuery: effectiveMatch,
           squadName: effectiveSquad,
@@ -413,19 +459,19 @@ ${config.tournament.websiteUrl}`;
   // Send Message 1: Conversational friendly explanation
   if (conversationalText) {
     addLog('SENDING_REPLY', { remoteJid, text: conversationalText.slice(0, 100) });
-    await sock.sendMessage(remoteJid, { text: conversationalText });
+    await sendBotMessage(sock, remoteJid, { text: conversationalText });
   }
 
   // Send Message 2: Standalone 1-Tap Copyable Booking Template (SENT SEPARATELY)
   if (separateTemplate && (!agentOutput.toolExecuted || agentOutput.toolExecuted !== 'verifyAndBookSlot')) {
     addLog('SENDING_TEMPLATE', { remoteJid, template: separateTemplate.slice(0, 60) });
     await new Promise(r => setTimeout(r, 600)); // Natural 600ms gap
-    await sock.sendMessage(remoteJid, { text: separateTemplate });
+    await sendBotMessage(sock, remoteJid, { text: separateTemplate });
   }
 
   // 7. If a slot was successfully booked via Gemini's verifyAndBookSlot tool:
   if (agentOutput.toolExecuted === 'verifyAndBookSlot' && agentOutput.toolResult?.success) {
-    await sock.sendMessage(remoteJid, { react: { text: '✅', key: msg.key } });
+    await sendBotMessage(sock, remoteJid, { react: { text: '✅', key: msg.key } });
 
     const b = agentOutput.toolResult;
     const confirmationSlip = `🎮 *ARENA X TOURNAMENT CONFIRMATION* 🎮
@@ -445,7 +491,7 @@ ${config.tournament.websiteUrl}`;
 🌐 *লাইভ ওয়েবসাইট:*
 ${config.tournament.websiteUrl}`;
 
-    await sock.sendMessage(remoteJid, { text: confirmationSlip });
+    await sendBotMessage(sock, remoteJid, { text: confirmationSlip });
 
     // Clear session after successful booking
     sessionManager.clear(senderPhone);

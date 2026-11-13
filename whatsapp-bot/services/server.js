@@ -96,6 +96,44 @@ export function startWebServer(port = process.env.PORT || 3000) {
       return;
     }
 
+    // 1c2. Simulate Player Chat turn via DokanAI Agent Brain & dispatch via WhatsApp
+    if (url.pathname === '/api/simulate-chat') {
+      const message = url.searchParams.get('message') || 'আজকে কি কি ম্যাচ আছে ভাই?';
+      const phone = (url.searchParams.get('phone') || '01791357521').replace(/\D/g, '');
+      const fullPhone = phone.startsWith('880') ? phone : (phone.startsWith('0') ? '88' + phone : '880' + phone);
+      const jid = `${fullPhone}@s.whatsapp.net`;
+
+      try {
+        const { runDokanAiAgent } = await import('./gemini.js');
+        const agentOutput = await runDokanAiAgent({
+          userMessage: message,
+          senderPhone: fullPhone,
+          chatHistory: []
+        });
+
+        let sendStatus = 'skipped_no_socket';
+        if (currentSock) {
+          await currentSock.sendMessage(jid, { text: agentOutput.replyText });
+          sendStatus = 'delivered';
+          addLog('SIMULATED_CHAT_DELIVERED', { jid, text: agentOutput.replyText.slice(0, 80) });
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          message,
+          reply: agentOutput.replyText,
+          toolExecuted: agentOutput.toolExecuted,
+          sendStatus
+        }, null, 2));
+      } catch (err) {
+        addLog('SIMULATE_CHAT_ERROR', { error: err.message });
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
     // 1d. Reset Session endpoint (Clears stale session to allow clean re-pairing)
     if (url.pathname === '/api/reset-session') {
       try {

@@ -248,40 +248,31 @@ export async function runDokanAiAgent({
   }
   fullPrompt += `Player Message: ${userMessage || '(User sent payment screenshot)'}`;
 
-  const currentHistory = [];
-
-  // Convert previous turns into @google/genai format
+  const historyForChat = [];
   for (const h of chatHistory.slice(-6)) {
     if (h.role && h.parts) {
-      currentHistory.push({
+      historyForChat.push({
         role: h.role === 'model' ? 'model' : 'user',
         parts: h.parts.map(p => ({ text: p.text || '' }))
       });
     }
   }
 
-  currentHistory.push({
-    role: 'user',
-    parts: [{ text: fullPrompt }]
-  });
-
   const selectedModel = 'gemini-3.5-flash-lite';
   let executedToolName = null;
   let executedToolResult = null;
 
   try {
-    let response = await ai.models.generateContent({
+    const chat = ai.chats.create({
       model: selectedModel,
-      contents: currentHistory,
+      history: historyForChat,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         tools: BOT_TOOLS
       }
     });
 
-    if (response.candidates?.[0]?.content) {
-      currentHistory.push(response.candidates[0].content);
-    }
+    let response = await chat.sendMessage({ message: fullPrompt });
 
     let loopLimit = 3;
     while (response.functionCalls && response.functionCalls.length > 0 && loopLimit > 0) {
@@ -301,23 +292,7 @@ export async function runDokanAiAgent({
         });
       }
 
-      currentHistory.push({
-        role: 'user',
-        parts: toolParts
-      });
-
-      response = await ai.models.generateContent({
-        model: selectedModel,
-        contents: currentHistory,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          tools: BOT_TOOLS
-        }
-      });
-
-      if (response.candidates?.[0]?.content) {
-        currentHistory.push(response.candidates[0].content);
-      }
+      response = await chat.sendMessage({ message: toolParts });
     }
 
     return {
