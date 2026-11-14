@@ -99,7 +99,7 @@
 
       <!-- Action Buttons: Player View, Admin Panel & Gateway APK Download -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <a href="/apk/sifr-pay.apk" download="sifr-pay.apk" class="px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+        <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
           <i class="bi bi-download"></i>
           <span class="hidden xs:inline">ডাউনলোড</span> <span>গেটওয়ে APK</span>
         </a>
@@ -146,7 +146,7 @@
           <i class="bi bi-shield-lock-fill text-base"></i>
           <span>লাইভ অ্যাডমিন কন্ট্রোল</span>
         </a>
-        <a href="/apk/sifr-pay.apk" download="sifr-pay.apk" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
+        <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
           <i class="bi bi-download text-base"></i>
           <span>ডাউনলোড অটো-পেমেন্ট গেটওয়ে APK</span>
         </a>
@@ -335,11 +335,11 @@
             </div>
           </div>
           <div class="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-            <a href="/apk/sifr-pay.apk" download="sifr-pay.apk" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#00c853] to-[#00a844] hover:from-[#00b34a] hover:to-[#00963d] text-white font-extrabold text-sm tracking-wide shadow-xl shadow-green-600/30 transition-all flex items-center gap-2 text-center">
+            <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#00c853] to-[#00a844] hover:from-[#00b34a] hover:to-[#00963d] text-white font-extrabold text-sm tracking-wide shadow-xl shadow-green-600/30 transition-all flex items-center gap-2 text-center cursor-pointer">
               <i class="bi bi-android2 text-lg"></i>
               <span>ডাউনলোড গেটওয়ে APK (.apk)</span>
             </a>
-            <a href="/apk/sifr-pay-gateway.zip" download="sifr-pay-gateway.zip" class="px-4 py-3.5 rounded-2xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold text-xs border border-gray-600 transition-all flex items-center gap-1.5">
+            <a href="javascript:void(0)" onclick="window.showApkLockModal('zip')" class="px-4 py-3.5 rounded-2xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold text-xs border border-gray-600 transition-all flex items-center gap-1.5 cursor-pointer">
               <i class="bi bi-file-earmark-zip"></i>
               <span>ZIP ফরম্যাট</span>
             </a>
@@ -477,7 +477,7 @@
       <div class="flex flex-wrap items-center gap-4">
         <a href="/player" class="hover:text-[#FF5722] font-semibold flex items-center gap-1"><i class="bi bi-controller"></i> Player Panel</a>
         <a href="/admin" class="hover:text-[#FF5722] font-semibold flex items-center gap-1"><i class="bi bi-shield-lock-fill"></i> Admin Panel</a>
-        <a href="/apk/sifr-pay.apk" download="sifr-pay.apk" class="text-green-700 hover:text-green-800 font-bold flex items-center gap-1"><i class="bi bi-android2 text-green-600"></i> Download Gateway APK</a>
+        <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="text-green-700 hover:text-green-800 font-bold flex items-center gap-1 cursor-pointer"><i class="bi bi-android2 text-green-600"></i> Download Gateway APK</a>
         <a href="mailto:sifrarchitect@gmail.com" class="hover:text-[#FF5722] font-semibold flex items-center gap-1">
           <i class="bi bi-envelope-fill text-orange-500"></i> sifrarchitect@gmail.com
         </a>
@@ -485,6 +485,95 @@
       </div>
     </div>
   </footer>
+
+  <!-- APK DOWNLOAD RESTRICTION MODAL -->
+  <div id="apkLockModalBackdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-200 relative transform transition-all text-center space-y-5">
+      
+      <!-- Close Button -->
+      <button onclick="window.closeApkLockModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-all text-sm font-bold">
+        ✕
+      </button>
+
+      <!-- Icon -->
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-3xl shadow-inner border border-amber-200">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+
+      <!-- Title & Description -->
+      <div class="space-y-2">
+        <h3 class="text-lg sm:text-xl font-black text-gray-900">APK ডাউনলোড সীমাবদ্ধ</h3>
+        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+          ডেমো এক্সেসে APK ডাউনলোড সুবিধা নেই। পূর্ণ এক্সেসের জন্য WhatsApp-এ যোগাযোগ করুন।
+        </p>
+      </div>
+
+      <!-- WhatsApp CTA Button -->
+      <a href="https://wa.me/8801791357521?text=Hi%20Team%20Sifr,%20I%20am%20testing%20the%20ARENA%20X%20demo%20and%20want%20full%20access%20to%20the%20SifrPay%20Gateway%20APK." target="_blank" class="w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md shadow-green-500/20 flex items-center justify-center gap-2">
+        <i class="bi bi-whatsapp text-lg"></i> WhatsApp-এ যোগাযোগ করুন
+      </a>
+
+      <!-- Client Access Code Gate -->
+      <div class="pt-4 border-t border-gray-100 text-left space-y-2.5">
+        <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+          <span>ক্লায়েন্ট অ্যাক্সেস কোড আছে?</span>
+          <span class="text-orange-500"><i class="bi bi-key-fill"></i> VIP Access</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="apkAccessCodeInput" placeholder="কোড দিন (যেমন: SIFR2026)" class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all uppercase">
+          <button onclick="window.verifyApkAccessCode()" class="px-4 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-all shadow-sm shrink-0">
+            আনলক
+          </button>
+        </div>
+        <p id="apkAccessError" class="text-[11px] text-red-500 font-medium hidden">⚠️ ভুল অ্যাক্সেস কোড! কোড পেতে WhatsApp-এ যোগাযোগ করুন।</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let pendingDownloadType = 'apk';
+    window.showApkLockModal = function(type) {
+      pendingDownloadType = type || 'apk';
+      const modal = document.getElementById('apkLockModalBackdrop');
+      const err = document.getElementById('apkAccessError');
+      const input = document.getElementById('apkAccessCodeInput');
+      if (err) err.classList.add('hidden');
+      if (input) input.value = '';
+      if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closeApkLockModal = function() {
+      const modal = document.getElementById('apkLockModalBackdrop');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.verifyApkAccessCode = function() {
+      const input = document.getElementById('apkAccessCodeInput');
+      const err = document.getElementById('apkAccessError');
+      const code = (input?.value || '').trim().toUpperCase();
+      const VALID_CODES = ['SIFR2026', 'CLIENTVIP', 'ARENAX2026', 'SIFRPAYVIP'];
+      
+      if (VALID_CODES.includes(code)) {
+        if (err) err.classList.add('hidden');
+        window.closeApkLockModal();
+        const downloadPath = pendingDownloadType === 'zip'
+          ? '/apk/vault-client-access-9482/sifr-pay-gateway.zip'
+          : '/apk/vault-client-access-9482/sifr-pay.apk';
+        const link = document.createElement('a');
+        link.href = downloadPath;
+        link.download = pendingDownloadType === 'zip' ? 'sifr-pay-gateway.zip' : 'sifr-pay.apk';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        if (err) {
+          err.classList.remove('hidden');
+          err.textContent = '⚠️ ভুল অ্যাক্সেস কোড! কোড পেতে WhatsApp-এ যোগাযোগ করুন।';
+        }
+      }
+    };
+  </script>
 
 </body>
 </html>

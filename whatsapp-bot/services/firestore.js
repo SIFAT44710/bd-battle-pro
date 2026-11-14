@@ -184,6 +184,16 @@ export async function bookSlotInFirestore({
   amount,
   paymentMethod
 }) {
+  // DEMO MODE GATE: Intercept booking and prevent Firestore write
+  if (process.env.DEMO_MODE === 'true') {
+    console.log(`[DEMO_MODE ACTIVE]: Simulated booking attempt for "${squadName}". Skipping Firestore write.`);
+    return {
+      success: false,
+      isDemo: true,
+      message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+    };
+  }
+
   const { data, update } = await getTournamentData();
   const matches = data.matches || [];
 

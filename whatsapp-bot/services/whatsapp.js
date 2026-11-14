@@ -403,6 +403,16 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
   const effectiveMatch = parsedBooking.matchQuery || existingSession.preferredMatch || 'Match 4';
 
   if (effectiveSquad && effectiveSlot && effectiveTrx) {
+    if (process.env.DEMO_MODE === 'true') {
+      console.log(`[DEMO_MODE ACTIVE]: Fast booking intercepted for "${effectiveSquad}". Sending demo notice.`);
+      await sendBotMessage(sock, remoteJid, { react: { text: '🔒', key: msg.key } });
+      await sendBotMessage(sock, remoteJid, {
+        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+      });
+      sessionManager.clear(senderPhone);
+      return;
+    }
+
     console.log(`[Fast Booking Executing]: Squad "${effectiveSquad}", Slot #${effectiveSlot}, TrxID "${effectiveTrx}" on ${effectiveMatch}`);
     const bookResult = await executeToolCall('verifyAndBookSlot', {
       matchQuery: effectiveMatch,
@@ -524,8 +534,18 @@ ${config.tournament.websiteUrl}`;
     await sendBotMessage(sock, remoteJid, { text: separateTemplate });
   }
 
-  // 7. If a slot was successfully booked via Gemini's verifyAndBookSlot tool:
-  if (agentOutput.toolExecuted === 'verifyAndBookSlot' && agentOutput.toolResult?.success) {
+  // 7. If verifyAndBookSlot was called:
+  if (agentOutput.toolExecuted === 'verifyAndBookSlot') {
+    if (process.env.DEMO_MODE === 'true' || agentOutput.toolResult?.isDemo) {
+      await sendBotMessage(sock, remoteJid, { react: { text: '🔒', key: msg.key } });
+      await sendBotMessage(sock, remoteJid, {
+        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+      });
+      sessionManager.clear(senderPhone);
+      return;
+    }
+
+    if (agentOutput.toolResult?.success) {
     await sendBotMessage(sock, remoteJid, { react: { text: '✅', key: msg.key } });
 
     const b = agentOutput.toolResult;

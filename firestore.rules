@@ -10,11 +10,10 @@ service cloud.firestore {
       // Full admin write access: Authenticated Firebase user
       allow write: if request.auth != null;
       
-      // Player self-booking update constraint:
-      // Allows players from web client to submit slot bookings without destroying schema
+      // Player self-booking update constraint & Demo reset:
+      // Allows players and demo admin from web client to submit slot bookings or reset
       allow update: if request.auth == null 
-        && request.resource.data.matches is list
-        && request.resource.data.title == resource.data.title;
+        && request.resource.data.matches is list;
     }
 
     // 2. Mobile Financial Services SMS Logs (bKash/Nagad Hardware Gateway)
@@ -29,13 +28,19 @@ service cloud.firestore {
             && request.resource.data.trxId.size() >= 6);
     }
 
-    // 3. System & White-Label Brand Settings
+    // 3. Reset Logs (Internal audit trail for manual or scheduled demo resets)
+    match /resetLogs/{logId} {
+      allow read: if request.auth != null;
+      allow create: if true;
+    }
+
+    // 4. System & White-Label Brand Settings
     match /settings/{settingId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // 4. Default Deny for any unmapped collections
+    // 5. Default Deny for any unmapped collections
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

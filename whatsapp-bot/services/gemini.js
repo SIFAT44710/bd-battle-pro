@@ -214,6 +214,15 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
         };
       }
 
+      // DEMO MODE CHECK: Prevent writing to database in demo mode
+      if (process.env.DEMO_MODE === 'true') {
+        return {
+          success: false,
+          isDemo: true,
+          message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+        };
+      }
+
       // 4. Perform atomic booking
       const bookRes = await bookSlotInFirestore({
         matchQuery: targetMatch.title,
