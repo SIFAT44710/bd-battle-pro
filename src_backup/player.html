@@ -1219,13 +1219,7 @@
       $('bookingModalBackdrop').style.display = 'block';
       $('bookingModalBox').style.display = 'block';
 
-      // Update URL with selected slot and match
-      const mParam = match.matchNumber || match.id;
       const currentSlot = select.value || slotNumber || '';
-      let newUrl = `${window.location.pathname}?match=${encodeURIComponent(mParam)}`;
-      if (currentSlot) newUrl += `&slot=${encodeURIComponent(currentSlot)}`;
-      window.history.replaceState({ matchId: match.id, slotNumber: currentSlot }, '', newUrl);
-
       if ($('bookingDirectLinkText')) {
         $('bookingDirectLinkText').textContent = `Match #${match.matchNumber || 1}${currentSlot ? ` (Slot ${currentSlot})` : ''} - বুকিং লিংক`;
       }
@@ -1639,14 +1633,20 @@
       let target = null;
       if (matchQuery) {
         const cleanQuery = matchQuery.toString().trim().toLowerCase();
-        target = matches.find(m => m.id && m.id.toLowerCase() === cleanQuery);
-        if (!target) {
-          const numMatch = cleanQuery.match(/\d+/);
-          if (numMatch) {
-            const num = parseInt(numMatch[0], 10);
-            target = matches.find(m => m.matchNumber === num);
-          }
+        
+        // 1. Match number exact (e.g. 5, "5", "Match 5")
+        const numMatch = cleanQuery.match(/\d+/);
+        if (numMatch) {
+          const num = parseInt(numMatch[0], 10);
+          target = matches.find(m => m.matchNumber === num);
         }
+
+        // 2. Match exact id (e.g. "match-5")
+        if (!target) {
+          target = matches.find(m => m.id && m.id.toLowerCase() === cleanQuery);
+        }
+
+        // 3. Substring in title or map
         if (!target) {
           target = matches.find(m => 
             (m.title && m.title.toLowerCase().includes(cleanQuery)) ||
@@ -1655,8 +1655,19 @@
         }
       }
 
+      // If user provided slot without match, find the upcoming match where this slot is free
       if (!target && slotQuery) {
-        target = matches[0];
+        const sNum = parseInt(slotQuery, 10);
+        target = matches.find(m => m.status === 'upcoming' && (m.slots || []).some(s => s.slotNumber === sNum && !s.booked));
+      }
+
+      // Intelligent Fallback: pick the latest upcoming match with open slots (Match 5 or Match 4), NEVER a 100% booked completed match
+      if (!target) {
+        const openUpcoming = matches.filter(m => m.status === 'upcoming' && (m.slots || []).some(s => !s.booked));
+        target = openUpcoming[openUpcoming.length - 1] || matches.find(m => m.status === 'upcoming') || matches[matches.length - 1];
+        if (matchQuery && target) {
+          window.showToast(`ম্যাচ #${matchQuery} পাওয়া যায়নি, লাইভ ম্যাচ #${target.matchNumber || 1} ওপেন হয়েছে।`, "info");
+        }
       }
 
       if (target) {
@@ -1669,7 +1680,7 @@
         if (slotNum && slotNum >= 1 && slotNum <= 12) {
           const slotItem = (target.slots || []).find(s => s.slotNumber === slotNum);
           if (slotItem && slotItem.booked) {
-            window.showToast(`স্লট #${slotNum} ইতিমধ্যে বুক হয়ে গেছে (${slotItem.squadName})! অন্য খালি স্লট বেছে নিন।`, "warning");
+            window.showToast(`ম্যাচ #${target.matchNumber}-এর স্লট #${slotNum} ইতিমধ্যে বুক করা (${slotItem.squadName})! অন্য খালি স্লট বেছে নিন।`, "warning");
             window.openBookingModal();
           } else {
             window.openBookingModal(slotNum);
@@ -1699,9 +1710,9 @@
             const data = snap.data();
             if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
               tournamentData = { ...tournamentData, ...data };
-            if (data.paymentSettings) {
-              tournamentData.paymentSettings = data.paymentSettings;
-            }
+              if (data.paymentSettings) {
+                tournamentData.paymentSettings = data.paymentSettings;
+              }
             } else if (data.slots) {
               tournamentData.matches[0].slots = data.slots;
               if (data.roomId) tournamentData.matches[0].roomId = data.roomId;
@@ -1714,15 +1725,18 @@
             setDoc(docRef, tournamentData);
           }
 
+          // Render list view
           window.renderMatchesList();
-          if ($('viewMatchDetail').style.display === 'block') {
-            window.renderMatchDetail();
-          }
 
-          // Trigger URL deep routing once Firestore data arrives
+          // CRITICAL FIX: Run URL router on live data FIRST before rendering detail
           if (!hasProcessedInitialUrl) {
-            handleUrlRouting();
             hasProcessedInitialUrl = true;
+            handleUrlRouting();
+          } else {
+            // Already viewing detail view: re-render live slots seamlessly without reset
+            if ($('viewMatchDetail').style.display === 'block') {
+              window.renderMatchDetail();
+            }
           }
         }, (err) => {
           console.warn("Firestore error:", err);
@@ -1732,10 +1746,15 @@
       }
     }
 
-    // Init
+    // Init: start realtime sync immediately; fallback router if offline
     window.renderMatchesList();
-    handleUrlRouting();
     startRealtimeSync();
+    setTimeout(() => {
+      if (!hasProcessedInitialUrl) {
+        hasProcessedInitialUrl = true;
+        handleUrlRouting();
+      }
+    }, 600);
   </script>
 </body>
 </html>
