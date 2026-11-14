@@ -519,6 +519,28 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
   server.listen(port, () => {
     console.log(`🌐 [Web Dashboard & Healthcheck]: Server running at http://localhost:${port}`);
+
+    // Autonomous 24/7 Keep-Alive Self-Pinger (Every 8 minutes to prevent Render 15-minute inactivity spin-down)
+    const publicUrl = process.env.RENDER_EXTERNAL_URL || 'https://bd-battle-pro.onrender.com';
+    const PING_INTERVAL_MS = 8 * 60 * 1000; // 8 minutes
+
+    setInterval(async () => {
+      try {
+        const pingTarget = `${publicUrl}/health`;
+        const res = await fetch(pingTarget, {
+          method: 'GET',
+          headers: { 'User-Agent': 'ARENA-X-Autonomous-KeepAlive/1.0' }
+        });
+        if (res.ok) {
+          addLog('SELF_PING_SUCCESS', {
+            status: res.status,
+            time: new Date().toLocaleTimeString()
+          });
+        }
+      } catch (err) {
+        addLog('SELF_PING_ERROR', { error: err.message });
+      }
+    }, PING_INTERVAL_MS);
   });
 
   return server;

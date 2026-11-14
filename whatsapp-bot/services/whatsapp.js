@@ -49,7 +49,9 @@ const TOURNAMENT_KEYWORDS = [
   'pathaisi', 'পাঠাইছি', 'send money', 'সেন্ড মানি', 'পেমেন্ট', 'payment', 'khali', 'খালি',
   'scrim', 'scrims', 'কাস্টম', 'custom', 'খেলব', 'খেলবো', 'জয়েন', 'join',
   'room', 'রুম', 'pass', 'পাস', 'prize', 'প্রাইজ', 'entry', 'fee', 'ফি',
-  'test', 'hi', 'hello', 'vai', 'ভাই', 'bro', 'সালাম', 'assalamu alaikum'
+  'test', 'hi', 'hello', 'vai', 'ভাই', 'bro', 'সালাম', 'assalamu alaikum',
+  'kemon acho', 'কেমন আছো', 'kemon achen', 'কেমন আছেন', 'help', 'সাহায্য',
+  'info', 'khobor', 'তথ্য', 'schedule', 'শিডিউল', 'rules', 'নিয়ম'
 ];
 
 function isTournamentRelatedText(text) {
@@ -124,6 +126,7 @@ export async function startWhatsAppBot() {
     }
 
     if (connection === 'close') {
+      if (sock._heartbeatTimer) clearInterval(sock._heartbeatTimer);
       botState.status = 'disconnected';
       botState.user = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
@@ -144,6 +147,16 @@ export async function startWhatsAppBot() {
       console.log('\n======================================================');
       console.log(`🟢 WHATSAPP BOT ONLINE & CONNECTED AS: ${sock.user?.id || 'ARENA X'}`);
       console.log('======================================================\n');
+
+      // Keep WhatsApp WebSocket actively listening & prevent TCP idle drops
+      if (sock._heartbeatTimer) clearInterval(sock._heartbeatTimer);
+      sock._heartbeatTimer = setInterval(async () => {
+        try {
+          if (botState.status === 'connected') {
+            await sock.sendPresenceUpdate('available');
+          }
+        } catch (e) {}
+      }, 3 * 60 * 1000); // Every 3 minutes
     }
   });
 

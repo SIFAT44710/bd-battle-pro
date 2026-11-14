@@ -1,0 +1,24 @@
+name: ARENA X 24/7 Keep-Alive Pinger
+
+on:
+  schedule:
+    # Runs every 10 minutes continuously around the clock (UTC)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+jobs:
+  ping-render:
+    name: Ping Render Cloud Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Health Endpoint to Keep Render Awake
+        run: |
+          echo "Sending keep-alive ping to ARENA X WhatsApp Bot on Render..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 45 https://bd-battle-pro.onrender.com/health)
+          echo "Render HTTP Status Code: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✓ Success: Render is online, active, and awake!"
+          else
+            echo "Retrying ping..."
+            curl -sS --max-time 60 https://bd-battle-pro.onrender.com/health || true
+          fi
