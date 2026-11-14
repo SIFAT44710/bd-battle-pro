@@ -413,9 +413,14 @@ export function startWebServer(port = process.env.PORT || 3000) {
           ✓ ফায়ারবেস লাইভ সাইট ইনস্ট্যান্ট সিঙ্ক হচ্ছে
         </p>
       </div>
-      <a href="https://ff-squad-arena-bd.web.app/admin" style="text-decoration:none;">
-        <button class="btn btn-primary">অ্যাডমিন হেডকোয়ার্টারে যান ➔</button>
-      </a>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button type="button" class="btn" onclick="resetSession()" style="background:#dc2626; color:#fff; border:none; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">
+          🔄 সেশন রিসেট ও নতুন পেয়ারিং কোড নিন (Reset Session)
+        </button>
+        <a href="https://ff-squad-arena-bd.web.app/admin" style="text-decoration:none;">
+          <button class="btn btn-primary" style="width:100%;">অ্যাডমিন ড্যাশবোর্ডে যান ➔</button>
+        </a>
+      </div>
     ` : `
       <!-- MOBILE-FIRST PAIRING CODE (NO PC / NO QR NEEDED) -->
       <div style="background:#18191a; border-radius:14px; padding:16px; border:1px solid #3a3b3c; margin-bottom:16px;">
@@ -463,6 +468,18 @@ export function startWebServer(port = process.env.PORT || 3000) {
   </div>
 
   <script>
+    async function resetSession() {
+      if (!confirm('আপনি কি নিশ্চিত যে বর্তমান হোয়াটসঅ্যাপ সেশন রিসেট করে নতুন পেয়ারিং কোড তৈরি করতে চান?')) return;
+      try {
+        const res = await fetch('/api/reset-session');
+        const data = await res.json();
+        alert('সেশন রিসেট সফল হয়েছে! পেজটি ৩ সেকেন্ডের মধ্যে নতুন পেয়ারিং কোড জেনারেটর নিয়ে রিলোড হবে...');
+        setTimeout(() => { window.location.reload(); }, 3000);
+      } catch (err) {
+        alert('এরর: ' + err.message);
+      }
+    }
+
     async function requestPairingCode() {
       const phoneInput = document.getElementById('pairPhoneInput');
       const phone = (phoneInput.value || '').trim();
