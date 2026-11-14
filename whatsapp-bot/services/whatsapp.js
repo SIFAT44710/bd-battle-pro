@@ -10,7 +10,7 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
-import { runDokanAiAgent, parsePaymentScreenshot, executeToolCall } from './gemini.js';
+import { runDokanAiAgent, parsePaymentScreenshot, transcribeAndParseVoiceNote, executeToolCall } from './gemini.js';
 import { useFirestoreAuthState } from './firestoreAuth.js';
 import { normalizePhone } from './firestore.js';
 import { sessionManager } from './session.js';
@@ -294,16 +294,11 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
                     msg.message;
 
   const isImage = !!unwrapped?.imageMessage;
-  const rawText = extractMessageText(msg.message);
+  const isAudio = !!unwrapped?.audioMessage;
+  let rawText = extractMessageText(msg.message);
 
-  addLog('INCOMING_MESSAGE', {
-    senderPhone,
-    remoteJid,
-    fromMe: msg.key?.fromMe,
-    isSelfChat,
-    isImage,
-    rawText: rawText.slice(0, 80)
-  });
+  let imageDetails = null;
+  let voiceDetails = null;
 
   // Retrieve player session
   const existingSession = sessionManager.get(senderPhone) || {
@@ -311,27 +306,29 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
     lastActivity: 0
   };
 
-  const isRecentBookingActive = existingSession.lastActivity && (Date.now() - existingSession.lastActivity < 30 * 60 * 1000);
-  const isMatchInquiry = isTournamentRelatedText(rawText);
+  // 1. Multimodal Audio Processing if voice note sent
+  if (isAudio) {
+    try {
+      await sendBotMessage(sock, remoteJid, { react: { text: '🎙️', key: msg.key } });
+      const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger });
+      const audioMime = unwrapped.audioMessage.mimetype || 'audio/ogg; codecs=opus';
+      voiceDetails = await transcribeAndParseVoiceNote(buffer, audioMime);
+      console.log('[DokanAI Voice Extracted]:', voiceDetails);
 
-  // 1. SMART TRIGGER & SILENT FILTER:
-  // If owner is testing (self-chat), ALWAYS respond!
-  // For external players: only respond if tournament-related OR active booking session:
-  if (!isSelfChat && !isMatchInquiry && !(isImage && isRecentBookingActive)) {
-    addLog('FILTER_IGNORED', { senderPhone, rawText: rawText.slice(0, 50) });
-    console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
-    return;
+      if (voiceDetails.transcription) {
+        rawText = voiceDetails.transcription;
+      }
+      if (voiceDetails.trx_id) existingSession.trx_id = voiceDetails.trx_id;
+      if (voiceDetails.amount) existingSession.amount = voiceDetails.amount;
+      if (voiceDetails.payment_method) existingSession.payment_method = voiceDetails.payment_method;
+      if (voiceDetails.match_query) existingSession.preferredMatch = voiceDetails.match_query;
+      if (voiceDetails.slot_number) existingSession.preferredSlot = voiceDetails.slot_number;
+      if (voiceDetails.squad_name) existingSession.squadName = voiceDetails.squad_name;
+      if (voiceDetails.leader_name) existingSession.leaderName = voiceDetails.leader_name;
+    } catch (e) {
+      console.warn('[DokanAI Voice Error]:', e.message);
+    }
   }
-
-  console.log(`\n[ARENA X Host Active]: ${isSelfChat ? '👑 Owner Test' : 'Player ' + senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage})`);
-
-  // Mark message as read & send typing presence
-  try {
-    await sock.readMessages([msg.key]);
-    await sock.sendPresenceUpdate('composing', remoteJid);
-  } catch (e) {}
-
-  let imageDetails = null;
 
   // 2. Multimodal OCR if image was sent (bKash/Nagad receipt)
   if (isImage) {
@@ -354,6 +351,36 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
       console.warn('[DokanAI Vision Error]:', e.message);
     }
   }
+
+  addLog('INCOMING_MESSAGE', {
+    senderPhone,
+    remoteJid,
+    fromMe: msg.key?.fromMe,
+    isSelfChat,
+    isImage,
+    isAudio,
+    rawText: rawText.slice(0, 80)
+  });
+
+  const isRecentBookingActive = existingSession.lastActivity && (Date.now() - existingSession.lastActivity < 30 * 60 * 1000);
+  const isMatchInquiry = isTournamentRelatedText(rawText);
+
+  // 3. SMART TRIGGER & SILENT FILTER:
+  // If owner is testing (self-chat) or voice note sent, ALWAYS respond!
+  // For external players: only respond if tournament-related OR active booking session OR voice note:
+  if (!isSelfChat && !isMatchInquiry && !(isImage && isRecentBookingActive) && !isAudio) {
+    addLog('FILTER_IGNORED', { senderPhone, rawText: rawText.slice(0, 50) });
+    console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
+    return;
+  }
+
+  console.log(`\n[ARENA X Host Active]: ${isSelfChat ? '👑 Owner Test' : 'Player ' + senderPhone} engaged with: "${rawText.slice(0, 50)}" (Image: ${isImage}, Audio: ${isAudio})`);
+
+  // Mark message as read & send typing presence
+  try {
+    await sock.readMessages([msg.key]);
+    await sock.sendPresenceUpdate('composing', remoteJid);
+  } catch (e) {}
 
   // Update session activity timestamp
   existingSession.lastActivity = Date.now();

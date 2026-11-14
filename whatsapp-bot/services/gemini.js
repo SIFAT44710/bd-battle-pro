@@ -372,3 +372,69 @@ Return ONLY valid JSON.
     return { trx_id: null, amount: null, payment_method: 'bkash', is_valid_payment: false };
   }
 }
+
+/**
+ * Multimodal Voice Message (PTT Audio) Parser via Gemini Audio
+ */
+export async function transcribeAndParseVoiceNote(audioBuffer, mimeType = 'audio/ogg; codecs=opus') {
+  let cleanMime = (mimeType || 'audio/ogg').split(';')[0].trim();
+  if (!cleanMime || cleanMime === 'audio/opus') cleanMime = 'audio/ogg';
+
+  const prompt = `
+You are the speech-to-text listener for the ARENA X Free Fire Esports WhatsApp Bot in Bangladesh.
+Listen to this voice message sent by a tournament player speaking Bengali, Banglish, or English.
+1. Transcribe the speech verbatim into natural, accurate text (transcription).
+2. Extract any tournament booking details (match number/query, slot number, squad name, leader name, TrxID, payment amount, payment method).
+Return JSON matching:
+{
+  "transcription": string,
+  "match_query": string or null,
+  "slot_number": number or null,
+  "squad_name": string or null,
+  "leader_name": string or null,
+  "trx_id": string or null,
+  "amount": number or null,
+  "payment_method": "bkash" | "nagad" | "rocket" | null
+}
+Return ONLY valid JSON.
+`;
+
+  try {
+    const ai = getGenAI();
+    const res = await ai.models.generateContent({
+      model: 'gemini-3.5-flash-lite',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                data: audioBuffer.toString('base64'),
+                mimeType: cleanMime
+              }
+            }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const parsed = JSON.parse(res.text);
+    return parsed;
+  } catch (err) {
+    console.warn('[Voice Note Parser Error]:', err.message);
+    return {
+      transcription: '',
+      match_query: null,
+      slot_number: null,
+      squad_name: null,
+      leader_name: null,
+      trx_id: null,
+      amount: null,
+      payment_method: null
+    };
+  }
+}
