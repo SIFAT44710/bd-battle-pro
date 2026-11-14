@@ -269,12 +269,18 @@ export function generateCopyableBookingTemplate({
   squadName = '',
   leaderName = ''
 } = {}) {
+  const matchNum = (matchQuery.toString().match(/\d+/) || ['4'])[0];
+  const directLink = `https://ff-squad-arena-bd.web.app/player?match=${matchNum}${slotNumber ? `&slot=${slotNumber}` : ''}`;
+
   return `[ARENA-BOOKING]
 Match: ${matchQuery || 'Match 4'}
 Squad Name: ${squadName || ''}
 Leader Name: ${leaderName || ''}
 Slot No: ${slotNumber || ''}
-TrxID: ${trxId || ''}`;
+TrxID: ${trxId || ''}
+
+🌐 ১-ক্লিক ডিরেক্ট বুকিং ও পেমেন্ট ভেরিফাই লিংক:
+${directLink}`;
 }
 
 /**
@@ -443,10 +449,19 @@ ${config.tournament.websiteUrl}`;
   // 6. Handle Separate Booking Format Message Dispatch
   const isFormatInquiry = /(?:format|ফরম্যাট|কিভাবে|কীভাবে|নিয়ম|rules|process|ফরম্যাট দাও)/i.test(rawText);
   const isExplicitBookingIntent = /(?:বুক করতে চাই|বুক করব|বুকিং করব|slot nite chai|book koren|slot book)/i.test(rawText);
+  const isLinkInquiry = /(?:link|লিংক|ওয়েবসাইট|website|web link|direct link)/i.test(rawText);
   const hasPaymentMissingDetails = (imageDetails?.trx_id || existingSession.trx_id) && (!existingSession.squadName || !existingSession.preferredSlot);
 
   let conversationalText = agentOutput.replyText || '';
   let separateTemplate = null;
+
+  // Ensure dynamic direct match booking link is always available if link was requested or intent expressed
+  if ((isLinkInquiry || isExplicitBookingIntent) && !conversationalText.includes('ff-squad-arena-bd.web.app')) {
+    const targetMatchNum = existingSession.preferredMatch ? (existingSession.preferredMatch.match(/\d+/) || ['4'])[0] : '4';
+    const targetSlot = existingSession.preferredSlot || '';
+    const webLink = `https://ff-squad-arena-bd.web.app/player?match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
+    conversationalText += `\n\n🔗 *১-ক্লিক ডিরেক্ট বুকিং ও ভেরিফাই লিংক:*\n${webLink}`;
+  }
 
   // Extract template if AI included it in reply text
   if (conversationalText.includes('[ARENA-BOOKING]') || conversationalText.includes('[ARENA BOOKING]')) {

@@ -159,9 +159,14 @@
         <button onclick="window.showMatchesList()" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:text-[#FF5722] hover:bg-orange-50 transition-all shadow-sm flex items-center gap-1.5">
           <i class="bi bi-arrow-left"></i> All Matches
         </button>
-        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-[#FF5722]" id="detailStatusBadge">
-          UPCOMING
-        </span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.copyCurrentMatchLink()" class="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-[#FF5722] text-xs font-bold transition-all shadow-sm flex items-center gap-1.5" title="Copy direct link to this match">
+            <i class="bi bi-link-45deg text-sm"></i> কপি লিংক
+          </button>
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-[#FF5722]" id="detailStatusBadge">
+            UPCOMING
+          </span>
+        </div>
       </div>
 
       <!-- Match Banner Summary Card -->
@@ -340,6 +345,16 @@
 
     <form id="bookingForm" onsubmit="window.handleConfirmBooking(event)" class="space-y-2.5">
       
+      <!-- Direct Share Link Notice -->
+      <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-orange-50/80 border border-orange-200/60 text-[11px] text-gray-700">
+        <span class="flex items-center gap-1 text-[#FF5722] font-semibold truncate">
+          <i class="bi bi-link-45deg"></i> <span id="bookingDirectLinkText">ডায়নামিক বুকিং লিংক সক্রিয়</span>
+        </span>
+        <button type="button" onclick="window.copyCurrentMatchLink()" class="ml-2 px-2 py-0.5 rounded bg-white border border-orange-200 text-[#FF5722] font-bold text-[10px] hover:bg-orange-100 transition-colors shadow-2xs shrink-0">
+          কপি লিংক
+        </button>
+      </div>
+
       <!-- STEP 1: SQUAD DETAILS -->
       <div id="bookingStepDetails" class="space-y-2.5">
         <div>
@@ -768,8 +783,11 @@
               <h2 class="font-bold text-sm sm:text-base tracking-tight leading-snug mt-1 flex items-center gap-1.5 truncate">
                 <i class="bi bi-controller text-[#FF5722] shrink-0"></i> <span class="truncate">${m.title || `Match #${m.matchNumber}`}</span>
               </h2>
-              <div class="text-[11px] sm:text-xs text-orange-200 mt-1 flex items-center gap-1.5">
-                <i class="bi bi-calendar3"></i> Today • Start: ${m.time || '08:30 PM'}
+              <div class="flex items-center justify-between text-[11px] sm:text-xs text-orange-200 mt-1">
+                <span class="flex items-center gap-1.5"><i class="bi bi-calendar3"></i> Today • Start: ${m.time || '08:30 PM'}</span>
+                <button type="button" onclick="event.stopPropagation(); window.copyDirectLink('${m.matchNumber || m.id}')" class="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white font-bold text-[10px] transition-all flex items-center gap-1" title="এই ম্যাচের লিংক কপি করুন">
+                  <i class="bi bi-link-45deg"></i> লিংক কপি
+                </button>
               </div>
             </div>
 
@@ -831,6 +849,13 @@
       $('viewMatchDetail').style.display = 'block';
       window.renderMatchDetail();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Keep URL clean and dynamic for instant sharing
+      const match = getActiveMatch();
+      if (match) {
+        const mParam = match.matchNumber || match.id;
+        window.history.replaceState({ matchId }, '', `${window.location.pathname}?match=${encodeURIComponent(mParam)}`);
+      }
     };
 
     // Back to Matches List
@@ -839,6 +864,9 @@
       $('viewMatchesList').style.display = 'block';
       window.renderMatchesList();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Clean query parameters from URL
+      window.history.replaceState({}, '', window.location.pathname);
     };
 
     // ==========================================
@@ -1190,11 +1218,28 @@
       if ($('payTrxError')) $('payTrxError').classList.add('hidden');
       $('bookingModalBackdrop').style.display = 'block';
       $('bookingModalBox').style.display = 'block';
+
+      // Update URL with selected slot and match
+      const mParam = match.matchNumber || match.id;
+      const currentSlot = select.value || slotNumber || '';
+      let newUrl = `${window.location.pathname}?match=${encodeURIComponent(mParam)}`;
+      if (currentSlot) newUrl += `&slot=${encodeURIComponent(currentSlot)}`;
+      window.history.replaceState({ matchId: match.id, slotNumber: currentSlot }, '', newUrl);
+
+      if ($('bookingDirectLinkText')) {
+        $('bookingDirectLinkText').textContent = `Match #${match.matchNumber || 1}${currentSlot ? ` (Slot ${currentSlot})` : ''} - বুকিং লিংক`;
+      }
     };
 
     window.closeBookingModal = function() {
       $('bookingModalBackdrop').style.display = 'none';
       $('bookingModalBox').style.display = 'none';
+
+      const match = getActiveMatch();
+      if (match) {
+        const mParam = match.matchNumber || match.id;
+        window.history.replaceState({ matchId: match.id }, '', `${window.location.pathname}?match=${encodeURIComponent(mParam)}`);
+      }
     };
 
     // Fast WhatsApp AI Auto-Booking Navigation
@@ -1543,6 +1588,107 @@
     };
 
     // ==========================================
+    // DYNAMIC MATCH & SLOT DEEP LINKING ENGINE
+    // ==========================================
+    window.copyDirectLink = function(matchParam, slotParam = '') {
+      const baseUrl = window.location.origin + window.location.pathname;
+      let fullUrl = `${baseUrl}?match=${encodeURIComponent(matchParam)}`;
+      if (slotParam) fullUrl += `&slot=${encodeURIComponent(slotParam)}`;
+
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        window.showToast("🔗 সরাসরি ম্যাচ বুকিং লিংক কপি হয়েছে!", "success");
+      }).catch(() => {
+        window.showToast("লিংক: " + fullUrl, "info");
+      });
+    };
+
+    window.copyCurrentMatchLink = function() {
+      const match = getActiveMatch();
+      if (!match) return;
+      const slotSelect = $('bookSlotSelect');
+      const isModalOpen = $('bookingModalBox') && $('bookingModalBox').style.display === 'block';
+      const slotNum = (isModalOpen && slotSelect && slotSelect.value) ? slotSelect.value : '';
+      const mParam = match.matchNumber || match.id;
+      window.copyDirectLink(mParam, slotNum);
+    };
+
+    let hasProcessedInitialUrl = false;
+
+    function handleUrlRouting() {
+      const params = new URLSearchParams(window.location.search);
+      let matchQuery = params.get('match') || params.get('m') || params.get('id');
+      const slotQuery = params.get('slot') || params.get('s');
+      const actionQuery = params.get('action') || params.get('book');
+      const phoneQuery = params.get('phone') || params.get('p') || params.get('contact');
+      const squadQuery = params.get('squad') || params.get('team');
+      const trxQuery = params.get('trx') || params.get('trxId');
+
+      if (!matchQuery) {
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const matchIdx = pathSegments.indexOf('match');
+        if (matchIdx !== -1 && pathSegments[matchIdx + 1]) {
+          matchQuery = pathSegments[matchIdx + 1];
+        }
+      }
+
+      if (!matchQuery && !slotQuery) return;
+
+      const matches = tournamentData.matches || [];
+      if (!matches.length) return;
+
+      let target = null;
+      if (matchQuery) {
+        const cleanQuery = matchQuery.toString().trim().toLowerCase();
+        target = matches.find(m => m.id && m.id.toLowerCase() === cleanQuery);
+        if (!target) {
+          const numMatch = cleanQuery.match(/\d+/);
+          if (numMatch) {
+            const num = parseInt(numMatch[0], 10);
+            target = matches.find(m => m.matchNumber === num);
+          }
+        }
+        if (!target) {
+          target = matches.find(m => 
+            (m.title && m.title.toLowerCase().includes(cleanQuery)) ||
+            (m.map && m.map.toLowerCase().includes(cleanQuery))
+          );
+        }
+      }
+
+      if (!target && slotQuery) {
+        target = matches[0];
+      }
+
+      if (target) {
+        activeMatchId = target.id;
+        $('viewMatchesList').style.display = 'none';
+        $('viewMatchDetail').style.display = 'block';
+        window.renderMatchDetail();
+
+        const slotNum = slotQuery ? parseInt(slotQuery, 10) : null;
+        if (slotNum && slotNum >= 1 && slotNum <= 12) {
+          const slotItem = (target.slots || []).find(s => s.slotNumber === slotNum);
+          if (slotItem && slotItem.booked) {
+            window.showToast(`স্লট #${slotNum} ইতিমধ্যে বুক হয়ে গেছে (${slotItem.squadName})! অন্য খালি স্লট বেছে নিন।`, "warning");
+            window.openBookingModal();
+          } else {
+            window.openBookingModal(slotNum);
+          }
+        } else if (actionQuery === 'book' || actionQuery === 'true' || params.has('book') || slotQuery !== null) {
+          window.openBookingModal();
+        }
+
+        if (phoneQuery && $('bookWhatsApp')) $('bookWhatsApp').value = phoneQuery;
+        if (squadQuery && $('bookSquadName')) $('bookSquadName').value = squadQuery;
+        if (trxQuery && $('payTrxId')) $('payTrxId').value = trxQuery;
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      handleUrlRouting();
+    });
+
+    // ==========================================
     // REAL-TIME FIRESTORE LISTENER
     // ==========================================
     function startRealtimeSync() {
@@ -1572,6 +1718,12 @@
           if ($('viewMatchDetail').style.display === 'block') {
             window.renderMatchDetail();
           }
+
+          // Trigger URL deep routing once Firestore data arrives
+          if (!hasProcessedInitialUrl) {
+            handleUrlRouting();
+            hasProcessedInitialUrl = true;
+          }
         }, (err) => {
           console.warn("Firestore error:", err);
         });
@@ -1582,6 +1734,7 @@
 
     // Init
     window.renderMatchesList();
+    handleUrlRouting();
     startRealtimeSync();
   </script>
 </body>

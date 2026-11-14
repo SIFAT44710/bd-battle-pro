@@ -99,6 +99,13 @@ YOUR CORE BEHAVIOR & RULES:
    - Keep answers natural, short, engaging, and to the point.
    - Use gaming emojis appropriately (🎮, 🎯, ৳, ✅, 🛡️, 🔥).
    - Never output cold, rigid code-blocks in general chat. Chat like an awesome, trustworthy human tournament admin hosting scrims on WhatsApp!
+
+6. DYNAMIC MATCH & SLOT DIRECT LINKS (CRITICAL):
+   - Whenever you present a match, recommend a match, or when a player asks to book or wants a link:
+     ALWAYS include the direct 1-click web registration & payment link for that match!
+     Direct Link Format: https://ff-squad-arena-bd.web.app/player?match=<matchNumber>
+     If they asked for a specific slot (e.g. Slot 5), append it: https://ff-squad-arena-bd.web.app/player?match=<matchNumber>&slot=<slotNumber>
+   - Explain warmly: "আপনি সরাসরি উপরের লিংকে গিয়ে আপনার স্কোয়াড নাম ও TrxID দিয়ে ১-ক্লিকে ইনস্ট্যান্ট ভেরিফাই করে নিতে পারেন, অথবা চাইলে এই হোয়াটসঅ্যাপ চ্যাটেও বিস্তারিত পাঠিয়ে বুক করে নিতে পারেন!"
 `;
 
 /**
@@ -133,6 +140,7 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             totalFree: freeSlots.length,
             bookedSquads,
             totalBooked: bookedSquads.length,
+            directBookingUrl: `https://ff-squad-arena-bd.web.app/player?match=${target.matchNumber || 1}`,
             paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
           };
         }
@@ -151,7 +159,8 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             prizePool: m.prizePool || 100,
             freeSlots: free,
             totalFree: free.length,
-            totalBooked: 12 - free.length
+            totalBooked: 12 - free.length,
+            directBookingUrl: `https://ff-squad-arena-bd.web.app/player?match=${m.matchNumber || 1}`
           };
         }),
         paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
