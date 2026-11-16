@@ -230,12 +230,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
               const code = await currentSock.requestPairingCode(phone);
               formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
             } else {
-              // Generate isolated 8-character pairing code
-              const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-              let p1 = '', p2 = '';
-              for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
-              for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
-              formattedCode = `${p1}-${p2}`;
+              throw new Error('WhatsApp ক্লায়েন্ট বর্তমানে প্রস্তুত নেই বা ইতিমধ্যে সংযুক্ত। অনুগ্রহ করে ২ সেকেন্ড পর পুনরায় চেষ্টা করুন।');
             }
 
             // Sync with Firestore tenant doc

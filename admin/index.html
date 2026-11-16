@@ -3258,24 +3258,39 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
 
       window.showToast("পেয়ারিং কোড তৈরি হচ্ছে...", "info");
 
-      // Try calling live bot backend if running
+      // Call live bot backend
       let generatedCode = null;
+      let errorMsg = null;
       try {
-        const res = await fetch(`/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+        let res = await fetch(`/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+        if (!res.ok) {
+          // Try local dev server fallback
+          res = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+        }
         if (res.ok) {
           const data = await res.json();
           if (data.pairingCode) generatedCode = data.pairingCode;
+          else if (data.message) errorMsg = data.message;
+        } else {
+          errorMsg = "বট ব্যাকএন্ড সার্ভার রেসপন্স দেয়নি।";
         }
-      } catch (e) {}
+      } catch (e) {
+        // Try direct localhost fetch if relative fetch failed
+        try {
+          const localRes = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+          if (localRes.ok) {
+            const data = await localRes.json();
+            if (data.pairingCode) generatedCode = data.pairingCode;
+          }
+        } catch (localErr) {
+          errorMsg = "লাইভ WhatsApp বট সার্ভারের সাথে সংযোগ করা যায়নি।";
+        }
+      }
 
-      // Fallback: Generate dedicated alphanumeric 8-digit pairing code
       if (!generatedCode) {
-        const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-        let part1 = '';
-        let part2 = '';
-        for (let i = 0; i < 4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
-        for (let i = 0; i < 4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
-        generatedCode = `${part1}-${part2}`;
+        window.showToast(errorMsg || "পেয়ারিং কোড পাওয়া যায়নি। অনুগ্রহ করে আপনার বট সার্ভার (npm run bot) চালু রাখুন অথবা সেন্ট্রাল পাবলিক বট ব্যবহার করুন।", "warning");
+        alert("⚠️ পেয়ারিং কোড এরর: " + (errorMsg || "WhatsApp সার্ভার থেকে অফিশিয়াল পেয়ারিং কোড আসেনি। নিশ্চিত করুন আপনার পিসিতে বা ক্লাউডে বট সার্ভার চালু আছে।"));
+        return;
       }
 
       try {
@@ -3292,7 +3307,7 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
         if (box) box.classList.remove('hidden');
         if (codeText) codeText.textContent = generatedCode;
 
-        window.showToast("পেয়ারিং কোড প্রস্তুত: " + generatedCode, "success");
+        window.showToast("অফিশিয়াল পেয়ারিং কোড প্রস্তুত: " + generatedCode, "success");
       } catch (err) {
         window.showToast("কোড সেভ ব্যর্থ হয়েছে: " + err.message, "error");
       }
