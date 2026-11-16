@@ -37,3 +37,22 @@
 - `js/points-engine.js`: Official FFWS points calculator & WhatsApp text report generator.
 - `js/firebase-config.js`: Firebase Realtime DB sync engine with automatic LocalStorage fallback.
 - `js/app.js`: Reactive UI rendering & event handlers.
+
+
+## Multi-Tenant B2B SaaS Architecture & Organizer Login System (Updated 2026-11-16)
+- **Centralized Multi-Tenant Model:**
+  - `tenants/{tenantId}`: Isolated document per organizer containing `slug`, `guildName`, `whatsappNumber`, `adminPinHash` (SHA-256), `trialEndsAt`, `killSwitch`, and `paymentSettings`.
+  - Subcollections: `tenants/{tenantId}/matches` holding isolated 12-squad tournament matches and slots.
+  - Mirrored file deployment: Firebase Hosting static directories (`login/index.html`, `admin/index.html`, `player/index.html`, `orbit.html`) strictly synced with root `.html` files.
+- **Organizer Authentication & Routing (`/login`):**
+  - Dual lookup mode: Organizers can log in using either their **Username / Slug** (`tanvir-esports`) OR their registered **WhatsApp Phone Number** (`01711223344`).
+  - Cryptographic verification: Client SHA-256 hash match against `tenantData.adminPinHash` (with legacy plaintext fallback).
+  - Kill-switch & trial expiration enforcement: Instant alert if suspended or trial expired (>30 days).
+  - Session persistence: `sessionStorage.setItem('adminAuth_' + slug, 'true')` and `localStorage.setItem('arena_x_last_tenant', slug)`.
+  - Direct 1-click links + auto-redirect (1.2s) to `/admin?org={slug}` and `/player?org={slug}`.
+  - Forgot PIN modal with 1-click link to official support WhatsApp (`01872733642`).
+- **Live URLs:**
+  - Landing & Showcase: `https://ff-squad-arena-bd.web.app`
+  - Organizer Login: `https://ff-squad-arena-bd.web.app/login`
+  - Free Trial Signup: `https://ff-squad-arena-bd.web.app/signup`
+  - Orbit Master CEO Panel: `https://ff-squad-arena-bd.web.app/orbit` (or `/sbs`)
