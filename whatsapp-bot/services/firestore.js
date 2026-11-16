@@ -1,6 +1,13 @@
 import admin from 'firebase-admin';
 import { initializeApp as initClientApp } from 'firebase/app';
-import { getFirestore as getClientFirestore, doc as clientDoc, getDoc as getClientDoc, updateDoc as updateClientDoc } from 'firebase/firestore';
+import { 
+  getFirestore as getClientFirestore, 
+  doc as clientDoc, 
+  getDoc as getClientDoc, 
+  updateDoc as updateClientDoc,
+  collection as clientCollection,
+  getDocs as getClientDocs
+} from 'firebase/firestore';
 import fs from 'fs';
 import { config } from '../config.js';
 
@@ -78,6 +85,89 @@ export async function getTournamentData() {
       driver,
       data: snap.data(),
       update: async (updates) => updateClientDoc(docRef, updates)
+    };
+  }
+}
+
+/**
+ * Fetch Tenant-Scoped Tournament Data & Matches
+ * Ensures complete multi-tenant isolation from other tenants or demo data.
+ */
+export async function getTenantTournamentData(tenantSlug) {
+  initFirestore();
+  if (!tenantSlug || tenantSlug === 'ff-daily-squad') {
+    return getTournamentData();
+  }
+
+  if (driver === 'admin') {
+    const tenantDocRef = adminDb.collection('tenants').doc(tenantSlug);
+    const tenantSnap = await tenantDocRef.get();
+    if (!tenantSnap.exists) {
+      throw new Error(`Tenant "${tenantSlug}" not found!`);
+    }
+    const tenantData = tenantSnap.data();
+
+    // Fetch matches from subcollection
+    const matchesSnap = await tenantDocRef.collection('matches').get();
+    const matches = [];
+    matchesSnap.forEach(docSnap => {
+      matches.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    matches.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+
+    return {
+      driver,
+      isTenant: true,
+      tenantSlug,
+      tenant: tenantData,
+      data: {
+        title: tenantData.guildName || tenantData.name || 'ARENA X Tournament',
+        paymentSettings: {
+          bkashNumber: tenantData.paymentSettings?.bkash || tenantData.whatsappNumber || '',
+          nagadNumber: tenantData.paymentSettings?.nagad || tenantData.whatsappNumber || '',
+          rocketNumber: tenantData.paymentSettings?.rocket || ''
+        },
+        matches
+      },
+      updateMatch: async (matchId, updates) => {
+        return tenantDocRef.collection('matches').doc(matchId).update(updates);
+      }
+    };
+  } else {
+    // Client SDK
+    const tenantDocRef = clientDoc(clientDbInstance, 'tenants', tenantSlug);
+    const tenantSnap = await getClientDoc(tenantDocRef);
+    if (!tenantSnap.exists()) {
+      throw new Error(`Tenant "${tenantSlug}" not found!`);
+    }
+    const tenantData = tenantSnap.data();
+
+    const matchesCol = clientCollection(clientDbInstance, `tenants/${tenantSlug}/matches`);
+    const matchesSnap = await getClientDocs(matchesCol);
+    const matches = [];
+    matchesSnap.forEach(docSnap => {
+      matches.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    matches.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0));
+
+    return {
+      driver,
+      isTenant: true,
+      tenantSlug,
+      tenant: tenantData,
+      data: {
+        title: tenantData.guildName || tenantData.name || 'ARENA X Tournament',
+        paymentSettings: {
+          bkashNumber: tenantData.paymentSettings?.bkash || tenantData.whatsappNumber || '',
+          nagadNumber: tenantData.paymentSettings?.nagad || tenantData.whatsappNumber || '',
+          rocketNumber: tenantData.paymentSettings?.rocket || ''
+        },
+        matches
+      },
+      updateMatch: async (matchId, updates) => {
+        const mRef = clientDoc(clientDbInstance, `tenants/${tenantSlug}/matches`, matchId);
+        return updateClientDoc(mRef, updates);
+      }
     };
   }
 }
@@ -174,6 +264,7 @@ export function isDuplicateTrxId(matches, trxId) {
  * Perform Atomic Slot Booking in Firestore
  */
 export async function bookSlotInFirestore({
+  tenantSlug = null,
   matchQuery,
   preferredSlot,
   squadName,
@@ -184,17 +275,20 @@ export async function bookSlotInFirestore({
   amount,
   paymentMethod
 }) {
-  // DEMO MODE GATE: Intercept booking and prevent Firestore write
-  if (process.env.DEMO_MODE === 'true') {
+  const isTenant = !!tenantSlug && tenantSlug !== 'ff-daily-squad';
+
+  // DEMO MODE GATE: Intercept booking and prevent Firestore write only if strictly in global demo mode AND not a dedicated tenant
+  if (process.env.DEMO_MODE === 'true' && !isTenant) {
     console.log(`[DEMO_MODE ACTIVE]: Simulated booking attempt for "${squadName}". Skipping Firestore write.`);
     return {
       success: false,
       isDemo: true,
-      message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+      message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801872733642 নম্বরে যোগাযোগ করুন।"
     };
   }
 
-  const { data, update } = await getTournamentData();
+  const tournamentObj = isTenant ? await getTenantTournamentData(tenantSlug) : await getTournamentData();
+  const { data } = tournamentObj;
   const matches = data.matches || [];
 
   const targetMatch = findTargetMatch(matches, matchQuery, true);
@@ -249,7 +343,7 @@ export async function bookSlotInFirestore({
             trxId: trxId || '',
             paymentMethod: paymentMethod || 'bkash',
             feePaid: Number(amount || targetMatch.entryFee || 100),
-            bookedVia: 'WhatsApp Bot',
+            bookedVia: isTenant ? `WhatsApp Bot (${tenantSlug})` : 'WhatsApp Bot (Demo)',
             bookedAt: new Date().toISOString()
           };
         }
@@ -261,8 +355,13 @@ export async function bookSlotInFirestore({
     return m;
   });
 
-  // Update in Firestore
-  await update({ matches: updatedMatches });
+  // Update in Firestore: Scoped to tenant subcollection if tenant, or tournament doc if demo
+  if (isTenant && tournamentObj.updateMatch) {
+    const updatedTarget = updatedMatches.find(m => m.id === targetMatch.id);
+    await tournamentObj.updateMatch(targetMatch.id, { slots: updatedTarget.slots });
+  } else if (tournamentObj.update) {
+    await tournamentObj.update({ matches: updatedMatches });
+  }
 
   return {
     success: true,

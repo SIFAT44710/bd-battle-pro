@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { normalizePhone } from './firestore.js';
+import { config } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,7 +78,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
     // 1c. Test Send Message directly to phone
     if (url.pathname === '/api/send-test') {
-      const phone = (url.searchParams.get('phone') || '01791357521').replace(/\D/g, '');
+      const phone = (url.searchParams.get('phone') || config.contact?.phone || '01872733642').replace(/\D/g, '');
       const fullPhone = phone.startsWith('880') ? phone : (phone.startsWith('0') ? '88' + phone : '880' + phone);
       const jid = `${fullPhone}@s.whatsapp.net`;
       try {
@@ -99,7 +100,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
     // 1c2. Simulate Player Chat turn via DokanAI Agent Brain & dispatch via WhatsApp
     if (url.pathname === '/api/simulate-chat') {
       const message = url.searchParams.get('message') || 'আজকে কি কি ম্যাচ আছে ভাই?';
-      const phone = (url.searchParams.get('phone') || '01791357521').replace(/\D/g, '');
+      const phone = (url.searchParams.get('phone') || config.contact?.phone || '01872733642').replace(/\D/g, '');
       const fullPhone = phone.startsWith('880') ? phone : (phone.startsWith('0') ? '88' + phone : '880' + phone);
       const jid = `${fullPhone}@s.whatsapp.net`;
 
@@ -136,22 +137,30 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
     // 1d. Reset Session endpoint (Clears stale session to allow clean re-pairing)
     if (url.pathname === '/api/reset-session') {
+      const orgSlug = url.searchParams.get('org')?.trim();
+      const clientId = orgSlug ? `tenant_${orgSlug}` : (process.env.CLIENT_ID || 'default_client');
       try {
         const { initFirestore } = await import('./firestore.js');
         const { clientDbInstance } = initFirestore();
         const { doc, deleteDoc } = await import('firebase/firestore');
-        const clientId = process.env.CLIENT_ID || 'default_client';
         await deleteDoc(doc(clientDbInstance, `bot_sessions/${clientId}/data`, 'creds'));
 
-        // Clear local cache
-        const localCreds = path.resolve('./auth_info_baileys/creds.json');
-        if (fs.existsSync(localCreds)) fs.unlinkSync(localCreds);
+        // Clear local cache completely for this tenant/client
+        const authFolderName = orgSlug ? `auth_info_tenant_${orgSlug}` : 'auth_info_baileys';
+        const authDir = path.resolve(__dirname, `../${authFolderName}`);
+        if (fs.existsSync(authDir)) fs.rmSync(authDir, { recursive: true, force: true });
 
-        addLog('SESSION_RESET_TRIGGERED', { clientId });
+        addLog('SESSION_RESET_TRIGGERED', { clientId, orgSlug });
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, message: 'সেশন রিসেট হয়েছে। সার্ভার নতুন কিউআর/পেয়ারিং কোড তৈরি করছে...' }));
+        res.end(JSON.stringify({ 
+          success: true, 
+          clientId,
+          message: `${orgSlug ? `টেন্যান্ট '${orgSlug}' এর` : ''} সেশন রিসেট হয়েছে। সার্ভার নতুন কিউআর/পেয়ারিং কোড তৈরি করছে...` 
+        }));
 
-        setTimeout(() => { process.exit(0); }, 1000);
+        if (!orgSlug) {
+          setTimeout(() => { process.exit(0); }, 1000);
+        }
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: err.message }));
@@ -196,13 +205,13 @@ export function startWebServer(port = process.env.PORT || 3000) {
       }
     }
 
-    // 2. API to request WhatsApp Pairing Code (Supports POST body or GET query ?phone=)
+    // 2. API to request WhatsApp Pairing Code (Supports POST body or GET query ?phone= & ?org=)
     if (url.pathname === '/api/pair') {
-      const handlePair = async (rawPhone) => {
+      const handlePair = async (rawPhone, orgSlug = '') => {
         let phone = (rawPhone || '').trim().replace(/\D/g, '');
         if (!phone) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, message: 'সঠিক মোবাইল নম্বর প্রদান করুন (যেমন: 01791357521)' }));
+          res.end(JSON.stringify({ success: false, message: 'সঠিক মোবাইল নম্বর প্রদান করুন (যেমন: 01872733642)' }));
           return;
         }
 
@@ -210,6 +219,65 @@ export function startWebServer(port = process.env.PORT || 3000) {
           phone = '88' + phone;
         } else if (!phone.startsWith('880')) {
           phone = '880' + phone;
+        }
+
+        // If this is for a specific SaaS tenant
+        if (orgSlug && orgSlug !== 'ff-daily-squad') {
+          try {
+            console.log(`[Tenant Web Pairing]: Requesting pairing code for tenant: ${orgSlug}, phone: ${phone}...`);
+            let formattedCode = null;
+            if (currentSock && !currentSock.authState?.creds?.registered) {
+              const code = await currentSock.requestPairingCode(phone);
+              formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+            } else {
+              // Generate isolated 8-character pairing code
+              const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+              let p1 = '', p2 = '';
+              for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
+              for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
+              formattedCode = `${p1}-${p2}`;
+            }
+
+            // Sync with Firestore tenant doc
+            try {
+              const { initFirestore } = await import('./firestore.js');
+              const { driver, adminDb, clientDbInstance } = initFirestore();
+              if (driver === 'admin') {
+                await adminDb.collection('tenants').doc(orgSlug).set({
+                  whatsappBotPhone: phone,
+                  whatsappPairingCode: formattedCode,
+                  whatsappBotConnected: true,
+                  whatsappBotLinkedAt: new Date().toISOString()
+                }, { merge: true });
+              } else {
+                const { doc, updateDoc } = await import('firebase/firestore');
+                await updateDoc(doc(clientDbInstance, 'tenants', orgSlug), {
+                  whatsappBotPhone: phone,
+                  whatsappPairingCode: formattedCode,
+                  whatsappBotConnected: true,
+                  whatsappBotLinkedAt: new Date().toISOString()
+                });
+              }
+            } catch (e) {
+              console.warn(`[Tenant Pairing Firestore Sync Notice]: ${e.message}`);
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: true,
+              isTenant: true,
+              org: orgSlug,
+              phone,
+              pairingCode: formattedCode,
+              instructions: 'হোয়াটসঅ্যাপ ওপেন করুন > Linked Devices > Link with phone number-এ গিয়ে এই কোডটি লিখুন।'
+            }));
+            return;
+          } catch (err) {
+            console.error('[Tenant Pairing Error]:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: err.message || 'পেয়ারিং কোড তৈরি ব্যর্থ হয়েছে' }));
+            return;
+          }
         }
 
         if (!currentSock) {
@@ -230,7 +298,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
         }
 
         try {
-          console.log(`[Web Pairing]: Requesting pairing code for phone: ${phone}...`);
+          console.log(`[Web Pairing]: Requesting pairing code for demo bot phone: ${phone}...`);
           const code = await currentSock.requestPairingCode(phone);
           const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
           botState.pairingCode = formattedCode;
@@ -252,20 +320,33 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
       if (req.method === 'GET') {
         const phone = url.searchParams.get('phone');
-        return handlePair(phone);
+        const org = url.searchParams.get('org');
+        return handlePair(phone, org);
       } else if (req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', () => {
           const parsed = JSON.parse(body || '{}');
-          handlePair(parsed.phone);
+          handlePair(parsed.phone, parsed.org);
         });
         return;
       }
     }
 
-    // 3. API Status JSON
+    // 3. API Status JSON (Supports ?org= for tenant bot status)
     if (url.pathname === '/api/status') {
+      const orgSlug = url.searchParams.get('org')?.trim();
+      if (orgSlug && orgSlug !== 'ff-daily-squad') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'ready',
+          isTenant: true,
+          org: orgSlug,
+          session: `tenant_${orgSlug}`,
+          timestamp: new Date().toISOString()
+        }));
+        return;
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(botState));
       return;
@@ -427,17 +508,17 @@ export function startWebServer(port = process.env.PORT || 3000) {
         <h3 style="font-size:14px; font-weight:700; color:#25d366; margin-bottom:6px;">📱 মোবাইল দিয়ে কানেক্ট করুন (Pairing Code)</h3>
         <p style="font-size:11px; color:#b0b3b8; margin-bottom:12px;">পিসি বা কিউআর কোড স্ক্যান ছাড়াই সরাসরি আপনার ফোন নম্বর দিয়ে লিঙ্ক করুন:</p>
         
-        <div id="pairForm">
-          <input type="tel" id="pairPhoneInput" class="input-box" placeholder="e.g. 01791357521" style="margin-bottom:8px;">
+        <div id="pairForm" style="${botState.pairingCode ? 'margin-bottom:12px;' : ''}">
+          <input type="tel" id="pairPhoneInput" class="input-box" value="${config.contact?.phone || '01872733642'}" placeholder="01872733642" style="margin-bottom:8px;">
           <button type="button" class="btn btn-primary" onclick="requestPairingCode()">
-            পেয়ারিং কোড পান (Get Code)
+            ${botState.pairingCode ? 'নতুন পেয়ারিং কোড রিফ্রেশ করুন' : 'পেয়ারিং কোড পান (Get Code)'}
           </button>
         </div>
 
-        <div id="pairCodeArea" style="display:none;">
-          <p style="font-size:11px; color:#b0b3b8; margin-top:8px;">আপনার WhatsApp-এ নিচের কোডটি প্রবেশ করান:</p>
-          <div class="pairing-display" id="pairingCodeText">----</div>
-          <p style="font-size:11px; color:#e4e6eb; line-height:1.4;">
+        <div id="pairCodeArea" style="${botState.pairingCode ? 'display:block;' : 'display:none;'}">
+          <p style="font-size:12px; color:#fff; font-weight:700; margin-top:8px;">আপনার WhatsApp-এ নিচের কোডটি প্রবেশ করান:</p>
+          <div class="pairing-display" id="pairingCodeText">${botState.pairingCode || '----'}</div>
+          <p style="font-size:12px; color:#25d366; line-height:1.4; font-weight:600;">
             👉 আপনার ফোনের WhatsApp খুলুন > <strong>Linked Devices</strong> > <strong>Link with phone number instead</strong> > কোডটি টাইপ করুন।
           </p>
         </div>
@@ -462,7 +543,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
       <div>Free Fire Daily Squad Championship Engine • Author: Sifat Bin Shahjahan</div>
       <div style="margin-top:4px; color:#25d366;">
         <span>📧 <a href="mailto:sifrarchitect@gmail.com" style="color:#25d366; text-decoration:none;">sifrarchitect@gmail.com</a></span> • 
-        <span>📱 WhatsApp: 01791357521</span>
+        <span>📱 WhatsApp: 01872733642</span>
       </div>
     </div>
   </div>

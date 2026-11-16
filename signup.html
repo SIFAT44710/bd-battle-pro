@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ARENA X — ১ মাসের ফ্রি ট্রায়ালে নিজের টুর্নামেন্ট প্ল্যাটফর্ম শুরু করুন</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF5722',
+              orangeHover: '#E64A19',
+              charcoal: '#212529',
+              dark: '#111827',
+              bgGray: '#F8F9FA',
+              borderGray: '#E5E7EB',
+              muted: '#6C757D'
+            }
+          },
+          fontFamily: {
+            sans: ['Hind Siliguri', 'Noto Sans Bengali', 'Inter', 'Roboto', 'sans-serif'],
+            mono: ['Hind Siliguri', 'Noto Sans Bengali', 'Inter', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'Inter', sans-serif;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #F8F9FA; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col select-none overflow-x-hidden">
+
+  <!-- Top Announcement Bar -->
+  <div class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-2 text-xs font-medium shadow-sm w-full">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0">🎁 30-DAY TRIAL</span>
+        <span class="truncate">
+          এখনই রেজিস্ট্রেশন করে ৩০ দিন ফ্রিতে সম্পূর্ণ টুর্নামেন্ট প্ল্যাটফর্ম ও অটো-বুকিং সিস্টেম ব্যবহার করুন!
+        </span>
+      </div>
+      <a href="/player" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
+        🎮 Player View ↗
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Navbar -->
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center gap-2.5 text-decoration-none">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-xl shadow-md shrink-0">
+          A
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-lg sm:text-xl tracking-tight text-gray-900">ARENA X</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-orange-100 text-[#FF5722] border border-orange-200 uppercase">
+              B2B SAAS
+            </span>
+          </div>
+          <span class="text-[10px] text-gray-500 font-medium block">Free Fire Tournament Engine</span>
+        </div>
+      </a>
+
+      <!-- Navbar Links & Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="/login" class="px-3 sm:px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs sm:text-sm tracking-wide border border-gray-300 transition-all flex items-center gap-1.5 shrink-0">
+          <i class="bi bi-box-arrow-in-right text-base text-[#FF5722]"></i>
+          <span>লগইন</span>
+        </a>
+        <a href="/player" class="px-3 sm:px-4 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF5722] font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+          <i class="bi bi-controller"></i>
+          <span>প্লেয়ার ড্যাশবোর্ড</span>
+        </a>
+        <a href="/admin" class="px-3 sm:px-4 py-2 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+          <i class="bi bi-shield-lock-fill"></i>
+          <span>অ্যাডমিন প্যানেল</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Signup Container -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full flex items-center justify-center">
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-xl p-6 sm:p-10 w-full max-w-xl space-y-6">
+      
+      <!-- Top Header -->
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-50 text-[#FF5722] flex items-center justify-center text-3xl shadow-inner border border-orange-100">
+          <i class="bi bi-rocket-takeoff-fill"></i>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+          নিজের টুর্নামেন্ট প্ল্যাটফর্ম শুরু করুন
+        </h1>
+        <p class="text-xs sm:text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
+          ১ মিনিটে সাইনআপ করুন—কোনো ক্রেডিট কার্ড ছাড়াই পাবেন ৩০ দিনের সম্পূর্ণ ফ্রি ট্রায়াল!
+        </p>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="saasSignupForm" class="space-y-4 pt-2">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">
+            <i class="bi bi-person-fill text-[#FF5722] mr-1"></i> আপনার নাম (Organizer Name)
+          </label>
+          <input type="text" id="ownerName" required class="w-full bg-[#F8F9FA] border border-gray-300 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all font-medium" placeholder="e.g. তানভীর আহমেদ">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">
+            <i class="bi bi-whatsapp text-green-600 mr-1"></i> হোয়াটসঅ্যাপ নম্বর (বিকাশ/নগদ পেমেন্ট রিসিভ নম্বর)
+          </label>
+          <input type="tel" id="ownerPhone" required class="w-full bg-[#F8F9FA] border border-gray-300 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all font-mono font-medium" placeholder="017XXXXXXXX">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">
+            <i class="bi bi-trophy-fill text-amber-500 mr-1"></i> টুর্নামেন্ট বা গিল্ডের নাম (Tournament / Guild Name)
+          </label>
+          <input type="text" id="tournamentName" required class="w-full bg-[#F8F9FA] border border-gray-300 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all font-medium" placeholder="e.g. Apex Esports BD" oninput="autoGenerateSlug(this.value)">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">
+            <i class="bi bi-link-45deg text-blue-500 mr-1"></i> আপনার ইউনিক প্ল্যাটফর্ম আইডি (Slug URL)
+          </label>
+          <div class="flex items-center bg-[#F8F9FA] border border-gray-300 rounded-xl overflow-hidden px-3 focus-within:border-[#FF5722] focus-within:bg-white transition-all">
+            <span class="text-gray-500 text-xs select-none">arenax.bd/</span>
+            <input type="text" id="slug" required class="w-full py-2.5 bg-transparent outline-none text-xs sm:text-sm font-mono text-[#FF5722] font-bold" placeholder="apex-esports">
+          </div>
+          <p class="text-[11px] text-gray-500 mt-1">এটি দিয়ে আপনার প্লেয়ার এবং অ্যাডমিন পেজের পার্সোনাল লিংক তৈরি হবে।</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">
+            <i class="bi bi-shield-lock-fill text-gray-700 mr-1"></i> সিক্রেট অ্যাডমিন পিন (৪-৬ ডিজিট)
+          </label>
+          <input type="password" id="adminPin" required minlength="4" maxlength="6" class="w-full bg-[#F8F9FA] border border-gray-300 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-gray-900 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all font-mono" placeholder="••••">
+          <p class="text-[11px] text-gray-500 mt-1">এই পিন দিয়ে আপনি পরে আপনার অ্যাডমিন প্যানেলে লগইন করবেন।</p>
+        </div>
+
+        <!-- 30-Day Trial Perks Box -->
+        <div class="p-4 rounded-2xl bg-orange-50/70 border border-orange-200 text-xs text-gray-700 space-y-1.5">
+          <div class="flex items-center gap-1.5 text-[#FF5722] font-bold text-xs uppercase tracking-wide">
+            <i class="bi bi-check-circle-fill"></i> ৩০ দিনের ফ্রি ট্রায়াল সুবিধাসমূহ:
+          </div>
+          <div class="flex items-center gap-2">✓ কোনো লিমিটেশন ছাড়া আনলিমিটেড ম্যাচ ও কাস্টম টুর্নামেন্ট তৈরি</div>
+          <div class="flex items-center gap-2">✓ প্লেয়ারদের জন্য রিয়েল-টাইম স্লট বুকিং ও বিকাশ/নগদ TrxID চেকিং</div>
+          <div class="flex items-center gap-2">✓ ম্যাচের ১৫ মিনিট আগে অটোমেটিক সিকিউর রুম আইডি ও পাসওয়ার্ড ডেলিভারি</div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full py-3.5 bg-[#FF5722] hover:bg-[#E64A19] text-white font-extrabold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer">
+          <i class="bi bi-rocket-takeoff-fill"></i> ৩০ দিনের ফ্রি ট্রায়াল চালু করুন
+        </button>
+
+        <div class="text-center pt-2 text-xs text-gray-600">
+          ইতিমধ্যে আপনার টুর্নামেন্ট অ্যাকাউন্ট আছে? 
+          <a href="/login" class="text-[#FF5722] font-bold hover:underline ml-1">
+            লগইন করুন (Log in) ➔
+          </a>
+        </div>
+
+        <div id="errorBox" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs text-center font-bold"></div>
+      </form>
+
+    </div>
+  </main>
+
+  <!-- SUCCESS MODAL (REAL LINKS + COPY BUTTONS) -->
+  <div id="successModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 max-w-lg w-full text-center space-y-5 shadow-2xl">
+      <div class="w-16 h-16 rounded-2xl bg-green-50 text-green-600 border border-green-200 flex items-center justify-center text-3xl mx-auto shadow-inner">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-black text-gray-900">অভিনন্দন! আপনার প্ল্যাটফর্ম তৈরি হয়েছে!</h2>
+        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed mt-1">
+          আপনার টুর্নামেন্ট প্ল্যাটফর্ম এবং ৩০ দিনের ফ্রি ট্রায়াল সফলভাবে অ্যাক্টিভ হয়েছে। নিচের লিঙ্কগুলো কপি করে সুরক্ষিত রাখুন:
+        </p>
+      </div>
+
+      <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-left space-y-3.5 text-xs">
+        <!-- Admin Link Box -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-gray-700 font-bold flex items-center gap-1">
+              <i class="bi bi-shield-lock-fill text-[#FF5722]"></i> আপনার অ্যাডমিন কন্ট্রোল প্যানেল:
+            </span>
+            <button type="button" onclick="copyUrl('adminLinkInput', 'adminCopyBtn')" id="adminCopyBtn" class="px-2.5 py-1 rounded-lg bg-white border border-gray-300 hover:bg-orange-50 hover:text-[#FF5722] font-bold text-[11px] transition-all flex items-center gap-1 shadow-sm">
+              <i class="bi bi-clipboard"></i> <span>কপি করুন</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="adminLinkInput" readonly class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono text-gray-900 font-bold select-all focus:outline-none">
+            <a id="adminLinkBtn" href="#" target="_blank" class="px-3 py-2 bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-xl font-bold text-xs transition-all shrink-0 flex items-center gap-1">
+              ওপেন <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Player Link Box -->
+        <div class="pt-3 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-gray-700 font-bold flex items-center gap-1">
+              <i class="bi bi-controller text-blue-600"></i> প্লেয়ারদের বুকিং পেজ:
+            </span>
+            <button type="button" onclick="copyUrl('playerLinkInput', 'playerCopyBtn')" id="playerCopyBtn" class="px-2.5 py-1 rounded-lg bg-white border border-gray-300 hover:bg-blue-50 hover:text-blue-600 font-bold text-[11px] transition-all flex items-center gap-1 shadow-sm">
+              <i class="bi bi-clipboard"></i> <span>কপি করুন</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="playerLinkInput" readonly class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono text-gray-900 font-bold select-all focus:outline-none">
+            <a id="playerLinkBtn" href="#" target="_blank" class="px-3 py-2 bg-[#212529] hover:bg-black text-white rounded-xl font-bold text-xs transition-all shrink-0 flex items-center gap-1">
+              ওপেন <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <a id="finalAdminBtn" href="#" class="w-full py-3.5 bg-[#FF5722] hover:bg-[#E64A19] text-white font-extrabold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-sm">
+          অ্যাডমিন প্যানেলে প্রবেশ করুন <i class="bi bi-arrow-right-short text-xl"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase v10 SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
+      authDomain: "ff-squad-arena-bd.firebaseapp.com",
+      projectId: "ff-squad-arena-bd",
+      storageBucket: "ff-squad-arena-bd.firebasestorage.app",
+      messagingSenderId: "604500327184",
+      appId: "1:604500327184:web:2eae6bfddea7ed2ae74395"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Cryptographic SHA-256 for Admin PIN (Never store plaintext)
+    async function hashPin(pin) {
+      const msgBuffer = new TextEncoder().encode(pin);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    window.copyUrl = function(inputId, btnId) {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (!input) return;
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg text-green-600"></i> <span class="text-green-600">কপি হয়েছে!</span>';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    };
+
+    window.autoGenerateSlug = function(val) {
+      if (!val) return;
+      const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      const slugInput = document.getElementById('slug');
+      if (slugInput && (!slugInput.dataset.manuallyEdited || slugInput.value === '')) {
+        slugInput.value = clean;
+      }
+    };
+
+    document.getElementById('slug').addEventListener('input', () => {
+      document.getElementById('slug').dataset.manuallyEdited = "true";
+    });
+
+    document.getElementById('saasSignupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errBox = document.getElementById('errorBox');
+      errBox.classList.add('hidden');
+
+      const ownerName = document.getElementById('ownerName').value.trim();
+      const ownerPhone = document.getElementById('ownerPhone').value.trim();
+      const tournamentName = document.getElementById('tournamentName').value.trim();
+      const slug = document.getElementById('slug').value.trim().toLowerCase();
+      const adminPin = document.getElementById('adminPin').value.trim();
+
+      if (!slug || slug.length < 3) {
+        errBox.textContent = 'দয়া করে কমপক্ষে ৩ অক্ষরের একটি ভ্যালিড প্ল্যাটফর্ম আইডি (Slug) দিন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      if (!adminPin || adminPin.length < 4) {
+        errBox.textContent = 'দয়া করে কমপক্ষে ৪ ডিজিটের একটি অ্যাডমিন পিন দিন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i> অ্যাকাউন্ট তৈরি ও ট্রায়াল সেটআপ হচ্ছে...';
+
+      try {
+        // 1. Validate chosen slug is unique (Do NOT overwrite)
+        const tenantRef = doc(db, "tenants", slug);
+        const tenantSnap = await getDoc(tenantRef);
+        if (tenantSnap.exists()) {
+          throw new Error(`'${slug}' আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে! অন্য একটি ইউনিক আইডি নির্বাচন করুন।`);
+        }
+
+        const now = new Date();
+        const trialExpiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 Days Free Trial
+        const adminPinHash = await hashPin(adminPin);
+
+        // 2. Create Tenant Document matching required schema
+        await setDoc(tenantRef, {
+          slug: slug,
+          organizerName: ownerName,
+          whatsappNumber: ownerPhone,
+          guildName: tournamentName,
+          adminPinHash: adminPinHash,
+          createdAt: now.toISOString(),
+          trialEndsAt: trialExpiry.toISOString(),
+          status: "active",
+          killSwitch: false,
+          paymentSettings: {
+            bkash: ownerPhone,
+            nagad: ownerPhone,
+            rocket: ""
+          },
+          brand: {
+            name: tournamentName,
+            logoUrl: "",
+            primaryColor: "#FF5722"
+          }
+        });
+
+        // 3. Create 1 Starter Match in tenants/{slug}/matches/match-1
+        const starterMatchRef = doc(db, "tenants", slug, "matches", "match-1");
+        await setDoc(starterMatchRef, {
+          id: "match-1",
+          matchNumber: 1,
+          title: "Match 1: Bermuda Squad Championship",
+          map: "Bermuda",
+          time: "08:30 PM",
+          status: "upcoming",
+          entryFee: 100,
+          prizePool: 1000,
+          roomId: "893411",
+          roomPass: "7788",
+          showIdPass: true,
+          slots: Array.from({ length: 12 }, (_, i) => ({
+            slotNumber: i + 1,
+            booked: false,
+            status: "available",
+            squadName: "",
+            player1: "",
+            player2: "",
+            player3: "",
+            player4: "",
+            contact: "",
+            trxId: ""
+          }))
+        });
+
+        // 4. Render ACTUAL Real Links with Copy Buttons (Not href="#")
+        const baseOrigin = window.location.origin;
+        const adminUrl = `${baseOrigin}/admin?org=${slug}`;
+        const playerUrl = `${baseOrigin}/player?org=${slug}`;
+
+        document.getElementById('adminLinkInput').value = adminUrl;
+        document.getElementById('adminLinkBtn').href = adminUrl;
+        document.getElementById('playerLinkInput').value = playerUrl;
+        document.getElementById('playerLinkBtn').href = playerUrl;
+        document.getElementById('finalAdminBtn').href = adminUrl;
+
+        // Auto-authenticate this session for this tenant
+        sessionStorage.setItem('adminAuth_' + slug, 'true');
+
+        document.getElementById('successModal').classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        errBox.textContent = err.message || 'অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-rocket-takeoff-fill"></i> ৩০ দিনের ফ্রি ট্রায়াল চালু করুন';
+      }
+    });
+  </script>
+</body>
+</html>

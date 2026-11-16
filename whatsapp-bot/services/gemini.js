@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { addLog } from './server.js';
 import {
   getTournamentData,
+  getTenantTournamentData,
   findTargetMatch,
   checkSlotStatus,
   isDuplicateTrxId,
@@ -82,7 +83,7 @@ YOUR CORE BEHAVIOR & RULES:
    - If that slot is already occupied, tell them politely which other slot numbers are still open.
 
 3. AUTONOMOUS PAYMENT VERIFICATION & BOOKING:
-   - Official payment number: 01791357521 (bKash & Nagad Personal).
+   - Official payment number: 01872733642 (bKash & Nagad Personal).
    - If player sends their Squad Name, Slot Number, and TrxID (or sends a payment receipt):
      Immediately call 'verifyAndBookSlot'.
    - If player sends a payment receipt or TrxID FIRST without their team name or slot:
@@ -112,12 +113,15 @@ YOUR CORE BEHAVIOR & RULES:
  * Execute tool calls against Cloud Firestore
  */
 export async function executeToolCall(toolName, args, playerSession = {}) {
-  console.log(`[ARENA X Tool Execute]: ${toolName}`, args);
+  const tenantSlug = playerSession.tenantSlug || null;
+  const isTenant = !!tenantSlug && tenantSlug !== 'ff-daily-squad';
+  console.log(`[ARENA X Tool Execute]: ${toolName} (Tenant: ${tenantSlug || 'DEMO'})`, args);
 
   if (toolName === 'checkAvailableSlots') {
     try {
-      const tourney = await getTournamentData();
+      const tourney = isTenant ? await getTenantTournamentData(tenantSlug) : await getTournamentData();
       const matches = (tourney && tourney.data && tourney.data.matches) || [];
+      const paymentSettings = (tourney && tourney.data && tourney.data.paymentSettings) || {};
       const upcoming = matches.filter(m => m.status === 'upcoming');
 
       if (args.matchQuery) {
@@ -140,14 +144,20 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             totalFree: freeSlots.length,
             bookedSquads,
             totalBooked: bookedSquads.length,
-            directBookingUrl: `https://ff-squad-arena-bd.web.app/player?match=${target.matchNumber || 1}`,
-            paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
+            directBookingUrl: isTenant 
+              ? `https://ff-squad-arena-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${target.matchNumber || 1}`
+              : `https://ff-squad-arena-bd.web.app/player?match=${target.matchNumber || 1}`,
+            paymentNumbers: {
+              bkash: paymentSettings.bkashNumber || '01872733642',
+              nagad: paymentSettings.nagadNumber || '01872733642'
+            }
           };
         }
       }
 
       return {
         found: true,
+        tenant: isTenant ? (tourney.data?.title || tenantSlug) : 'ARENA X Demo',
         upcomingMatches: upcoming.map(m => {
           const free = (m.slots || []).filter(s => !s.booked).map(s => s.slotNumber);
           return {
@@ -160,10 +170,15 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             freeSlots: free,
             totalFree: free.length,
             totalBooked: 12 - free.length,
-            directBookingUrl: `https://ff-squad-arena-bd.web.app/player?match=${m.matchNumber || 1}`
+            directBookingUrl: isTenant 
+              ? `https://ff-squad-arena-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${m.matchNumber || 1}`
+              : `https://ff-squad-arena-bd.web.app/player?match=${m.matchNumber || 1}`
           };
         }),
-        paymentNumbers: { bkash: '01791357521', nagad: '01791357521' }
+        paymentNumbers: {
+          bkash: paymentSettings.bkashNumber || '01872733642',
+          nagad: paymentSettings.nagadNumber || '01872733642'
+        }
       };
     } catch (err) {
       return { error: 'Failed to retrieve tournament data: ' + err.message };
@@ -172,8 +187,8 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
 
   if (toolName === 'verifyAndBookSlot') {
     try {
-      const { data } = await getTournamentData();
-      const matches = data.matches || [];
+      const tourney = isTenant ? await getTenantTournamentData(tenantSlug) : await getTournamentData();
+      const matches = (tourney && tourney.data && tourney.data.matches) || [];
       const targetMatch = findTargetMatch(matches, args.matchQuery, true);
 
       if (!targetMatch) {
@@ -214,23 +229,24 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
         };
       }
 
-      // DEMO MODE CHECK: Prevent writing to database in demo mode
-      if (process.env.DEMO_MODE === 'true') {
+      // DEMO MODE CHECK: Prevent writing to database in demo mode ONLY if not a real tenant
+      if (process.env.DEMO_MODE === 'true' && !isTenant) {
         return {
           success: false,
           isDemo: true,
-          message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+          message: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801872733642 নম্বরে যোগাযোগ করুন।"
         };
       }
 
-      // 4. Perform atomic booking
+      // 4. Perform atomic booking (scoped to tenant subcollection if tenant)
       const bookRes = await bookSlotInFirestore({
+        tenantSlug,
         matchQuery: targetMatch.title,
         preferredSlot: args.slotNumber,
         squadName: args.squadName,
         leaderName: args.leaderName || (args.playerNames && args.playerNames[0]) || `${args.squadName}_Lead`,
         playerNames: args.playerNames || [],
-        contactPhone: args.contactPhone || playerSession.phone || '01791357521',
+        contactPhone: args.contactPhone || playerSession.phone || '01872733642',
         trxId: cleanTrx,
         amount: verifiedAmount,
         paymentMethod: args.paymentMethod || 'bkash'
@@ -263,7 +279,7 @@ export async function runDokanAiAgent({
     fullPrompt += `[Session State: Player already provided TrxID: ${sessionData.trx_id}, Amount: ৳${sessionData.amount || 10}, Method: ${sessionData.payment_method || 'bKash'}]\n`;
   }
   if (imageContext) {
-    fullPrompt += `[System Notice: Player uploaded payment receipt screenshot. Extracted details: TrxID: ${imageContext.trx_id || 'UNKNOWN'}, Amount: ৳${imageContext.amount || 'UNKNOWN'}, Method: ${imageContext.payment_method || 'bKash'}, Receiver: ${imageContext.receiver_number || '01791357521'}]\n`;
+    fullPrompt += `[System Notice: Player uploaded payment receipt screenshot. Extracted details: TrxID: ${imageContext.trx_id || 'UNKNOWN'}, Amount: ৳${imageContext.amount || 'UNKNOWN'}, Method: ${imageContext.payment_method || 'bKash'}, Receiver: ${imageContext.receiver_number || '01872733642'}]\n`;
   }
   fullPrompt += `Player Message: ${userMessage || '(User sent payment screenshot)'}`;
 

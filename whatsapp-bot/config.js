@@ -35,9 +35,10 @@ export const config = {
   },
   contact: {
     email: process.env.CONTACT_EMAIL || 'sifrarchitect@gmail.com',
-    phone: process.env.CONTACT_PHONE || '01791357521'
+    phone: process.env.CONTACT_PHONE || '01872733642'
   },
   bot: {
-    debug: process.env.DEBUG_LOGS === 'true'
+    debug: process.env.DEBUG_LOGS === 'true',
+    enabled: process.env.BOT_ENABLED !== 'false'
   }
 };

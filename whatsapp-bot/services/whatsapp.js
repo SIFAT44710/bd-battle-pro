@@ -3,6 +3,8 @@ import makeWASocket, {
   fetchLatestBaileysVersion,
   downloadMediaMessage,
   makeCacheableSignalKeyStore,
+  useMultiFileAuthState,
+  Browsers,
   isJidBroadcast,
   isJidNewsletter
 } from '@whiskeysockets/baileys';
@@ -10,12 +12,16 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { runDokanAiAgent, parsePaymentScreenshot, transcribeAndParseVoiceNote, executeToolCall } from './gemini.js';
-import { useFirestoreAuthState } from './firestoreAuth.js';
 import { normalizePhone } from './firestore.js';
 import { sessionManager } from './session.js';
 import { config } from '../config.js';
 import { botState, registerSocket, addLog } from './server.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const authDir = path.resolve(__dirname, '../auth_info_baileys');
 
 const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 
@@ -66,22 +72,45 @@ function extractMessageText(message) {
             message.viewOnceMessage?.message ||
             message.viewOnceMessageV2?.message ||
             message.documentWithCaptionMessage?.message ||
+            message.editedMessage?.message?.protocolMessage?.editedMessage ||
             message;
   return m.conversation ||
          m.extendedTextMessage?.text ||
          m.imageMessage?.caption ||
          m.documentMessage?.caption ||
+         m.videoMessage?.caption ||
+         m.buttonsResponseMessage?.selectedButtonId ||
+         m.listResponseMessage?.singleSelectReply?.selectedRowId ||
+         m.templateButtonReplyMessage?.selectedId ||
          '';
 }
 
-export async function startWhatsAppBot() {
-  const clientId = process.env.CLIENT_ID || 'default_client';
-  
-  // Cloud-Resilient Firestore Auth State (Survives Render / Docker restarts)
-  const { state, saveCreds } = await useFirestoreAuthState(clientId);
+let currentSock = null;
+let isStarting = false;
+
+export async function startWhatsAppBot(tenantSlug = null) {
+  if (isStarting) return;
+  isStarting = true;
+
+  if (currentSock) {
+    try {
+      currentSock.ev.removeAllListeners();
+      currentSock.end(undefined);
+    } catch (e) {}
+    currentSock = null;
+  }
+
+  const activeAuthDir = tenantSlug ? path.resolve(__dirname, `../auth_info_tenant_${tenantSlug}`) : authDir;
+
+  if (!fs.existsSync(activeAuthDir)) {
+    fs.mkdirSync(activeAuthDir, { recursive: true });
+  }
+
+  // Multi-File Auth State (Local, atomic, and rock-solid)
+  const { state, saveCreds } = await useMultiFileAuthState(activeAuthDir);
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
-  console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest})...`);
+  console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest}, Tenant: ${tenantSlug || 'DEMO'})...`);
 
   const sock = makeWASocket({
     version,
@@ -94,14 +123,38 @@ export async function startWhatsAppBot() {
     markOnlineOnConnect: true,
     syncFullHistory: false,
     generateHighQualityLinkPreview: true,
-    browser: ['ARENA X DokanAI Agent', 'Chrome', '1.0.0'],
+    browser: Browsers.ubuntu('Chrome'),
     getMessage: async (key) => {
       return { conversation: 'ARENA X Bot' };
     },
     shouldIgnoreJid: (jid) => isJidBroadcast(jid) || isJidNewsletter(jid) || jid.endsWith('@newsletter')
   });
 
+  sock.tenantSlug = tenantSlug;
+  currentSock = sock;
   registerSocket(sock);
+
+  // Auto-request pairing code for configured phone if not already registered
+  if (!state.creds?.registered && config.contact?.phone) {
+    const rawDigits = config.contact.phone.replace(/\D/g, '');
+    const cleanPhone = rawDigits.startsWith('880') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
+    setTimeout(async () => {
+      try {
+        if (!sock.authState.creds.registered && !botState.pairingCode) {
+          console.log(`[WhatsApp]: Requesting live Pairing Code for ${cleanPhone}...`);
+          const code = await sock.requestPairingCode(cleanPhone);
+          const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+          botState.pairingCode = formatted;
+          botState.status = 'pairing_ready';
+          console.log('\n======================================================');
+          console.log(`🔑 LIVE WHATSAPP PAIRING CODE FOR ${cleanPhone}: ${formatted}`);
+          console.log('======================================================\n');
+        }
+      } catch (err) {
+        console.log('[WhatsApp]: Auto-pairing request notice:', err.message);
+      }
+    }, 4000);
+  }
 
   // Save auth state changes directly to Firestore & local cache
   sock.ev.on('creds.update', saveCreds);
@@ -130,18 +183,34 @@ export async function startWhatsAppBot() {
       botState.status = 'disconnected';
       botState.user = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-      console.log(`[WhatsApp]: Connection closed (${statusCode}). Reconnecting: ${shouldReconnect}`);
-      if (shouldReconnect) {
-        setTimeout(startWhatsAppBot, 3000);
-      } else {
-        console.log('[WhatsApp]: Session unauthenticated/logged out.');
-        setTimeout(startWhatsAppBot, 3000);
+      console.log(`[WhatsApp]: Connection closed (${statusCode}). Reconnecting in 3s...`);
+
+      // If logged out (401), credentials are invalid/expired; wipe cache so it doesn't loop
+      if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
+        console.log('[WhatsApp]: Session expired or logged out (401). Wiping invalid session credentials...');
+        try {
+          if (fs.existsSync(authDir)) {
+            fs.rmSync(authDir, { recursive: true, force: true });
+          }
+          fs.mkdirSync(authDir, { recursive: true });
+        } catch (e) {
+          console.error('[WhatsApp]: Error clearing authDir:', e.message);
+        }
+        botState.pairingCode = null;
+        botState.qr = null;
       }
+
+      setTimeout(() => {
+        isStarting = false;
+        startWhatsAppBot();
+      }, 3000);
     } else if (connection === 'open') {
+      isStarting = false;
       botState.status = 'connected';
       botState.user = sock.user?.id || 'Connected';
       botState.connectedAt = new Date().toISOString();
+      botState.qr = null;
+      botState.pairingCode = null;
       botState.qr = null;
       botState.pairingCode = null;
       console.log('\n======================================================');
@@ -162,6 +231,10 @@ export async function startWhatsAppBot() {
 
   // Incoming Messages Handler with Smart Trigger & Silent Filter
   sock.ev.on('messages.upsert', async (m) => {
+    // If bot is stopped or paused via config, skip processing immediately
+    if (config.bot.enabled === false) {
+      return;
+    }
     addLog('UPSERT_EVENT_RAW', { type: m.type, count: m.messages?.length });
     if (m.type !== 'notify' && m.type !== 'append') return;
 
@@ -181,7 +254,11 @@ export async function startWhatsAppBot() {
 
       // Allow self-chat testing (message to oneself)
       const botPhone = (sock.user?.id || '').split(':')[0].split('@')[0];
-      const isSelfChat = botPhone && remoteJid.startsWith(botPhone);
+      const isSelfChat = msg.key.fromMe && (
+        (botPhone && remoteJid.includes(botPhone)) ||
+        remoteJid.endsWith('@lid') ||
+        remoteJid === sock.user?.id
+      );
       if (msg.key.fromMe && !isSelfChat) continue;
 
       const senderPhone = normalizePhone(remoteJid.split('@')[0]);
@@ -365,12 +442,8 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
   const isRecentBookingActive = existingSession.lastActivity && (Date.now() - existingSession.lastActivity < 30 * 60 * 1000);
   const isMatchInquiry = isTournamentRelatedText(rawText);
 
-  // 3. SMART TRIGGER & SILENT FILTER:
-  // If owner is testing (self-chat) or voice note sent, ALWAYS respond!
-  // For external players: only respond if tournament-related OR active booking session OR voice note:
-  if (!isSelfChat && !isMatchInquiry && !(isImage && isRecentBookingActive) && !isAudio) {
-    addLog('FILTER_IGNORED', { senderPhone, rawText: rawText.slice(0, 50) });
-    console.log(`[Silent Filter]: Ignored personal/unrelated chat from ${senderPhone}: "${rawText.slice(0, 30)}"`);
+  // 3. SMART TRIGGER: Respond to all incoming customer chats, owner self-chats, and tournament inquiries
+  if (!rawText && !isImage && !isAudio) {
     return;
   }
 
@@ -407,7 +480,7 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
       console.log(`[DEMO_MODE ACTIVE]: Fast booking intercepted for "${effectiveSquad}". Sending demo notice.`);
       await sendBotMessage(sock, remoteJid, { react: { text: '🔒', key: msg.key } });
       await sendBotMessage(sock, remoteJid, {
-        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801872733642 নম্বরে যোগাযোগ করুন।"
       });
       sessionManager.clear(senderPhone);
       return;
@@ -423,7 +496,7 @@ async function handleIncomingPlayerMessage(sock, msg, remoteJid, senderPhone, is
       trxId: effectiveTrx,
       amount: existingSession.amount || 10,
       paymentMethod: existingSession.payment_method || 'bkash'
-    }, { phone: senderPhone, ...existingSession });
+    }, { phone: senderPhone, tenantSlug: sock.tenantSlug, ...existingSession });
 
     if (bookResult && bookResult.success) {
       await sendBotMessage(sock, remoteJid, { react: { text: '✅', key: msg.key } });
@@ -470,7 +543,7 @@ ${config.tournament.websiteUrl}`;
     userMessage: rawText,
     senderPhone,
     chatHistory: existingSession.chatHistory || [],
-    sessionData: existingSession,
+    sessionData: { tenantSlug: sock.tenantSlug, ...existingSession },
     imageContext: imageDetails
   });
 
@@ -496,7 +569,8 @@ ${config.tournament.websiteUrl}`;
   if ((isLinkInquiry || isExplicitBookingIntent) && !conversationalText.includes('ff-squad-arena-bd.web.app')) {
     const targetMatchNum = existingSession.preferredMatch ? (existingSession.preferredMatch.match(/\d+/) || ['4'])[0] : '4';
     const targetSlot = existingSession.preferredSlot || '';
-    const webLink = `https://ff-squad-arena-bd.web.app/player?match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
+    const orgParam = sock.tenantSlug ? `org=${encodeURIComponent(sock.tenantSlug)}&` : '';
+    const webLink = `https://ff-squad-arena-bd.web.app/player?${orgParam}match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
     conversationalText += `\n\n🔗 *১-ক্লিক ডিরেক্ট বুকিং ও ভেরিফাই লিংক:*\n${webLink}`;
   }
 
@@ -539,7 +613,7 @@ ${config.tournament.websiteUrl}`;
     if (process.env.DEMO_MODE === 'true' || agentOutput.toolResult?.isDemo) {
       await sendBotMessage(sock, remoteJid, { react: { text: '🔒', key: msg.key } });
       await sendBotMessage(sock, remoteJid, {
-        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801791357521 নম্বরে যোগাযোগ করুন।"
+        text: "এটি একটি ডেমো বট। রিয়েল বুকিং সম্পন্ন করতে পূর্ণ এক্সেস প্রয়োজন। WhatsApp-এ +8801872733642 নম্বরে যোগাযোগ করুন।"
       });
       sessionManager.clear(senderPhone);
       return;
@@ -571,4 +645,5 @@ ${config.tournament.websiteUrl}`;
     // Clear session after successful booking
     sessionManager.clear(senderPhone);
   }
+}
 }

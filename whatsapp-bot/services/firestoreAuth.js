@@ -22,16 +22,10 @@ export async function useFirestoreAuthState(clientId = 'default_client') {
   const keysColPath = `bot_sessions/${clientId}/keys`;
 
   async function readFirestoreDoc(collectionPath, docId) {
+    if (driver !== 'admin') return null; // Fall back to local disk storage when running client-only
     try {
-      if (driver === 'admin') {
-        const snap = await adminDb.collection(collectionPath).doc(docId).get();
-        if (snap.exists) return snap.data()?.value || null;
-      } else {
-        const { doc: getDocRef, getDoc } = await import('firebase/firestore');
-        const dRef = getDocRef(clientDbInstance, collectionPath, docId);
-        const snap = await getDoc(dRef);
-        if (snap.exists()) return snap.data()?.value || null;
-      }
+      const snap = await adminDb.collection(collectionPath).doc(docId).get();
+      if (snap.exists) return snap.data()?.value || null;
     } catch (err) {
       console.warn(`[FirestoreAuth] Read error (${collectionPath}/${docId}):`, err.message);
     }
@@ -39,34 +33,21 @@ export async function useFirestoreAuthState(clientId = 'default_client') {
   }
 
   async function writeFirestoreDoc(collectionPath, docId, jsonStr) {
+    if (driver !== 'admin') return; // Fall back to local disk storage when running client-only
     try {
-      if (driver === 'admin') {
-        await adminDb.collection(collectionPath).doc(docId).set({
-          value: jsonStr,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } else {
-        const { doc: getDocRef, setDoc } = await import('firebase/firestore');
-        const dRef = getDocRef(clientDbInstance, collectionPath, docId);
-        await setDoc(dRef, {
-          value: jsonStr,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      }
+      await adminDb.collection(collectionPath).doc(docId).set({
+        value: jsonStr,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
     } catch (err) {
       console.warn(`[FirestoreAuth] Write error (${collectionPath}/${docId}):`, err.message);
     }
   }
 
   async function deleteFirestoreDoc(collectionPath, docId) {
+    if (driver !== 'admin') return;
     try {
-      if (driver === 'admin') {
-        await adminDb.collection(collectionPath).doc(docId).delete();
-      } else {
-        const { doc: getDocRef, deleteDoc } = await import('firebase/firestore');
-        const dRef = getDocRef(clientDbInstance, collectionPath, docId);
-        await deleteDoc(dRef);
-      }
+      await adminDb.collection(collectionPath).doc(docId).delete();
     } catch (err) {
       console.warn(`[FirestoreAuth] Delete error (${collectionPath}/${docId}):`, err.message);
     }

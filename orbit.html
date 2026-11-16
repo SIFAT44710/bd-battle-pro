@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ORBIT — SBS CEO Master Control Room</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Google Fonts: Hind Siliguri, Noto Sans Bengali, Inter & Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF5722',
+              orangeHover: '#E64A19',
+              charcoal: '#212529',
+              dark: '#111827',
+              bgGray: '#F8F9FA',
+              borderGray: '#E5E7EB',
+              muted: '#6C757D'
+            }
+          },
+          fontFamily: {
+            sans: ['Hind Siliguri', 'Noto Sans Bengali', 'Inter', 'Roboto', 'sans-serif'],
+            mono: ['Hind Siliguri', 'Noto Sans Bengali', 'Inter', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'Inter', sans-serif;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #F8F9FA; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake { animation: shake 0.4s ease-in-out; }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col select-none overflow-x-hidden">
+
+  <!-- ======================================================= -->
+  <!-- CEO MASTER SECURITY GATE OVERLAY (PASSWORD PROTECTION) -->
+  <!-- ======================================================= -->
+  <div id="ceoAuthGate" class="fixed inset-0 z-50 bg-[#111827]/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-[#18191a] border border-[#3a3b3c] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center text-white">
+      
+      <!-- Top glow decoration -->
+      <div class="absolute -top-24 -left-24 w-48 h-48 bg-[#FF5722]/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Icon -->
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#FF5722] to-amber-500 text-white flex items-center justify-center text-3xl mx-auto shadow-lg shadow-orange-500/20 mb-4">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+
+      <!-- Badges & Title -->
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-extrabold uppercase tracking-widest mb-3">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        SBS CEO Master Clearance Only
+      </div>
+
+      <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white mb-2">
+        ORBIT CEO CONTROL ROOM
+      </h1>
+      <p class="text-xs text-gray-400 mb-6 leading-relaxed">
+        অননুমোদিত প্রবেশ সম্পূর্ণ নিষিদ্ধ। সেন্ট্রাল SaaS ফ্লিট মনিটরিং ও ১-ক্লিক Kill-Switch পরিচালনা করতে আপনার মাস্টার সিইও পাসওয়ার্ড দিন।
+      </p>
+
+      <!-- Password Form -->
+      <form id="ceoLoginForm" onsubmit="event.preventDefault(); window.verifyCeoMasterPassword();" class="space-y-4">
+        <div class="relative text-left">
+          <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+            Master CEO Password
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+              <i class="bi bi-key-fill text-base"></i>
+            </span>
+            <input 
+              type="password" 
+              id="ceoPasswordInput" 
+              autocomplete="current-password"
+              placeholder="••••••••••••••••"
+              class="w-full bg-[#242526] border border-[#3a3b3c] rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722] transition-all font-mono"
+              required
+              autofocus
+            >
+            <button 
+              type="button" 
+              id="togglePasswordBtn" 
+              onclick="window.toggleCeoPasswordVisibility()" 
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <i class="bi bi-eye" id="togglePasswordIcon"></i>
+            </button>
+          </div>
+          <p id="ceoAuthError" class="text-xs text-red-400 font-bold mt-2 hidden flex items-center gap-1.5 justify-center">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>ভুল পাসওয়ার্ড! প্রবেশাধিকার প্রত্যাখ্যাত।</span>
+          </p>
+        </div>
+
+        <button 
+          type="submit" 
+          id="ceoSubmitBtn"
+          class="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF5722] to-orange-600 hover:from-[#E64A19] hover:to-orange-700 text-white font-extrabold text-sm tracking-wide shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i class="bi bi-unlock-fill"></i>
+          <span>ভেরিফাই ও আনলক করুন</span>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-[#3a3b3c]/60 flex items-center justify-between text-[11px] text-gray-500">
+        <span>ARENA X &copy; 2026 Team Sifr</span>
+        <a href="/" class="hover:text-gray-300 transition-colors">মূল সাইটে ফিরে যান</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MAIN ORBIT APP WRAPPER (HIDDEN UNTIL AUTHENTICATED)     -->
+  <!-- ======================================================= -->
+  <div id="orbitAppWrapper" class="hidden flex-1 flex flex-col">
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-2 text-xs font-medium shadow-sm w-full">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0">👑 CEO COMMAND</span>
+          <span class="truncate">
+            ORBIT ড্যাশবোর্ড থেকে সেন্ট্রালভাবে সব টেন্যান্ট মনিটরিং, ট্রায়াল কাউন্টডাউন ও ১-ক্লিক Kill-Switch পরিচালনা করুন।
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[11px] font-bold" id="liveSyncStatus">Live Firestore Sync Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        
+        <!-- Brand Logo -->
+        <a href="/" class="flex items-center gap-2.5 text-decoration-none">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-xl shadow-md shrink-0">
+            A
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-lg sm:text-xl tracking-tight text-gray-900">ARENA X</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-cyan-100 text-cyan-800 border border-cyan-200 uppercase tracking-wider">
+                ORBIT CEO
+              </span>
+            </div>
+            <span class="text-[10px] text-gray-500 font-medium block">SaaS Master Fleet Management</span>
+          </div>
+        </a>
+
+        <!-- Navbar Actions -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a href="/signup" target="_blank" class="px-3 sm:px-4 py-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>নতুন সাইনআপ টেস্ট</span>
+          </a>
+          <a href="/admin" target="_blank" class="px-3 sm:px-4 py-2 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>শোকেস ডেমো</span>
+          </a>
+          <button onclick="window.logoutCeo()" class="px-3 sm:px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs sm:text-sm tracking-wide transition-all flex items-center gap-1.5 shrink-0 cursor-pointer" title="ড্যাশবোর্ড লক করুন">
+            <i class="bi bi-lock-fill"></i>
+            <span>লক / লগআউট</span>
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full space-y-6">
+    
+    <!-- Top Stat Cards Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Stat 1: Total Tenants -->
+      <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500">মোট টেন্যান্ট / হোস্ট</span>
+          <div class="w-8 h-8 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center text-base">
+            <i class="bi bi-buildings-fill"></i>
+          </div>
+        </div>
+        <div class="text-3xl sm:text-4xl font-black text-gray-900 mt-2 font-mono" id="statTotal">0</div>
+        <div class="text-[11px] text-gray-500 mt-1">সর্বমোট রেজিস্টার্ড প্ল্যাটফর্ম</div>
+      </div>
+
+      <!-- Stat 2: Active & Live -->
+      <div class="bg-emerald-50/40 rounded-2xl p-5 border border-emerald-200 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+            <i class="bi bi-broadcast"></i> লাইভ ও অ্যাক্টিভ
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+        </div>
+        <div class="text-3xl sm:text-4xl font-black text-emerald-800 mt-2 font-mono" id="statActive">0</div>
+        <div class="text-[11px] text-emerald-600 mt-1">ম্যাচ পরিচালনা ও সচল রয়েছে</div>
+      </div>
+
+      <!-- Stat 3: Expiring Soon -->
+      <div class="bg-amber-50/40 rounded-2xl p-5 border border-amber-200 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
+            <i class="bi bi-clock-history"></i> মেয়াদ শেষের পথে
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base">
+            <i class="bi bi-exclamation-circle-fill"></i>
+          </div>
+        </div>
+        <div class="text-3xl sm:text-4xl font-black text-amber-800 mt-2 font-mono" id="statExpiring">0</div>
+        <div class="text-[11px] text-amber-600 mt-1">&le; ৫ দিন ট্রায়াল বাকি আছে</div>
+      </div>
+
+      <!-- Stat 4: Suspended (Kill-Switched) -->
+      <div class="bg-red-50/40 rounded-2xl p-5 border border-red-200 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-red-700 flex items-center gap-1">
+            <i class="bi bi-slash-circle-fill"></i> স্থগিত (Kill-Switched)
+          </span>
+          <div class="w-8 h-8 rounded-xl bg-red-100 text-red-700 flex items-center justify-center text-base">
+            <i class="bi bi-shield-x"></i>
+          </div>
+        </div>
+        <div class="text-3xl sm:text-4xl font-black text-red-800 mt-2 font-mono" id="statSuspended">0</div>
+        <div class="text-[11px] text-red-600 mt-1">অ্যাক্সেস লকড ও বন্ধ রয়েছে</div>
+      </div>
+
+    </div>
+
+    <!-- Tenants Management Section -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+      
+      <!-- Table Header & Search -->
+      <div class="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold text-gray-900 flex items-center gap-2">
+            <i class="bi bi-hdd-network-fill text-[#FF5722]"></i>
+            <span>টেন্যান্ট মাস্টার তালিকা ও কন্ট্রোল প্যানেল</span>
+          </h2>
+          <p class="text-xs text-gray-500">
+            প্রতিটি হোস্টের ৩০ দিনের ট্রায়াল মনিটর করুন এবং ১-ক্লিকে অ্যাক্সেস লক বা আনলক করুন
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-full sm:w-64">
+            <i class="bi bi-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+            <input type="text" id="searchInput" oninput="filterTenants()" placeholder="নাম বা ফোন দিয়ে খুঁজুন..." class="w-full pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF5722] transition-all">
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Content -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-gray-100/70 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+              <th class="px-5 py-3.5">টেন্যান্ট ও গিল্ডের নাম</th>
+              <th class="px-5 py-3.5">অর্গানাইজার</th>
+              <th class="px-5 py-3.5">হোয়াটসঅ্যাপ / ফোন</th>
+              <th class="px-5 py-3.5">ট্রায়াল মেয়াদ</th>
+              <th class="px-5 py-3.5 text-center">স্ট্যাটাস</th>
+              <th class="px-5 py-3.5 text-right">অ্যাকশন ও Kill-Switch</th>
+            </tr>
+          </thead>
+          <tbody id="tenantsTableBody" class="divide-y divide-gray-200 font-medium text-gray-800">
+            <tr>
+              <td colspan="6" class="px-5 py-10 text-center text-gray-400">
+                <i class="bi bi-arrow-repeat animate-spin text-xl inline-block mr-2 text-[#FF5722]"></i>
+                ফ্লিট ডেটা লোড হচ্ছে...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+  </div> <!-- /#orbitAppWrapper -->
+
+  <!-- Firebase v10 SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBwoL8nXUevPWciB1cyjez5Bi_V9bYc98",
+      authDomain: "ff-squad-arena-bd.firebaseapp.com",
+      projectId: "ff-squad-arena-bd",
+      storageBucket: "ff-squad-arena-bd.firebasestorage.app",
+      messagingSenderId: "604500327184",
+      appId: "1:604500327184:web:2eae6bfddea7ed2ae74395"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // =======================================================
+    // ORBIT CEO HARD PASSWORD GATE (CRYPTOGRAPHIC SHA-256)
+    // =======================================================
+    // Authorized CEO Master Passwords:
+    // 1. SBS@ORBIT#2026!CEO
+    // 2. SIFR@ORBIT#2026!CEO
+    // 3. Sifat@Orbit2026!
+    const CEO_HASHES = [
+      '7b4db427ac566821a3c5c79838cc788e0aefa5a4ef3f4466130a0b9cdcfd3cf5',
+      'b00d64249e77acf34564ac0b2f2d231ca6c9f27764ea23baf76e00cc73711169',
+      '21eeeee1dec8d000539d42104abebc158ad0c26e3d9520257a29221c940ee74f'
+    ];
+
+    async function computeSha256(str) {
+      const buf = new TextEncoder().encode(str);
+      const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+      const hashArr = Array.from(new Uint8Array(hashBuf));
+      return hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function unlockCeoDashboard() {
+      const gate = document.getElementById('ceoAuthGate');
+      if (gate) gate.remove();
+      const wrapper = document.getElementById('orbitAppWrapper');
+      if (wrapper) wrapper.classList.remove('hidden');
+      initFirestoreSync();
+    }
+
+    window.verifyCeoMasterPassword = async function() {
+      const input = document.getElementById('ceoPasswordInput');
+      const errBox = document.getElementById('ceoAuthError');
+      const btn = document.getElementById('ceoSubmitBtn');
+      const enteredPass = (input.value || '').trim();
+
+      if (!enteredPass) {
+        if (errBox) {
+          errBox.textContent = 'দয়া করে মাস্টার সিইও পাসওয়ার্ড লিখুন।';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i><span>ভেরিফাই হচ্ছে...</span>';
+      }
+
+      try {
+        const hash = await computeSha256(enteredPass);
+        if (CEO_HASHES.includes(hash)) {
+          sessionStorage.setItem('orbit_ceo_authenticated', 'true');
+          unlockCeoDashboard();
+        } else {
+          if (errBox) {
+            errBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i><span>ভুল পাসওয়ার্ড! প্রবেশাধিকার প্রত্যাখ্যাত।</span>';
+            errBox.classList.remove('hidden');
+          }
+          if (input) {
+            input.value = '';
+            input.focus();
+            input.classList.add('border-red-500', 'animate-shake');
+            setTimeout(() => input.classList.remove('animate-shake'), 600);
+          }
+        }
+      } catch (err) {
+        if (errBox) {
+          errBox.textContent = 'ভেরিফিকেশন ত্রুটি: ' + err.message;
+          errBox.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-unlock-fill"></i><span>ভেরিফাই ও আনলক করুন</span>';
+        }
+      }
+    };
+
+    window.toggleCeoPasswordVisibility = function() {
+      const input = document.getElementById('ceoPasswordInput');
+      const icon = document.getElementById('togglePasswordIcon');
+      if (!input || !icon) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    };
+
+    window.logoutCeo = function() {
+      if (confirm('আপনি কি ORBIT ড্যাশবোর্ড থেকে লগআউট করতে চান?')) {
+        sessionStorage.removeItem('orbit_ceo_authenticated');
+        location.reload();
+      }
+    };
+
+    // Auto-unlock if authenticated in current session
+    if (sessionStorage.getItem('orbit_ceo_authenticated') === 'true') {
+      unlockCeoDashboard();
+    }
+
+    let allTenants = [];
+    let firestoreUnsubscribe = null;
+
+    // Real-time listener on `tenants` collection (Only runs after CEO auth)
+    function initFirestoreSync() {
+      if (firestoreUnsubscribe) return;
+      firestoreUnsubscribe = onSnapshot(collection(db, "tenants"), (snapshot) => {
+        allTenants = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          allTenants.push({
+            id: docSnap.id,
+            slug: data.slug || docSnap.id,
+            guildName: data.guildName || data.name || docSnap.id,
+            organizerName: data.organizerName || data.ownerName || '—',
+            whatsappNumber: data.whatsappNumber || data.ownerPhone || '—',
+            trialEndsAt: data.trialEndsAt || data.trialExpiresAt,
+            status: data.status || 'active',
+            killSwitch: data.killSwitch === true,
+            ...data
+          });
+        });
+
+        renderDashboard();
+      }, (error) => {
+        console.error("Firestore error:", error);
+        document.getElementById('liveSyncStatus').textContent = "Offline / Sync Error";
+        document.getElementById('liveSyncStatus').className = "text-red-300 font-bold";
+      });
+    }
+
+    function renderDashboard() {
+      const now = new Date();
+      let activeCount = 0;
+      let expiringCount = 0;
+      let suspendedCount = 0;
+
+      allTenants.forEach(t => {
+        const isKilled = t.killSwitch === true || t.status === 'killed' || t.status === 'suspended';
+        const expiry = t.trialEndsAt ? new Date(t.trialEndsAt) : null;
+        const daysLeft = expiry ? Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)) : 0;
+
+        if (isKilled) {
+          suspendedCount++;
+        } else {
+          activeCount++;
+          if (daysLeft >= 0 && daysLeft <= 5) expiringCount++;
+        }
+      });
+
+      document.getElementById('statTotal').textContent = allTenants.length;
+      document.getElementById('statActive').textContent = activeCount;
+      document.getElementById('statExpiring').textContent = expiringCount;
+      document.getElementById('statSuspended').textContent = suspendedCount;
+
+      renderTable(allTenants);
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById('tenantsTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">কোনো টেন্যান্ট পাওয়া যায়নি। <a href="/signup" class="text-[#FF5722] font-bold hover:underline">নতুন সাইনআপ করুন</a></td></tr>';
+        return;
+      }
+
+      const now = new Date();
+      tbody.innerHTML = list.map(t => {
+        const isKilled = t.killSwitch === true || t.status === 'killed' || t.status === 'suspended';
+        const expiry = t.trialEndsAt ? new Date(t.trialEndsAt) : null;
+        const daysLeft = expiry ? Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)) : 0;
+        const isExpired = !isKilled && daysLeft <= 0;
+
+        const statusBadge = isKilled
+          ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">KILLED</span>`
+          : isExpired
+          ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">EXPIRED</span>`
+          : `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">ACTIVE</span>`;
+
+        const daysBadge = isKilled
+          ? `<span class="text-red-600 font-bold text-xs">লকড (স্থগিত)</span>`
+          : daysLeft > 0
+          ? `<span class="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${daysLeft} দিন বাকি</span>`
+          : `<span class="font-mono text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">মেয়াদ সমাপ্ত</span>`;
+
+        const killSwitchBtn = isKilled
+          ? `<button onclick="toggleTenantKillSwitch('${t.id}', false)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer">
+              <i class="bi bi-play-circle-fill"></i> Activate
+             </button>`
+          : `<button onclick="toggleTenantKillSwitch('${t.id}', true)" class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer">
+              <i class="bi bi-power"></i> Kill-Switch
+             </button>`;
+
+        const extendTrialBtn = `<button onclick="extendTrial('${t.id}')" title="Extend Trial +30 Days" class="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-bold text-[11px] transition-all cursor-pointer">
+          +30d
+        </button>`;
+
+        const adminUrl = `/admin?org=${encodeURIComponent(t.slug || t.id)}`;
+        const playerUrl = `/player?org=${encodeURIComponent(t.slug || t.id)}`;
+
+        return `
+          <tr class="hover:bg-orange-50/30 transition-colors">
+            <td class="px-5 py-4">
+              <div class="font-extrabold text-gray-900 text-[13px]">${escapeHtml(t.guildName || t.name || t.id)}</div>
+              <div class="text-[11px] text-gray-500 font-mono mt-0.5">slug: <span class="text-[#FF5722] font-semibold">${escapeHtml(t.slug || t.id)}</span></div>
+            </td>
+            <td class="px-5 py-4 text-gray-700 font-semibold">${escapeHtml(t.organizerName || '—')}</td>
+            <td class="px-5 py-4">
+              <a href="https://wa.me/88${(t.whatsappNumber || '').replace(/\D/g, '')}" target="_blank" class="text-green-700 hover:underline font-mono font-bold flex items-center gap-1">
+                <i class="bi bi-whatsapp"></i> ${escapeHtml(t.whatsappNumber || '—')}
+              </a>
+            </td>
+            <td class="px-5 py-4">
+              <div>${daysBadge}</div>
+              <div class="text-[10px] text-gray-500 font-mono mt-1">${expiry ? expiry.toLocaleDateString() : '—'}</div>
+            </td>
+            <td class="px-5 py-4 text-center">${statusBadge}</td>
+            <td class="px-5 py-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a href="${adminUrl}" target="_blank" class="px-2.5 py-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-[#FF5722] rounded-xl text-[11px] font-bold" title="Showcase Admin">
+                  Admin <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <a href="${playerUrl}" target="_blank" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-xl text-[11px] font-bold" title="Open Player View">
+                  Player <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                ${extendTrialBtn}
+                ${killSwitchBtn}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.toggleTenantKillSwitch = async function(tenantId, setKill) {
+      const confirmMsg = setKill
+        ? `আপনি কি সত্যিই '${tenantId}' প্ল্যাটফর্মটি কিল-সুইচ দিয়ে স্থগিত (Kill) করতে চান?`
+        : `আপনি কি '${tenantId}' প্ল্যাটফর্মটি পুনরায় সচল (Activate) করতে চান?`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const tenantRef = doc(db, "tenants", tenantId);
+        await updateDoc(tenantRef, {
+          killSwitch: setKill,
+          status: setKill ? 'killed' : 'active'
+        });
+      } catch (err) {
+        alert("স্ট্যাটাস আপডেট ব্যর্থ হয়েছে: " + err.message);
+      }
+    };
+
+    window.extendTrial = async function(tenantId) {
+      if (!confirm(`'${tenantId}' এর ফ্রি ট্রায়াল আরো ৩০ দিন বৃদ্ধি করতে চান?`)) return;
+      try {
+        const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const tenantRef = doc(db, "tenants", tenantId);
+        await updateDoc(tenantRef, {
+          status: 'active',
+          killSwitch: false,
+          trialEndsAt: newExpiry.toISOString()
+        });
+      } catch (err) {
+        alert("ট্রায়াল বৃদ্ধি ব্যর্থ হয়েছে: " + err.message);
+      }
+    };
+
+    window.filterTenants = function() {
+      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      if (!q) {
+        renderTable(allTenants);
+        return;
+      }
+      const filtered = allTenants.filter(t =>
+        (t.guildName || '').toLowerCase().includes(q) ||
+        (t.slug || '').toLowerCase().includes(q) ||
+        (t.whatsappNumber || '').includes(q) ||
+        (t.organizerName || '').toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+  </script>
+</body>
+</html>
