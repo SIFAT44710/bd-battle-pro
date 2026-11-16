@@ -175,7 +175,7 @@ export async function getTenantTournamentData(tenantSlug) {
 /**
  * Find the most relevant match based on player request
  */
-export function findTargetMatch(matches, query, autoFallback = false) {
+export function findTargetMatch(matches, query, autoFallback = true) {
   if (!matches || !matches.length) return null;
 
   // 1. If query specified, match by title, time, map, or match number
@@ -216,6 +216,9 @@ export function findTargetMatch(matches, query, autoFallback = false) {
  * Check Slot Availability for a Match
  */
 export function checkSlotStatus(match, requestedSlot) {
+  if (!match) {
+    return { available: false, slotNumber: requestedSlot || null, freeSlots: [] };
+  }
   const slots = match.slots || [];
   const freeSlots = [];
 
