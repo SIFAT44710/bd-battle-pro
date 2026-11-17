@@ -56,3 +56,20 @@
   - Organizer Login: `https://ff-squad-arena-bd.web.app/login`
   - Free Trial Signup: `https://ff-squad-arena-bd.web.app/signup`
   - Orbit Master CEO Panel: `https://ff-squad-arena-bd.web.app/orbit` (or `/sbs`)
+  - Render Cloud Bot Health: `https://bd-battle-pro.onrender.com/health`
+
+## 24/7 Cloud Bot & Mobile UI Alignment Architecture (Updated 2026-11-17)
+- **Zero-Local-PC Dependency:**
+  - Previous issue: Website admin panel (`admin.html`) was hardcoded to fetch `http://localhost:3000/api/pair`. Pairing bound WhatsApp to local node process; shutting down PC terminated the bot.
+  - Fix: Configured dynamic `BOT_SERVER_URL` in `admin.html` targeting `https://bd-battle-pro.onrender.com` (falling back to localhost only when developing locally).
+- **Ephemeral Disk & Container Restart Resilience:**
+  - On Render/Railway/Koyeb, container redeploys or restarts wipe local `auth_info_baileys/` directories.
+  - Solution: Integrated `backupAuthDirToFirestore` and `restoreAuthDirFromFirestore`. Baileys session bundles (`creds.json` and keys) are automatically stored in Cloud Firestore `bot_sessions/{clientId}`. Upon restart, the container auto-downloads credentials and reconnects to WhatsApp in <5 seconds without requiring any QR re-scan.
+- **24/7 Sentinel Keep-Alive (Anti-Sleep):**
+  - Render free tier spins down after 15 minutes of HTTP inactivity.
+  - Solution: Autonomous internal timer (`start24x7KeepAlive()`) in `index.js` sends an HTTP GET request to `https://bd-battle-pro.onrender.com/health` every 8 minutes, maintaining 24/7 uptime without external paid services.
+- **Mobile Viewport & Header Polish:**
+  - Eliminated awkward text wrapping on 360px mobile viewports in `player.html`.
+  - Refactored `demoNoticeBanner` to a compact, non-breaking headline.
+  - Added balanced `Online` status pill in header navbar.
+  - Replaced wrapping badges in match list with mobile-native inline headers.
