@@ -105,12 +105,12 @@
   <div id="demoNoticeBanner" class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-2 text-xs font-medium shadow-sm w-full">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
       <div class="flex items-center gap-1.5 min-w-0">
-        <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0" id="noticeTag">⚡ LIVE DEMO</span>
+        <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0" id="noticeTag">🔥 LIVE SLOTS</span>
         <span class="truncate" id="noticeText">
-          এটি লাইভ ডেমো ভার্সন। এখানে অ্যাডমিন প্যানেল সবার টেস্ট করার জন্য উন্মুক্ত, তবে আপনার নিজস্ব ওয়েবসাইটে অ্যাডমিন প্যানেল পাসওয়ার্ড/গুগল লগইন দিয়ে সম্পূর্ণ লক করা থাকবে।
+          অফিসিয়াল লাইভ টুর্নামেন্ট স্লট বুকিং ও রুম আইডি পোর্টাল
         </span>
       </div>
-      <a href="/admin" id="bannerAdminLink" class="inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
+      <a href="/admin" id="bannerAdminLink" class="hidden inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
         🔒 Admin Panel ↗
       </a>
     </div>
@@ -129,11 +129,7 @@
         </div>
       </a>
       <div class="flex items-center gap-2">
-        <a href="/login" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs tracking-wide border border-gray-300 transition-all flex items-center gap-1 shrink-0">
-          <i class="bi bi-box-arrow-in-right text-[#FF5722]"></i>
-          <span>লগইন</span>
-        </a>
-        <a id="navAdminLink" href="/admin" class="px-3 py-1.5 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+        <a id="navAdminLink" href="/admin" class="hidden px-3 py-1.5 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
           <i class="bi bi-shield-lock-fill"></i>
           <span>অ্যাডমিন</span>
         </a>
@@ -628,10 +624,23 @@
       if (headSubtitle) headSubtitle.textContent = 'Official Tournament';
       const footTitle = document.getElementById('footerBrandTitle');
       if (footTitle) footTitle.textContent = `${orgName.toUpperCase()} ESPORTS`;
+      // Only show Admin Panel button/icon to authenticated admins (never to regular players)
+      const isAdminLoggedIn = sessionStorage.getItem('adminAuth_' + ORG_SLUG) === 'true';
       const navAdm = document.getElementById('navAdminLink');
-      if (navAdm) navAdm.href = `/admin?org=${encodeURIComponent(ORG_SLUG)}`;
       const banAdm = document.getElementById('bannerAdminLink');
-      if (banAdm) banAdm.href = `/admin?org=${encodeURIComponent(ORG_SLUG)}`;
+      if (isAdminLoggedIn) {
+        if (navAdm) {
+          navAdm.href = `/admin?org=${encodeURIComponent(ORG_SLUG)}`;
+          navAdm.classList.remove('hidden');
+        }
+        if (banAdm) {
+          banAdm.href = `/admin?org=${encodeURIComponent(ORG_SLUG)}`;
+          banAdm.classList.remove('hidden');
+        }
+      } else {
+        if (navAdm) navAdm.classList.add('hidden');
+        if (banAdm) banAdm.classList.add('hidden');
+      }
 
       // 2. Update Top Banner
       const noticeTag = document.getElementById('noticeTag');
@@ -1963,6 +1972,17 @@
         }
       } else {
         // Shared Demo Mode (Open to all visitors)
+        const isDemoAdmin = sessionStorage.getItem('adminAuth_demo') === 'true' || sessionStorage.getItem('adminAuth_master') === 'true';
+        const navAdm = document.getElementById('navAdminLink');
+        const banAdm = document.getElementById('bannerAdminLink');
+        if (isDemoAdmin) {
+          if (navAdm) navAdm.classList.remove('hidden');
+          if (banAdm) banAdm.classList.remove('hidden');
+        } else {
+          if (navAdm) navAdm.classList.add('hidden');
+          if (banAdm) banAdm.classList.add('hidden');
+        }
+
         window.renderMatchesList();
         startRealtimeSync();
         setTimeout(() => {

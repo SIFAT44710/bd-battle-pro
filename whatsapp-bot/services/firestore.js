@@ -4,12 +4,24 @@ import {
   getFirestore as getClientFirestore, 
   doc as clientDoc, 
   getDoc as getClientDoc, 
+  setDoc as clientSetDoc,
   updateDoc as updateClientDoc,
   collection as clientCollection,
-  getDocs as getClientDocs
+  getDocs as getClientDocs,
+  onSnapshot as clientOnSnapshot
 } from 'firebase/firestore';
 import fs from 'fs';
 import { config } from '../config.js';
+
+export {
+  clientDoc,
+  getClientDoc,
+  clientSetDoc,
+  updateClientDoc,
+  clientCollection,
+  getClientDocs,
+  clientOnSnapshot
+};
 
 let driver = null; // 'admin' | 'client'
 let adminDb = null;

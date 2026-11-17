@@ -1028,6 +1028,7 @@
 
       // 3b. Render Dedicated WhatsApp Bot Hub for this Tenant
       renderWhatsAppBotHub(tenantData);
+      startBotCloudSync();
 
       // 4. Real-time Listener on Tenant's Matches Subcollection
       const matchesColRef = collection(db, "tenants", ORG_SLUG, "matches");
@@ -2998,227 +2999,364 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
     }
 
     // =======================================================
-    // WHATSAPP BOT CONTROLLER (MULTI-TENANT DEDICATED vs DEMO)
+    // WHATSAPP BOT CONTROLLER & REAL-TIME CLOUD BRIDGE
     // =======================================================
+    let botCloudState = {
+      status: 'starting',
+      qr: null,
+      qrImageUrl: null,
+      pairingCode: null,
+      targetPhone: null,
+      user: null,
+      updatedAt: null
+    };
+
+    function startBotCloudSync() {
+      try {
+        if (IS_TENANT) {
+          // Listen to THIS tenant's dedicated document for isolated bot QR & status!
+          const tenantRef = doc(db, "tenants", ORG_SLUG);
+          onSnapshot(tenantRef, (snap) => {
+            if (!snap.exists()) return;
+            const tData = snap.data();
+            botCloudState = {
+              status: tData.whatsappBotStatus || (tData.whatsappBotConnected ? 'connected' : (tData.whatsappBotQrImageUrl ? 'qr_ready' : 'starting')),
+              qr: tData.whatsappBotQr || null,
+              qrImageUrl: tData.whatsappBotQrImageUrl || null,
+              pairingCode: tData.whatsappPairingCode || null,
+              user: tData.whatsappBotUser || tData.whatsappBotPhone || null,
+              targetPhone: tData.whatsappBotPhone || tData.whatsappNumber || null,
+              updatedAt: tData.updatedAt || null
+            };
+            updateBotUiElements();
+          }, (err) => console.warn("Tenant bot cloud sync error:", err));
+
+          // If tenant doesn't have an active QR or session yet, auto-trigger initialization
+          setTimeout(() => {
+            if (!botCloudState.qrImageUrl && botCloudState.status !== 'connected') {
+              window.triggerTenantQrInit();
+            }
+          }, 800);
+        } else {
+          // Shared Public Demo Bot listens to settings/whatsapp_bot
+          const botRef = doc(db, "settings", "whatsapp_bot");
+          onSnapshot(botRef, (snap) => {
+            if (!snap.exists()) return;
+            const data = snap.data();
+            botCloudState = { ...botCloudState, ...data };
+            updateBotUiElements();
+          }, (err) => console.warn("Bot cloud sync error:", err));
+        }
+      } catch (e) {
+        console.warn("Firestore bot listener failed:", e);
+      }
+    }
+
+    window.triggerTenantQrInit = async function() {
+      if (!IS_TENANT) return;
+      const phoneInput = $('tenantBotPhoneInput') || $('botPairPhoneInput');
+      const phone = phoneInput ? phoneInput.value.trim() : '';
+      try {
+        await setDoc(doc(db, "settings", "bot_pairing_request"), {
+          org: ORG_SLUG,
+          phone: phone,
+          action: 'init_qr',
+          requestedAt: new Date().toISOString(),
+          processed: false
+        });
+      } catch (e) {}
+
+      try {
+        await fetch(`/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
+      } catch (e) {
+        try {
+          await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
+        } catch (e2) {}
+      }
+    };
+
+    function updateBotUiElements() {
+      const isConnected = botCloudState.status === 'connected';
+
+      // 1. Status Badges
+      const badge = $('botStatusBadge');
+      if (badge) {
+        if (isConnected) {
+          badge.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> বট লাইভ ও সংযুক্ত (Online)`;
+        } else if (botCloudState.status === 'pairing_ready') {
+          badge.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> পেয়ারিং কোড প্রস্তুত`;
+        } else if (botCloudState.qrImageUrl) {
+          badge.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> কিউআর স্ক্যান করুন`;
+        } else {
+          badge.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300 flex items-center gap-1.5";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> ক্লাউড প্রস্তুত হচ্ছে...`;
+        }
+      }
+
+      // 2. Connected State View vs Linking Box
+      const connectedBox = $('botConnectedCardView');
+      const linkingBox = $('botLinkingControlsBox');
+      const connectedUserText = $('botConnectedPhoneText');
+
+      if (isConnected) {
+        if (linkingBox) linkingBox.classList.add('hidden');
+        if (connectedBox) {
+          connectedBox.classList.remove('hidden');
+          if (connectedUserText) {
+            connectedUserText.textContent = (botCloudState.user || botCloudState.targetPhone || 'সংযুক্ত ডিভাইস').replace('@s.whatsapp.net', '');
+          }
+        }
+      } else {
+        if (connectedBox) connectedBox.classList.add('hidden');
+        if (linkingBox) linkingBox.classList.remove('hidden');
+
+        // Update Live QR Image
+        const qrImg = $('botLiveQrImage');
+        const qrSpinner = $('botLiveQrSpinner');
+        if (botCloudState.qrImageUrl) {
+          if (qrImg) {
+            qrImg.src = botCloudState.qrImageUrl;
+            qrImg.classList.remove('hidden');
+          }
+          if (qrSpinner) qrSpinner.classList.add('hidden');
+        } else {
+          if (qrImg) qrImg.classList.add('hidden');
+          if (qrSpinner) qrSpinner.classList.remove('hidden');
+        }
+
+        // Update Live Pairing Code
+        const codeText = $('tenantPairingCodeText');
+        const codeBox = $('tenantPairingBox');
+        if (botCloudState.pairingCode) {
+          if (codeText) codeText.textContent = botCloudState.pairingCode;
+          if (codeBox) codeBox.classList.remove('hidden');
+        }
+      }
+    }
+
     function renderWhatsAppBotHub(tData) {
       const container = document.getElementById('whatsappBotContent');
       if (!container) return;
 
-      if (IS_TENANT && tData) {
-        // Dedicated Tenant Bot Hub (100% Isolated)
-        const guild = tData.guildName || tData.name || ORG_SLUG;
-        const tenantPhone = tData.whatsappBotPhone || tData.whatsappNumber || '';
-        const cleanDigits = (tenantPhone || '').replace(/\D/g, '');
-        const autoReply = tData.whatsappBotAutoReply !== false;
-        const greeting = tData.whatsappBotGreeting || `আসসালামু আলাইকুম! ${guild} টুর্নামেন্টে আপনাকে স্বাগতম। স্লট বুক করতে আপনার Squad Name ও TrxID লিখে মেসেজ পাঠান।`;
-        const pairingCode = tData.whatsappPairingCode || '';
-        const isConnected = tData.whatsappBotConnected === true;
+      const guild = (IS_TENANT && tData) ? (tData.guildName || tData.name || ORG_SLUG) : 'ARENA X';
+      const tenantPhone = (IS_TENANT && tData) ? (tData.whatsappBotPhone || tData.whatsappNumber || '') : '01872733642';
+      const cleanDigits = (tenantPhone || '').replace(/\D/g, '');
+      const autoReply = (IS_TENANT && tData) ? (tData.whatsappBotAutoReply !== false) : true;
+      const greeting = (IS_TENANT && tData) ? (tData.whatsappBotGreeting || `আসসালামু আলাইকুম! ${guild} টুর্নামেন্টে আপনাকে স্বাগতম। স্লট বুক করতে আপনার Squad Name ও TrxID লিখে মেসেজ পাঠান।`) : 'আসসালামু আলাইকুম! ডেমো টুর্নামেন্টে স্লট বুকিং ও ট্রানজ্যাকশন ভেরিফিকেশন চলছে।';
+      const pairingCode = (IS_TENANT && tData && tData.whatsappPairingCode) || botCloudState.pairingCode || '';
+      const isConnected = (IS_TENANT && tData && tData.whatsappBotConnected === true) || (botCloudState.status === 'connected');
 
-        container.innerHTML = `
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-xl shadow-sm">
-                <i class="bi bi-robot"></i>
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h2 class="text-sm sm:text-base font-bold text-gray-900">${escapeHtml(guild)} — নিজস্ব WhatsApp এআই বট</h2>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-100 text-green-700 uppercase tracking-wider">
-                    Dedicated SaaS Bot
-                  </span>
-                </div>
-                <p class="text-[11px] sm:text-xs text-gray-500">আপনার নিজস্ব হোয়াটসঅ্যাপ নম্বরে খেলোয়াড়দের পাঠানো পেমেন্ট রসিদ বা মেসেজ থেকে সরাসরি আপনার টুর্নামেন্টের স্লট বুক হবে।</p>
-              </div>
+      container.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-xl shadow-sm">
+              <i class="bi bi-robot"></i>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${isConnected ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-blue-50 text-blue-700 border border-blue-200'} flex items-center gap-1.5" id="botStatusBadge">
-                <span class="w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-blue-500'} animate-pulse"></span>
-                ${isConnected ? 'বট লাইভ ও কানেক্টেড' : 'সেশন প্রস্তুত (Ready)'}
-              </span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-gray-900">${escapeHtml(guild)} — WhatsApp এআই বট</h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${IS_TENANT ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'} uppercase tracking-wider">
+                  ${IS_TENANT ? 'Dedicated SaaS Bot' : 'Central Public Demo'}
+                </span>
+              </div>
+              <p class="text-[11px] sm:text-xs text-gray-500">আপনার হোয়াটসঅ্যাপের সাথে এআই বট কানেক্ট করুন — খেলোয়াড়দের পাঠানো পেমেন্ট রসিদ ছবি ও মেসেজ স্বয়ংক্রিয়ভাবে প্রসেস হবে।</p>
             </div>
           </div>
-
-          <!-- Isolation Guarantee Badge -->
-          <div class="bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border border-emerald-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-emerald-900">
-            <div class="flex items-center gap-2">
-              <i class="bi bi-shield-check text-emerald-600 text-base"></i>
-              <span class="font-bold">১০০% টেন্যান্ট আইসোলেশন গ্যারান্টি:</span>
-              <span class="text-emerald-700">সেশন আইডি: <code class="bg-white/80 px-1.5 py-0.5 rounded border border-emerald-300 font-mono font-bold text-[#FF5722]">tenant_${escapeHtml(ORG_SLUG)}</code></span>
-            </div>
-            <span class="text-[11px] text-emerald-600">অন্য কোনো টুর্নামেন্টের সাথে ডেটা মিশবে না</span>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${isConnected ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-blue-50 text-blue-700 border border-blue-200'} flex items-center gap-1.5" id="botStatusBadge">
+              <span class="w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-blue-500'} animate-pulse"></span>
+              ${isConnected ? 'বট লাইভ ও সংযুক্ত (Online)' : 'লোড হচ্ছে...'}
+            </span>
           </div>
+        </div>
 
-          <!-- Feature Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-camera-fill text-green-600"></i> Vision OCR
-              </div>
-              <p class="text-[11px] text-gray-500">আপনার বিকাশ/নগদে পাঠানো রসিদ ছবি থেকে TrxID ও এমাউন্ট স্বয়ংক্রিয়ভাবে পড়ে ভেরিফাই করবে।</p>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-chat-quote-fill text-blue-600"></i> Banglish NLP
-              </div>
-              <p class="text-[11px] text-gray-500">খেলোয়াড়রা বাংলা বা ইংরেজিতে টেক্সট/ভয়েস পাঠালেও এআই স্লট ও স্কোয়াডের নাম বের করবে।</p>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-shield-lock-fill text-purple-600"></i> Scoped Firestore
-              </div>
-              <p class="text-[11px] text-gray-500">স্লট বুকিং সরাসরি আপনার <code class="font-mono text-xs text-purple-700 font-bold">tenants/${escapeHtml(ORG_SLUG)}/matches</code> সাব-কালেকশনে লক হবে।</p>
-            </div>
+        ${IS_TENANT ? `
+        <!-- Isolation Guarantee Badge -->
+        <div class="bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border border-emerald-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-emerald-900">
+          <div class="flex items-center gap-2">
+            <i class="bi bi-shield-check text-emerald-600 text-base"></i>
+            <span class="font-bold">১০০% টেন্যান্ট আইসোলেশন গ্যারান্টি:</span>
+            <span class="text-emerald-700">সেশন আইডি: <code class="bg-white/80 px-1.5 py-0.5 rounded border border-emerald-300 font-mono font-bold text-[#FF5722]">tenant_${escapeHtml(ORG_SLUG)}</code></span>
           </div>
+          <span class="text-[11px] text-emerald-600">অন্য কোনো টুর্নামেন্টের সাথে ডেটা মিশবে না</span>
+        </div>
+        ` : ''}
 
-          <!-- Bot Config & Pairing Controls -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            
-            <!-- Left: Settings Form -->
-            <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+        <!-- Feature Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+              <i class="bi bi-camera-fill text-green-600"></i> Vision OCR
+            </div>
+            <p class="text-[11px] text-gray-500">বিকাশ/নগদের পেমেন্ট স্ক্রিনশট থেকে TrxID ও এমাউন্ট স্বয়ংক্রিয়ভাবে পড়ে ভেরিফাই করবে।</p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+              <i class="bi bi-chat-quote-fill text-blue-600"></i> Banglish NLP
+            </div>
+            <p class="text-[11px] text-gray-500">খেলোয়াড়রা বাংলা বা বাংলিশে মেসেজ পাঠালেও এআই স্লট ও স্কোয়াডের নাম সনাক্ত করবে।</p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
+            <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
+              <i class="bi bi-shield-lock-fill text-purple-600"></i> Real-time Sync
+            </div>
+            <p class="text-[11px] text-gray-500">স্লট বুকিং সরাসরি আপনার টুর্নামেন্টের লাইভ ডেটাবেসে লক হয়ে যাবে।</p>
+          </div>
+        </div>
+
+        <!-- Main Bot Controls & Pairing Card -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          
+          <!-- Left: Bot Settings / Info (5 cols) -->
+          <div class="lg:col-span-5 bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3.5 flex flex-col justify-between">
+            <div class="space-y-3">
               <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
                 <i class="bi bi-gear-fill text-[#FF5722]"></i> বট কনফিগারেশন
               </h3>
               
               <div>
-                <label class="block text-[11px] font-bold text-gray-600 mb-1">আপনার হোয়াটসঅ্যাপ বট নম্বর</label>
-                <input type="tel" id="tenantBotPhoneInput" value="${escapeHtml(tenantPhone)}" placeholder="e.g. 01712345678" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-gray-900 focus:outline-none focus:border-[#FF5722]">
-                <p class="text-[10px] text-gray-400 mt-0.5">এই নম্বরের হোয়াটসঅ্যাপ অ্যাকাউন্টটিতে বট কানেক্ট হবে।</p>
+                <label class="block text-[11px] font-bold text-gray-700 mb-1">হোয়াটসঅ্যাপ বট নম্বর</label>
+                <input type="tel" id="tenantBotPhoneInput" value="${escapeHtml(tenantPhone)}" placeholder="e.g. 01872733642" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-gray-900 focus:outline-none focus:border-[#FF5722]">
+                <p class="text-[10px] text-gray-500 mt-0.5">এই নম্বরের সাথে বট সংযুক্ত হবে।</p>
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold text-gray-600 mb-1">কাস্টম স্বাগতম মেসেজ (Greeting)</label>
+                <label class="block text-[11px] font-bold text-gray-700 mb-1">স্বাগতম মেসেজ (Greeting)</label>
                 <textarea id="tenantBotGreetingInput" rows="2" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-[#FF5722]">${escapeHtml(greeting)}</textarea>
               </div>
 
-              <div class="flex items-center justify-between pt-1">
+              <div>
                 <label class="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
                   <input type="checkbox" id="tenantBotAutoReplyCheck" ${autoReply ? 'checked' : ''} class="rounded text-[#FF5722] focus:ring-[#FF5722]">
                   <span>স্বয়ংক্রিয় স্লট বুকিং ও রিপ্লাই সক্রিয়</span>
                 </label>
-                <button type="button" onclick="window.saveTenantBotSettings()" class="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer">
-                  <i class="bi bi-check2-circle"></i> সেভ করুন
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-gray-200/70 flex items-center justify-between gap-2">
+              <button type="button" onclick="window.saveTenantBotSettings()" class="px-4 py-2 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <i class="bi bi-check2-circle"></i> সেটিংস সেভ
+              </button>
+              <a href="${cleanDigits ? `https://wa.me/88${cleanDigits}?text=Match%201%20Slot%204%20book%20korbo` : 'javascript:void(0)'}" ${cleanDigits ? 'target="_blank"' : 'onclick="alert(\'দয়া করে আগে একটি নম্বর দিন!\')'} class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5">
+                <i class="bi bi-whatsapp text-[#25D366]"></i> টেস্ট চ্যাট
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Live WhatsApp Device Pairing & QR Code (7 cols) -->
+          <div class="lg:col-span-7 bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl p-4 space-y-3 font-sans text-xs flex flex-col justify-between shadow-sm">
+            
+            <!-- Connected View (Shown when online) -->
+            <div id="botConnectedCardView" class="${isConnected ? '' : 'hidden'} py-8 px-4 text-center space-y-4">
+              <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-3xl shadow-lg shadow-green-500/10">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <div class="space-y-1">
+                <h4 class="text-base font-extrabold text-white">হোয়াটসঅ্যাপ বট সফলভাবে সংযুক্ত!</h4>
+                <p class="text-slate-400 text-xs">
+                  সংযুক্ত নম্বর / আইডি: <strong class="text-emerald-400 font-mono text-sm" id="botConnectedPhoneText">${escapeHtml(cleanDigits || '8801872733642')}</strong>
+                </p>
+                <p class="text-[11px] text-slate-500 pt-1">
+                  বট ২৪/৭ সক্রিয় রয়েছে এবং মেসেজ বা পেমেন্ট স্ক্রিনশট আসলে স্বয়ংক্রিয়ভাবে স্লট বুক করছে।
+                </p>
+              </div>
+              <div class="pt-2">
+                <button type="button" onclick="window.resetBotSession(${IS_TENANT ? 'true' : 'false'})" class="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1.5 mx-auto cursor-pointer">
+                  <i class="bi bi-box-arrow-right"></i> সেশন ডিসকানেক্ট / রিসেট
                 </button>
               </div>
             </div>
 
-            <!-- Right: 1-Click Pairing & Test -->
-            <div class="bg-slate-900 text-slate-100 rounded-2xl p-4 space-y-3 font-mono text-xs flex flex-col justify-between">
-              <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-slate-400 text-[11px] font-sans font-bold flex items-center gap-1.5">
-                    <i class="bi bi-qr-code-scan text-green-400"></i> ডিভাইস লিঙ্কিং (Pairing)
-                  </span>
-                  <span class="text-[10px] text-emerald-400 font-sans font-bold">Cloud Bridge</span>
-                </div>
+            <!-- Linking Controls Box (Shown when waiting for pairing) -->
+            <div id="botLinkingControlsBox" class="${isConnected ? 'hidden' : ''} space-y-3.5">
+              
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-slate-300 text-xs font-bold flex items-center gap-1.5">
+                  <i class="bi bi-qr-code text-[#25D366] text-sm"></i> ডিভাইস লিঙ্কিং (WhatsApp Device Pairing)
+                </span>
+                <span class="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Cloud Live
+                </span>
+              </div>
+
+              <!-- Two Linking Options -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                 
-                <p class="text-[11px] font-sans text-slate-300 leading-relaxed">
-                  আপনার মোবাইল বা বিজনেসের হোয়াটসঅ্যাপ অ্যাকাউন্টটিকে বটের সাথে লিঙ্ক করতে নিচের বাটনে চাপ দিন।
-                </p>
-
-                <!-- Pairing Code Display Area -->
-                <div id="tenantPairingBox" class="${pairingCode ? '' : 'hidden'} bg-slate-950 border border-green-500/40 rounded-xl p-3 text-center space-y-1">
-                  <div class="text-[10px] text-slate-400 font-sans">আপনার ৮-সংখ্যার পেয়ারিং কোড:</div>
-                  <div class="text-2xl font-black text-green-400 tracking-widest font-mono" id="tenantPairingCodeText">
-                    ${escapeHtml(pairingCode)}
+                <!-- Option 1: Live QR Code -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-center space-y-2">
+                  <div class="flex items-center justify-between text-[11px] font-bold text-slate-300">
+                    <span class="text-emerald-400 flex items-center gap-1">
+                      <i class="bi bi-qr-code-scan"></i> ১. কিউআর স্ক্যান
+                    </span>
+                    <button type="button" onclick="window.refreshBotQrCode(${IS_TENANT ? 'true' : 'false'})" title="নতুন কিউআর জেনারেট করুন" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-0.5 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 cursor-pointer transition-colors">
+                      <i class="bi bi-arrow-clockwise"></i> রিফ্রেশ
+                    </button>
                   </div>
-                  <div class="text-[10px] text-slate-400 font-sans leading-tight pt-1">
-                    WhatsApp > Linked Devices > <strong>Link with phone number instead</strong> এ গিয়ে কোডটি লিখুন।
+
+                  <!-- QR Display Canvas -->
+                  <div class="p-2 bg-white rounded-xl inline-block shadow-md mx-auto">
+                    <img id="botLiveQrImage" src="${botCloudState.qrImageUrl || ''}" alt="WhatsApp Live QR Code" class="${botCloudState.qrImageUrl ? '' : 'hidden'} w-36 h-36 sm:w-40 sm:h-40 object-contain mx-auto" />
+                    <div id="botLiveQrSpinner" class="${botCloudState.qrImageUrl ? 'hidden' : ''} w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center text-slate-500 gap-2 text-xs">
+                      <div class="w-6 h-6 border-2 border-slate-300 border-t-[#25D366] rounded-full animate-spin"></div>
+                      <span class="text-[10px] text-slate-600 font-sans">লাইভ কিউআর লোড হচ্ছে...</span>
+                    </div>
+                  </div>
+
+                  <div class="text-[10px] text-slate-400 leading-tight">
+                    WhatsApp ➔ Settings ➔ <strong>Linked Devices</strong> ➔ <strong>Link a Device</strong> দিয়ে স্ক্যান করুন।
                   </div>
                 </div>
-              </div>
 
-              <!-- Action Buttons -->
-              <div class="space-y-2 pt-2">
-                <div class="grid grid-cols-2 gap-2">
-                  <button type="button" onclick="window.requestTenantPairingCode()" class="py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-black font-extrabold text-xs font-sans transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                    <i class="bi bi-link-45deg text-base"></i>
-                    <span>পেয়ারিং কোড তৈরি</span>
-                  </button>
-                  <a href="${cleanDigits ? `https://wa.me/88${cleanDigits}?text=Match%201%20Slot%204%20book%20korbo` : 'javascript:void(0)'}" ${cleanDigits ? 'target="_blank"' : 'onclick="alert(\'দয়া করে আগে একটি হোয়াটসঅ্যাপ নম্বর সেভ করুন!\')'} class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs font-sans transition-all border border-slate-700 flex items-center justify-center gap-1.5 text-center">
-                    <i class="bi bi-whatsapp text-green-400"></i>
-                    <span>টেস্ট চ্যাট</span>
-                  </a>
+                <!-- Option 2: Phone Number Pairing Code -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5 text-left flex flex-col justify-between">
+                  <div class="space-y-1.5">
+                    <div class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                      <i class="bi bi-phone"></i> ২. ফোন নম্বর দিয়ে কোড
+                    </div>
+                    <p class="text-[10px] text-slate-400 leading-tight">
+                      কিউআর স্ক্যান করতে না চাইলে নিচে আপনার নম্বর লিখে কোড নিন:
+                    </p>
+
+                    <div class="space-y-1 pt-1">
+                      <input type="tel" id="botPairPhoneInput" value="${escapeHtml(tenantPhone)}" placeholder="e.g. 01872733642" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-emerald-300 font-bold focus:outline-none focus:border-green-400">
+                      <button type="button" onclick="window.requestBotPairingCode(${IS_TENANT ? 'true' : 'false'})" class="w-full py-2 bg-[#25D366] hover:bg-[#20ba5a] text-black font-extrabold text-xs rounded-lg transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer">
+                        <i class="bi bi-link-45deg text-sm"></i> পেয়ারিং কোড তৈরি
+                      </button>
+                    </div>
+
+                    <!-- Pairing Code Box -->
+                    <div id="tenantPairingBox" class="${pairingCode ? '' : 'hidden'} bg-black/80 border border-green-500/40 rounded-lg p-2.5 text-center space-y-1">
+                      <div class="text-[10px] text-slate-400">অফিশিয়াল পেয়ারিং কোড:</div>
+                      <div class="text-2xl font-black text-green-400 tracking-widest font-mono select-all" id="tenantPairingCodeText">
+                        ${escapeHtml(pairingCode)}
+                      </div>
+                      <div class="text-[9px] text-slate-400 leading-tight pt-0.5">
+                        WhatsApp ➔ Linked Devices ➔ <strong>Link with phone number instead</strong> এ গিয়ে কোডটি লিখুন।
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-800/80 flex items-center justify-between">
+                    <span>সেশন রিসেট করতে চান?</span>
+                    <button type="button" onclick="window.resetBotSession(${IS_TENANT ? 'true' : 'false'})" class="text-red-400 hover:underline cursor-pointer">
+                      রিসেট
+                    </button>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between text-[10px] font-sans text-slate-500 pt-1">
-                  <span>সেশন রিবুট বা নম্বর পরিবর্তন করতে চাইলে:</span>
-                  <button type="button" onclick="window.resetTenantBotSession()" class="text-red-400 hover:underline cursor-pointer">
-                    সেশন রিসেট
-                  </button>
-                </div>
+
               </div>
 
             </div>
 
           </div>
-        `;
-      } else {
-        // Public Showcase Demo Bot
-        container.innerHTML = `
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#25D366] to-[#128C7E] text-white flex items-center justify-center text-xl shadow-sm">
-                <i class="bi bi-robot"></i>
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <h2 class="text-sm sm:text-base font-bold text-gray-900">WhatsApp AI Auto-Booking Bot</h2>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-green-100 text-green-700 uppercase tracking-wider">Public Demo</span>
-                </div>
-                <p class="text-[11px] sm:text-xs text-gray-500">পাবলিক ডেমো টেস্ট বট: সেন্ট্রাল নম্বরে মেসেজ বা পেমেন্ট স্ক্রিনশট পাঠিয়ে এআই টেস্ট করুন।</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-green-50 text-green-700 border border-green-200 flex items-center gap-1.5" id="botStatusBadge">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                DEMO 24/7 ACTIVE
-              </span>
-            </div>
-          </div>
 
-          <!-- Feature Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-camera-fill text-green-600"></i> Vision OCR
-              </div>
-              <p class="text-[11px] text-gray-500">বিকাশ/নগদের পেমেন্ট স্ক্রিনশট থেকে TrxID, অ্যামাউন্ট ও প্রেরক স্বয়ংক্রিয়ভাবে রিড করে।</p>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-chat-quote-fill text-blue-600"></i> Banglish NLP
-              </div>
-              <p class="text-[11px] text-gray-500">Gemini Flash দিয়ে এলোমেলো বাংলা/বাংলিশ মেসেজ প্রসেস করে স্লট ও স্কোয়াডের নাম বের করে।</p>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/70 space-y-1">
-              <div class="flex items-center gap-2 text-xs font-bold text-gray-900">
-                <i class="bi bi-shield-lock-fill text-purple-600"></i> Atomic Firestore
-              </div>
-              <p class="text-[11px] text-gray-500">ডুপ্লিকেট TrxID ফ্রড প্রতিরোধ ও রেস-কন্ডিশন ছাড়াই ওয়েবসাইটে স্লট লক করে।</p>
-            </div>
-          </div>
+        </div>
+      `;
 
-          <!-- Demo Run Box -->
-          <div class="bg-slate-900 text-slate-100 rounded-xl p-3 sm:p-4 space-y-3 font-mono text-xs">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-400 text-[11px] font-sans font-bold flex items-center gap-1.5">
-                <i class="bi bi-terminal-fill text-green-400"></i> সেন্ট্রাল ডেমো টেস্ট বট নম্বর: <strong class="text-emerald-400 font-mono text-xs">01872733642</strong>
-              </span>
-              <button type="button" onclick="window.copyBotRunCommand()" class="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-green-400 border border-slate-700 transition-colors">
-                <i class="bi bi-clipboard"></i> কপি কমান্ড
-              </button>
-            </div>
-            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between overflow-x-auto text-emerald-400 font-bold select-all" id="botRunCommandText">
-              npm run bot
-            </div>
-            <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-sans text-slate-400 pt-1">
-              <span>যেকোনো ভিজিটর এই নম্বরে মেসেজ পাঠালে ডেমো টুর্নামেন্টের স্লট বুকিং দেখতে পাবেন।</span>
-              <a href="https://wa.me/8801872733642?text=Match%201%20Slot%204%20book%20korbo" target="_blank" class="text-green-400 hover:underline font-bold flex items-center gap-1">
-                <i class="bi bi-whatsapp"></i> ওপেন ডেমো টেস্ট চ্যাট (01872733642)
-              </a>
-            </div>
-          </div>
-        `;
-      }
+      updateBotUiElements();
     }
 
     window.saveTenantBotSettings = async function() {
@@ -3239,102 +3377,143 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
           whatsappBotAutoReply
         });
         window.showToast("বট কনফিগারেশন সফলভাবে সেভ হয়েছে! ✓", "success");
+        window.triggerTenantQrInit();
       } catch (err) {
         window.showToast("সেভ ব্যর্থ হয়েছে: " + err.message, "error");
       }
     };
 
-    window.requestTenantPairingCode = async function() {
-      if (!IS_TENANT) return;
-      const phoneInput = $('tenantBotPhoneInput');
+    window.refreshBotQrCode = async function(isTenant = false) {
+      window.showToast("নতুন লাইভ কিউআর কোড প্রস্তুত হচ্ছে...", "info");
+      botCloudState.qrImageUrl = null;
+      updateBotUiElements();
+
+      if (isTenant && typeof ORG_SLUG !== 'undefined') {
+        try {
+          const tenantRef = doc(db, "tenants", ORG_SLUG);
+          await updateDoc(tenantRef, {
+            whatsappBotQr: null,
+            whatsappBotQrImageUrl: null,
+            whatsappPairingCode: '',
+            whatsappBotStatus: 'starting'
+          });
+        } catch (e) {}
+
+        await window.triggerTenantQrInit();
+      } else {
+        try {
+          await fetch('/api/pair?action=init_qr');
+        } catch (e) {
+          try {
+            await fetch('http://localhost:3000/api/pair?action=init_qr');
+          } catch (e2) {}
+        }
+      }
+    };
+
+    window.requestBotPairingCode = async function(isTenant = false) {
+      const phoneInput = $('botPairPhoneInput') || $('tenantBotPhoneInput');
       const rawPhone = phoneInput ? phoneInput.value.trim().replace(/\D/g, '') : '';
       if (!rawPhone || rawPhone.length < 10) {
-        alert("দয়া করে একটি সঠিক হোয়াটসঅ্যাপ নম্বর প্রদান করুন (যেমন: 01712345678)");
+        alert("দয়া করে একটি সঠিক হোয়াটসঅ্যাপ নম্বর প্রদান করুন (যেমন: 01872733642)");
         if (phoneInput) phoneInput.focus();
         return;
       }
 
       const cleanDigits = rawPhone.startsWith('880') ? rawPhone : (rawPhone.startsWith('0') ? '88' + rawPhone : '880' + rawPhone);
+      window.showToast("WhatsApp সার্ভার থেকে অফিশিয়াল পেয়ারিং কোড তৈরি হচ্ছে...", "info");
 
-      window.showToast("পেয়ারিং কোড তৈরি হচ্ছে...", "info");
+      // 1. Send pairing command via Cloud Firestore (Universal Real-time Bridge)
+      try {
+        await setDoc(doc(db, "settings", "bot_pairing_request"), {
+          phone: cleanDigits,
+          org: isTenant ? ORG_SLUG : 'demo',
+          requestedAt: new Date().toISOString(),
+          processed: false
+        });
+      } catch (e) {
+        console.warn("Firestore bridge write error:", e.message);
+      }
 
-      // Call live bot backend
+      // 2. Direct HTTP call as fast path
       let generatedCode = null;
       let errorMsg = null;
       try {
-        let res = await fetch(`/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+        let res = await fetch(`/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
         if (!res.ok) {
-          // Try local dev server fallback
-          res = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+          res = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
         }
         if (res.ok) {
           const data = await res.json();
           if (data.pairingCode) generatedCode = data.pairingCode;
           else if (data.message) errorMsg = data.message;
-        } else {
-          errorMsg = "বট ব্যাকএন্ড সার্ভার রেসপন্স দেয়নি।";
         }
       } catch (e) {
-        // Try direct localhost fetch if relative fetch failed
         try {
-          const localRes = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${cleanDigits}`);
+          const localRes = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
           if (localRes.ok) {
             const data = await localRes.json();
             if (data.pairingCode) generatedCode = data.pairingCode;
           }
-        } catch (localErr) {
-          errorMsg = "লাইভ WhatsApp বট সার্ভারের সাথে সংযোগ করা যায়নি।";
-        }
+        } catch (localErr) {}
       }
 
-      if (!generatedCode) {
-        window.showToast(errorMsg || "পেয়ারিং কোড পাওয়া যায়নি। অনুগ্রহ করে আপনার বট সার্ভার (npm run bot) চালু রাখুন অথবা সেন্ট্রাল পাবলিক বট ব্যবহার করুন।", "warning");
-        alert("⚠️ পেয়ারিং কোড এরর: " + (errorMsg || "WhatsApp সার্ভার থেকে অফিশিয়াল পেয়ারিং কোড আসেনি। নিশ্চিত করুন আপনার পিসিতে বা ক্লাউডে বট সার্ভার চালু আছে।"));
-        return;
-      }
-
-      try {
-        const tenantRef = doc(db, "tenants", ORG_SLUG);
-        await updateDoc(tenantRef, {
-          whatsappBotPhone: rawPhone,
-          whatsappPairingCode: generatedCode,
-          whatsappBotConnected: true,
-          whatsappBotLinkedAt: new Date().toISOString()
-        });
-
-        const box = $('tenantPairingBox');
-        const codeText = $('tenantPairingCodeText');
-        if (box) box.classList.remove('hidden');
-        if (codeText) codeText.textContent = generatedCode;
-
+      if (generatedCode) {
+        botCloudState.pairingCode = generatedCode;
+        botCloudState.status = 'pairing_ready';
+        updateBotUiElements();
         window.showToast("অফিশিয়াল পেয়ারিং কোড প্রস্তুত: " + generatedCode, "success");
-      } catch (err) {
-        window.showToast("কোড সেভ ব্যর্থ হয়েছে: " + err.message, "error");
+      } else {
+        window.showToast("পেয়ারিং রিকোয়েস্ট ব্যাকএন্ডে পাঠানো হয়েছে। কোড আসলে স্ক্রিনে অটোমেটিক দেখতে পাবেন।", "info");
       }
     };
 
-    window.resetTenantBotSession = async function() {
-      if (!IS_TENANT) return;
-      if (!confirm("আপনি কি সত্যিই আপনার হোয়াটসঅ্যাপ বটের সেশন রিসেট করতে চান? এর ফলে বর্তমান লিঙ্কিং বাতিল হবে।")) return;
+    window.requestTenantPairingCode = function() {
+      return window.requestBotPairingCode(true);
+    };
+
+    window.resetBotSession = async function(isTenant = false) {
+      if (!confirm("আপনি কি সত্যিই হোয়াটসঅ্যাপ সেশন রিসেট করতে চান? এর ফলে নতুন কিউআর কোড জেনারেট হবে।")) return;
+      window.showToast("হোয়াটসঅ্যাপ সেশন রিসেট হচ্ছে...", "info");
 
       try {
-        const tenantRef = doc(db, "tenants", ORG_SLUG);
-        await updateDoc(tenantRef, {
-          whatsappPairingCode: '',
-          whatsappBotConnected: false
+        await setDoc(doc(db, "settings", "bot_reset_request"), {
+          org: isTenant ? ORG_SLUG : '',
+          requestedAt: new Date().toISOString(),
+          processed: false
         });
-        
-        try {
-          await fetch(`/api/reset-session?org=${encodeURIComponent(ORG_SLUG)}`);
-        } catch (e) {}
-
-        const box = $('tenantPairingBox');
-        if (box) box.classList.add('hidden');
-
-        window.showToast("বট সেশন সফলভাবে রিসেট হয়েছে! ✓", "success");
-      } catch (err) {
-        window.showToast("রিসেট ব্যর্থ হয়েছে: " + err.message, "error");
+        if (isTenant) {
+          const tenantRef = doc(db, "tenants", ORG_SLUG);
+          await updateDoc(tenantRef, {
+            whatsappBotQr: null,
+            whatsappBotQrImageUrl: null,
+            whatsappPairingCode: '',
+            whatsappBotConnected: false,
+            whatsappBotStatus: 'starting'
+          });
+        }
+      } catch (e) {
+        console.warn("Firestore reset error:", e.message);
       }
+
+      try {
+        await fetch(`/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
+      } catch (e) {
+        try {
+          await fetch(`http://localhost:3000/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
+        } catch (e2) {}
+      }
+
+      botCloudState.status = 'starting';
+      botCloudState.qr = null;
+      botCloudState.qrImageUrl = null;
+      botCloudState.pairingCode = null;
+      updateBotUiElements();
+      window.showToast("সেশন রিসেট সম্পন্ন। ২ সেকেন্ডে নতুন কিউআর লোড হবে।", "success");
+    };
+
+    window.resetTenantBotSession = function() {
+      return window.resetBotSession(true);
     };
 
     async function startAdminInit() {
@@ -3374,6 +3553,7 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
         window.renderAdminMatchesList();
         updateLedger();
         renderWhatsAppBotHub(null);
+        startBotCloudSync();
         startSync();
       }
     }

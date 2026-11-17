@@ -9,6 +9,7 @@ import makeWASocket, {
   isJidNewsletter
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
+import QRCode from 'qrcode';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
@@ -27,6 +28,177 @@ const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 
 // Track message IDs dispatched by this bot instance to avoid self-reply loops
 const botSentMessageIds = new Set();
+
+export const activeSockets = new Map(); // key: 'demo' or tenantSlug
+export function getSocket(tenantSlug = null) {
+  return activeSockets.get(tenantSlug || 'demo');
+}
+
+export async function syncTenantBotStateToFirestore(tenantSlug, data) {
+  if (!tenantSlug || tenantSlug === 'demo') {
+    return syncBotStateToFirestore(data);
+  }
+  try {
+    const { initFirestore, clientDoc, clientSetDoc } = await import('./firestore.js');
+    const { driver, adminDb, clientDbInstance } = initFirestore();
+    const payload = {
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    if (driver === 'admin' && adminDb) {
+      await adminDb.collection('tenants').doc(tenantSlug).set(payload, { merge: true });
+    } else if (clientDbInstance) {
+      await clientSetDoc(clientDoc(clientDbInstance, 'tenants', tenantSlug), payload, { merge: true });
+    }
+  } catch (err) {
+    console.warn(`[syncTenantBotStateToFirestore Notice for ${tenantSlug}]:`, err.message);
+  }
+}
+
+export async function syncBotStateToFirestore(data) {
+  try {
+    const { initFirestore, clientDoc, clientSetDoc } = await import('./firestore.js');
+    const { driver, adminDb, clientDbInstance } = initFirestore();
+    const payload = {
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    if (driver === 'admin' && adminDb) {
+      await adminDb.collection('settings').doc('whatsapp_bot').set(payload, { merge: true });
+    } else if (clientDbInstance) {
+      await clientSetDoc(clientDoc(clientDbInstance, 'settings', 'whatsapp_bot'), payload, { merge: true });
+    }
+  } catch (err) {
+    console.warn('[syncBotStateToFirestore Notice]:', err.message);
+  }
+}
+
+let bridgeListenerStarted = false;
+export async function startFirestoreBridgeListener() {
+  if (bridgeListenerStarted) return;
+  bridgeListenerStarted = true;
+  try {
+    const { initFirestore, clientDoc, clientOnSnapshot, updateClientDoc } = await import('./firestore.js');
+    const { clientDbInstance } = initFirestore();
+    if (clientDbInstance) {
+      // 1. Listen for Pairing & Init Requests
+      clientOnSnapshot(clientDoc(clientDbInstance, 'settings', 'bot_pairing_request'), async (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (!data || data.processed) return;
+        const isTenant = data.org && data.org !== 'demo';
+        const targetOrg = isTenant ? data.org : null;
+        console.log(`[Firestore Bridge]: Incoming Request [action=${data.action || 'pair'}] for target: ${data.org || 'demo'}, phone: ${data.phone || 'N/A'}`);
+
+        try {
+          if (data.action === 'init_qr' && targetOrg) {
+            console.log(`[Firestore Bridge]: Initializing dedicated QR code for tenant [${targetOrg}]...`);
+            await startWhatsAppBot(targetOrg);
+          } else if (data.phone) {
+            const rawDigits = data.phone.replace(/\D/g, '');
+            const cleanPhone = rawDigits.startsWith('880') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
+
+            let targetSock = activeSockets.get(targetOrg || 'demo');
+            if (!targetSock || targetSock.authState?.creds?.registered) {
+              await startWhatsAppBot(targetOrg);
+              targetSock = activeSockets.get(targetOrg || 'demo');
+            }
+
+            if (targetSock && !targetSock.authState?.creds?.registered) {
+              console.log(`[Firestore Bridge]: Requesting pairing code for ${cleanPhone} on [${targetOrg || 'demo'}]...`);
+              const code = await targetSock.requestPairingCode(cleanPhone);
+              const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+              
+              if (targetOrg) {
+                await syncTenantBotStateToFirestore(targetOrg, {
+                  whatsappPairingCode: formatted,
+                  whatsappBotPhone: cleanPhone,
+                  whatsappBotStatus: 'pairing_ready'
+                });
+              } else {
+                botState.pairingCode = formatted;
+                botState.status = 'pairing_ready';
+                await syncBotStateToFirestore({
+                  pairingCode: formatted,
+                  targetPhone: cleanPhone,
+                  status: 'pairing_ready'
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[Firestore Bridge Pairing/Init Error]:', e.message);
+        } finally {
+          try {
+            await updateClientDoc(clientDoc(clientDbInstance, 'settings', 'bot_pairing_request'), {
+              processed: true,
+              processedAt: new Date().toISOString()
+            });
+          } catch (e) {}
+        }
+      });
+
+      // 2. Listen for Session Reset Requests
+      clientOnSnapshot(clientDoc(clientDbInstance, 'settings', 'bot_reset_request'), async (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (!data || data.processed) return;
+        const isTenant = data.org && data.org !== 'demo';
+        console.log(`[Firestore Bridge]: Incoming Reset Request for [${data.org || 'demo'}]...`);
+        try {
+          const authDirToClean = isTenant ? path.resolve(__dirname, `../auth_info_tenant_${data.org}`) : authDir;
+          if (fs.existsSync(authDirToClean)) {
+            fs.rmSync(authDirToClean, { recursive: true, force: true });
+          }
+          if (isTenant) {
+            if (activeSockets.has(data.org)) {
+              try {
+                const s = activeSockets.get(data.org);
+                s.ev.removeAllListeners();
+                s.end(undefined);
+              } catch (e) {}
+              activeSockets.delete(data.org);
+            }
+            await syncTenantBotStateToFirestore(data.org, {
+              whatsappBotQr: null,
+              whatsappBotQrImageUrl: null,
+              whatsappPairingCode: '',
+              whatsappBotConnected: false,
+              whatsappBotStatus: 'starting'
+            });
+          } else {
+            if (activeSockets.has('demo')) {
+              try {
+                const s = activeSockets.get('demo');
+                s.ev.removeAllListeners();
+                s.end(undefined);
+              } catch (e) {}
+              activeSockets.delete('demo');
+            }
+            botState.status = 'starting';
+            botState.qr = null;
+            botState.pairingCode = null;
+            botState.user = null;
+          }
+          await startWhatsAppBot(isTenant ? data.org : null);
+        } catch (e) {
+          console.error('[Firestore Bridge Reset Error]:', e.message);
+        } finally {
+          try {
+            await updateClientDoc(clientDoc(clientDbInstance, 'settings', 'bot_reset_request'), {
+              processed: true,
+              processedAt: new Date().toISOString()
+            });
+          } catch (e) {}
+        }
+      });
+
+      console.log('✓ [Firestore Bridge]: Reactive cloud command listener active.');
+    }
+  } catch (err) {
+    console.warn('[startFirestoreBridgeListener Notice]:', err.message);
+  }
+}
 
 export async function sendBotMessage(sock, jid, content) {
   try {
@@ -86,18 +258,18 @@ function extractMessageText(message) {
 }
 
 let currentSock = null;
-let isStarting = false;
 
 export async function startWhatsAppBot(tenantSlug = null) {
-  if (isStarting) return;
-  isStarting = true;
+  const socketKey = tenantSlug || 'demo';
 
-  if (currentSock) {
+  // If this specific socket already exists, close it cleanly before replacing
+  if (activeSockets.has(socketKey)) {
     try {
-      currentSock.ev.removeAllListeners();
-      currentSock.end(undefined);
+      const oldSock = activeSockets.get(socketKey);
+      oldSock.ev.removeAllListeners();
+      oldSock.end(undefined);
     } catch (e) {}
-    currentSock = null;
+    activeSockets.delete(socketKey);
   }
 
   const activeAuthDir = tenantSlug ? path.resolve(__dirname, `../auth_info_tenant_${tenantSlug}`) : authDir;
@@ -110,7 +282,7 @@ export async function startWhatsAppBot(tenantSlug = null) {
   const { state, saveCreds } = await useMultiFileAuthState(activeAuthDir);
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
-  console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest}, Tenant: ${tenantSlug || 'DEMO'})...`);
+  console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest}, Target: ${tenantSlug ? `Tenant [${tenantSlug}]` : 'Central Demo'})...`);
 
   const sock = makeWASocket({
     version,
@@ -131,99 +303,135 @@ export async function startWhatsAppBot(tenantSlug = null) {
   });
 
   sock.tenantSlug = tenantSlug;
-  currentSock = sock;
-  registerSocket(sock);
-
-  // Auto-request pairing code for configured phone if not already registered
-  if (!state.creds?.registered && config.contact?.phone) {
-    const rawDigits = config.contact.phone.replace(/\D/g, '');
-    const cleanPhone = rawDigits.startsWith('880') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
-    setTimeout(async () => {
-      try {
-        if (!sock.authState.creds.registered && !botState.pairingCode) {
-          console.log(`[WhatsApp]: Requesting live Pairing Code for ${cleanPhone}...`);
-          const code = await sock.requestPairingCode(cleanPhone);
-          const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
-          botState.pairingCode = formatted;
-          botState.status = 'pairing_ready';
-          console.log('\n======================================================');
-          console.log(`🔑 LIVE WHATSAPP PAIRING CODE FOR ${cleanPhone}: ${formatted}`);
-          console.log('======================================================\n');
-        }
-      } catch (err) {
-        console.log('[WhatsApp]: Auto-pairing request notice:', err.message);
-      }
-    }, 4000);
+  activeSockets.set(socketKey, sock);
+  if (!tenantSlug) {
+    currentSock = sock;
+    registerSocket(sock);
   }
+  startFirestoreBridgeListener();
 
   // Save auth state changes directly to Firestore & local cache
   sock.ev.on('creds.update', saveCreds);
 
   // Connection Updates
-  sock.ev.on('connection.update', (update) => {
+  sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
     addLog('CONNECTION_UPDATE', {
+      target: tenantSlug || 'demo',
       connection: connection || 'status_update',
       isNewLogin: update.isNewLogin
     });
 
     if (qr) {
-      botState.qr = qr;
-      botState.status = 'qr_ready';
-      console.log('\n======================================================');
-      console.log('📱 SCAN THIS WHATSAPP QR CODE WITH YOUR PHONE:');
-      console.log('======================================================\n');
-      qrcode.generate(qr, { small: true });
-      console.log('\nOpen WhatsApp > Settings > Linked Devices > Link a Device\n');
+      let qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=320x320`;
+      try {
+        const qrDataUrl = await QRCode.toDataURL(qr, { margin: 1, width: 320 });
+        if (qrDataUrl) qrImageUrl = qrDataUrl;
+      } catch (e) {}
+
+      if (tenantSlug) {
+        console.log('\n======================================================');
+        console.log(`📱 [Tenant ${tenantSlug}]: Dedicated Live QR Code generated & synced!`);
+        console.log('======================================================\n');
+        qrcode.generate(qr, { small: true });
+        console.log(`\nOpen WhatsApp on tenant phone > Settings > Linked Devices > Link a Device\n`);
+
+        await syncTenantBotStateToFirestore(tenantSlug, {
+          whatsappBotQr: qr,
+          whatsappBotQrImageUrl: qrImageUrl,
+          whatsappBotStatus: 'qr_ready',
+          whatsappPairingCode: ''
+        });
+      } else {
+        botState.qr = qr;
+        botState.status = 'qr_ready';
+        syncBotStateToFirestore({
+          qr,
+          qrImageUrl,
+          status: 'qr_ready',
+          pairingCode: botState.pairingCode || ''
+        });
+        console.log('\n======================================================');
+        console.log('📱 SCAN THIS DEMO WHATSAPP QR CODE WITH YOUR PHONE:');
+        console.log('======================================================\n');
+        qrcode.generate(qr, { small: true });
+        console.log('\nOpen WhatsApp > Settings > Linked Devices > Link a Device\n');
+      }
     }
 
     if (connection === 'close') {
       if (sock._heartbeatTimer) clearInterval(sock._heartbeatTimer);
-      botState.status = 'disconnected';
-      botState.user = null;
+      if (tenantSlug) {
+        await syncTenantBotStateToFirestore(tenantSlug, {
+          whatsappBotConnected: false,
+          whatsappBotStatus: 'disconnected'
+        });
+      } else {
+        botState.status = 'disconnected';
+        botState.user = null;
+        syncBotStateToFirestore({
+          status: 'disconnected',
+          user: null
+        });
+      }
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      console.log(`[WhatsApp]: Connection closed (${statusCode}). Reconnecting in 3s...`);
+      console.log(`[WhatsApp ${tenantSlug || 'demo'}]: Connection closed (${statusCode}). Reconnecting in 3s...`);
 
       // If logged out (401), credentials are invalid/expired; wipe cache so it doesn't loop
       if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
-        console.log('[WhatsApp]: Session expired or logged out (401). Wiping invalid session credentials...');
+        console.log(`[WhatsApp ${tenantSlug || 'demo'}]: Session expired (401). Wiping credentials...`);
         try {
-          if (fs.existsSync(authDir)) {
-            fs.rmSync(authDir, { recursive: true, force: true });
+          if (fs.existsSync(activeAuthDir)) {
+            fs.rmSync(activeAuthDir, { recursive: true, force: true });
           }
-          fs.mkdirSync(authDir, { recursive: true });
+          fs.mkdirSync(activeAuthDir, { recursive: true });
         } catch (e) {
           console.error('[WhatsApp]: Error clearing authDir:', e.message);
         }
-        botState.pairingCode = null;
-        botState.qr = null;
       }
 
       setTimeout(() => {
-        isStarting = false;
-        startWhatsAppBot();
+        startWhatsAppBot(tenantSlug);
       }, 3000);
     } else if (connection === 'open') {
-      isStarting = false;
-      botState.status = 'connected';
-      botState.user = sock.user?.id || 'Connected';
-      botState.connectedAt = new Date().toISOString();
-      botState.qr = null;
-      botState.pairingCode = null;
-      botState.qr = null;
-      botState.pairingCode = null;
-      console.log('\n======================================================');
-      console.log(`🟢 WHATSAPP BOT ONLINE & CONNECTED AS: ${sock.user?.id || 'ARENA X'}`);
-      console.log('======================================================\n');
+      if (tenantSlug) {
+        await syncTenantBotStateToFirestore(tenantSlug, {
+          whatsappBotConnected: true,
+          whatsappBotStatus: 'connected',
+          whatsappBotUser: sock.user?.id || 'Connected',
+          whatsappBotLinkedAt: new Date().toISOString(),
+          whatsappBotQr: null,
+          whatsappBotQrImageUrl: null,
+          whatsappPairingCode: null
+        });
+        console.log('\n======================================================');
+        console.log(`🟢 [Tenant ${tenantSlug}]: DEDICATED WHATSAPP BOT CONNECTED AS: ${sock.user?.id || 'ARENA X'}`);
+        console.log('======================================================\n');
+      } else {
+        botState.status = 'connected';
+        botState.user = sock.user?.id || 'Connected';
+        botState.connectedAt = new Date().toISOString();
+        botState.qr = null;
+        botState.pairingCode = null;
+        syncBotStateToFirestore({
+          status: 'connected',
+          connectedAt: new Date().toISOString(),
+          user: sock.user?.id || 'Connected',
+          qr: null,
+          qrImageUrl: null,
+          pairingCode: null
+        });
+        console.log('\n======================================================');
+        console.log(`🟢 DEMO WHATSAPP BOT ONLINE & CONNECTED AS: ${sock.user?.id || 'ARENA X'}`);
+        console.log('======================================================\n');
+      }
 
       // Keep WhatsApp WebSocket actively listening & prevent TCP idle drops
       if (sock._heartbeatTimer) clearInterval(sock._heartbeatTimer);
       sock._heartbeatTimer = setInterval(async () => {
         try {
-          if (botState.status === 'connected') {
-            await sock.sendPresenceUpdate('available');
-          }
+          await sock.sendPresenceUpdate('available');
         } catch (e) {}
       }, 3 * 60 * 1000); // Every 3 minutes
     }
@@ -344,10 +552,12 @@ export function generateCopyableBookingTemplate({
   slotNumber = '',
   trxId = '',
   squadName = '',
-  leaderName = ''
+  leaderName = '',
+  tenantSlug = ''
 } = {}) {
   const matchNum = (matchQuery.toString().match(/\d+/) || ['4'])[0];
-  const directLink = `https://ff-squad-arena-bd.web.app/player?match=${matchNum}${slotNumber ? `&slot=${slotNumber}` : ''}`;
+  const orgParam = tenantSlug ? `org=${encodeURIComponent(tenantSlug)}&` : '';
+  const directLink = `https://ff-squad-arena-bd.web.app/player?${orgParam}match=${matchNum}${slotNumber ? `&slot=${slotNumber}` : ''}`;
 
   return `[ARENA-BOOKING]
 Match: ${matchQuery || 'Match 4'}
@@ -531,7 +741,8 @@ ${config.tournament.websiteUrl}`;
         text: generateCopyableBookingTemplate({
           matchQuery: effectiveMatch,
           squadName: effectiveSquad,
-          trxId: effectiveTrx
+          trxId: effectiveTrx,
+          tenantSlug: sock.tenantSlug || ''
         })
       });
       return;
@@ -591,7 +802,8 @@ ${config.tournament.websiteUrl}`;
       slotNumber: existingSession.preferredSlot || '',
       squadName: existingSession.squadName || '',
       leaderName: existingSession.leaderName || '',
-      trxId: imageDetails?.trx_id || existingSession.trx_id || ''
+      trxId: imageDetails?.trx_id || existingSession.trx_id || '',
+      tenantSlug: sock.tenantSlug || ''
     });
   }
 

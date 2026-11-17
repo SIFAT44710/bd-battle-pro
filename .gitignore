@@ -4,7 +4,9 @@
 node_modules/
 /node_modules
 auth_info_baileys/
-.env.local
+auth_info_*/
+whatsapp-bot/auth_info_*/
+*.mp4
 serviceAccountKey.json
 /.pnp
 .pnp.*

@@ -293,58 +293,62 @@ export async function runDokanAiAgent({
     }
   }
 
-  const selectedModel = 'gemini-3.5-flash-lite';
+  const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash'];
   let executedToolName = null;
   let executedToolResult = null;
 
-  try {
-    const chat = ai.chats.create({
-      model: selectedModel,
-      history: historyForChat,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        tools: BOT_TOOLS
+  for (const selectedModel of candidateModels) {
+    try {
+      const chat = ai.chats.create({
+        model: selectedModel,
+        history: historyForChat,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          tools: BOT_TOOLS
+        }
+      });
+
+      let response = await chat.sendMessage({ message: fullPrompt });
+
+      let loopLimit = 3;
+      while (response.functionCalls && response.functionCalls.length > 0 && loopLimit > 0) {
+        loopLimit--;
+        const toolParts = [];
+
+        for (const call of response.functionCalls) {
+          executedToolName = call.name;
+          const result = await executeToolCall(call.name, call.args || {}, { phone: senderPhone, ...sessionData });
+          executedToolResult = result;
+
+          toolParts.push({
+            functionResponse: {
+              name: call.name,
+              response: { output: result }
+            }
+          });
+        }
+
+        response = await chat.sendMessage({ message: toolParts });
       }
-    });
 
-    let response = await chat.sendMessage({ message: fullPrompt });
+      return {
+        replyText: response.text || 'আপনার মেসেজটি পেয়েছি ভাই। আর কিভাবে সাহায্য করতে পারি?',
+        toolExecuted: executedToolName,
+        toolResult: executedToolResult
+      };
 
-    let loopLimit = 3;
-    while (response.functionCalls && response.functionCalls.length > 0 && loopLimit > 0) {
-      loopLimit--;
-      const toolParts = [];
-
-      for (const call of response.functionCalls) {
-        executedToolName = call.name;
-        const result = await executeToolCall(call.name, call.args || {}, { phone: senderPhone, ...sessionData });
-        executedToolResult = result;
-
-        toolParts.push({
-          functionResponse: {
-            name: call.name,
-            response: { output: result }
-          }
-        });
-      }
-
-      response = await chat.sendMessage({ message: toolParts });
+    } catch (err) {
+      console.warn(`[ARENA X Host Agent Model ${selectedModel}]:`, err.message);
+      try { addLog('AGENT_ERROR', { model: selectedModel, error: err.message }); } catch (e) {}
     }
-
-    return {
-      replyText: response.text || 'আপনার মেসেজটি পেয়েছি ভাই। আর কিভাবে সাহায্য করতে পারি?',
-      toolExecuted: executedToolName,
-      toolResult: executedToolResult
-    };
-
-  } catch (err) {
-    console.error('[ARENA X Host Agent Error]:', err.message);
-    try { addLog('AGENT_ERROR', { error: err.message }); } catch (e) {}
-    return {
-      replyText: `👋 আসসালামু আলাইকুম ভাই! ARENA X ফ্রি ফায়ার টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান জানান, আমি এখনই চেক করে দিচ্ছি!`,
-      toolExecuted: null,
-      toolResult: null
-    };
   }
+
+  // Graceful rule-based fallback if all AI models are undergoing temporary spikes
+  return {
+    replyText: `👋 আসসালামু আলাইকুম ভাই! ARENA X ফ্রি ফায়ার টুর্নামেন্টে স্বাগতম। বর্তমানে Match 4 (এন্ট্রি ফি: ৳১০) এবং Match 2 (এন্ট্রি ফি: ৳১০০) চালু রয়েছে। আপনি কোন ম্যাচে কোন স্লট বুক করতে চান জানান, আমি এখনই চেক করে দিচ্ছি!`,
+    toolExecuted: null,
+    toolResult: null
+  };
 }
 
 /**

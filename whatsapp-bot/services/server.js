@@ -138,29 +138,54 @@ export function startWebServer(port = process.env.PORT || 3000) {
     // 1d. Reset Session endpoint (Clears stale session to allow clean re-pairing)
     if (url.pathname === '/api/reset-session') {
       const orgSlug = url.searchParams.get('org')?.trim();
-      const clientId = orgSlug ? `tenant_${orgSlug}` : (process.env.CLIENT_ID || 'default_client');
+      const isTenant = orgSlug && orgSlug !== 'ff-daily-squad';
       try {
-        const { initFirestore } = await import('./firestore.js');
-        const { clientDbInstance } = initFirestore();
-        const { doc, deleteDoc } = await import('firebase/firestore');
-        await deleteDoc(doc(clientDbInstance, `bot_sessions/${clientId}/data`, 'creds'));
-
-        // Clear local cache completely for this tenant/client
-        const authFolderName = orgSlug ? `auth_info_tenant_${orgSlug}` : 'auth_info_baileys';
+        const { activeSockets, startWhatsAppBot, syncTenantBotStateToFirestore } = await import('./whatsapp.js');
+        const authFolderName = isTenant ? `auth_info_tenant_${orgSlug}` : 'auth_info_baileys';
         const authDir = path.resolve(__dirname, `../${authFolderName}`);
         if (fs.existsSync(authDir)) fs.rmSync(authDir, { recursive: true, force: true });
 
-        addLog('SESSION_RESET_TRIGGERED', { clientId, orgSlug });
+        addLog('SESSION_RESET_TRIGGERED', { orgSlug, isTenant });
+
+        if (isTenant) {
+          if (activeSockets.has(orgSlug)) {
+            try {
+              const s = activeSockets.get(orgSlug);
+              s.ev.removeAllListeners();
+              s.end(undefined);
+            } catch (e) {}
+            activeSockets.delete(orgSlug);
+          }
+          await syncTenantBotStateToFirestore(orgSlug, {
+            whatsappBotQr: null,
+            whatsappBotQrImageUrl: null,
+            whatsappPairingCode: '',
+            whatsappBotConnected: false,
+            whatsappBotStatus: 'starting'
+          });
+          await startWhatsAppBot(orgSlug);
+        } else {
+          if (activeSockets.has('demo')) {
+            try {
+              const s = activeSockets.get('demo');
+              s.ev.removeAllListeners();
+              s.end(undefined);
+            } catch (e) {}
+            activeSockets.delete('demo');
+          }
+          botState.status = 'starting';
+          botState.qr = null;
+          botState.pairingCode = null;
+          botState.user = null;
+          await startWhatsAppBot(null);
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           success: true, 
-          clientId,
-          message: `${orgSlug ? `টেন্যান্ট '${orgSlug}' এর` : ''} সেশন রিসেট হয়েছে। সার্ভার নতুন কিউআর/পেয়ারিং কোড তৈরি করছে...` 
+          org: orgSlug || 'demo',
+          message: `${isTenant ? `টেন্যান্ট '${orgSlug}' এর` : ''} সেশন রিসেট হয়েছে এবং নতুন কিউআর কোড তৈরি হচ্ছে...` 
         }));
-
-        if (!orgSlug) {
-          setTimeout(() => { process.exit(0); }, 1000);
-        }
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: err.message }));
@@ -207,7 +232,27 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
     // 2. API to request WhatsApp Pairing Code (Supports POST body or GET query ?phone= & ?org=)
     if (url.pathname === '/api/pair') {
-      const handlePair = async (rawPhone, orgSlug = '') => {
+      const handlePair = async (rawPhone, orgSlug = '', action = '') => {
+        const { activeSockets, startWhatsAppBot, syncTenantBotStateToFirestore, syncBotStateToFirestore } = await import('./whatsapp.js');
+
+        // Check if this is an init_qr request (which does not require a phone number)
+        const isInitQr = action === 'init_qr' || url.searchParams.get('action') === 'init_qr';
+        if (isInitQr && orgSlug && orgSlug !== 'ff-daily-squad') {
+          console.log(`[Tenant Web Action]: Initializing dedicated QR for tenant: ${orgSlug}...`);
+          let tSock = activeSockets.get(orgSlug);
+          if (!tSock || tSock.authState?.creds?.registered) {
+            await startWhatsAppBot(orgSlug);
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            isTenant: true,
+            org: orgSlug,
+            message: 'Dedicated QR initialization triggered'
+          }));
+          return;
+        }
+
         let phone = (rawPhone || '').trim().replace(/\D/g, '');
         if (!phone) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -226,35 +271,22 @@ export function startWebServer(port = process.env.PORT || 3000) {
           try {
             console.log(`[Tenant Web Pairing]: Requesting pairing code for tenant: ${orgSlug}, phone: ${phone}...`);
             let formattedCode = null;
-            if (currentSock && !currentSock.authState?.creds?.registered) {
-              const code = await currentSock.requestPairingCode(phone);
-              formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
-            } else {
-              throw new Error('WhatsApp ক্লায়েন্ট বর্তমানে প্রস্তুত নেই বা ইতিমধ্যে সংযুক্ত। অনুগ্রহ করে ২ সেকেন্ড পর পুনরায় চেষ্টা করুন।');
+            let tSock = activeSockets.get(orgSlug);
+            if (!tSock || tSock.authState?.creds?.registered) {
+              await startWhatsAppBot(orgSlug);
+              tSock = activeSockets.get(orgSlug);
             }
 
-            // Sync with Firestore tenant doc
-            try {
-              const { initFirestore } = await import('./firestore.js');
-              const { driver, adminDb, clientDbInstance } = initFirestore();
-              if (driver === 'admin') {
-                await adminDb.collection('tenants').doc(orgSlug).set({
-                  whatsappBotPhone: phone,
-                  whatsappPairingCode: formattedCode,
-                  whatsappBotConnected: true,
-                  whatsappBotLinkedAt: new Date().toISOString()
-                }, { merge: true });
-              } else {
-                const { doc, updateDoc } = await import('firebase/firestore');
-                await updateDoc(doc(clientDbInstance, 'tenants', orgSlug), {
-                  whatsappBotPhone: phone,
-                  whatsappPairingCode: formattedCode,
-                  whatsappBotConnected: true,
-                  whatsappBotLinkedAt: new Date().toISOString()
-                });
-              }
-            } catch (e) {
-              console.warn(`[Tenant Pairing Firestore Sync Notice]: ${e.message}`);
+            if (tSock && !tSock.authState?.creds?.registered) {
+              const code = await tSock.requestPairingCode(phone);
+              formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
+              await syncTenantBotStateToFirestore(orgSlug, {
+                whatsappPairingCode: formattedCode,
+                whatsappBotPhone: phone,
+                whatsappBotStatus: 'pairing_ready'
+              });
+            } else {
+              throw new Error('WhatsApp ক্লায়েন্ট বর্তমানে প্রস্তুত নেই বা ইতিমধ্যে সংযুক্ত। অনুগ্রহ করে ২ সেকেন্ড পর পুনরায় চেষ্টা করুন।');
             }
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -275,18 +307,18 @@ export function startWebServer(port = process.env.PORT || 3000) {
           }
         }
 
-        if (!currentSock) {
-          res.writeHead(503, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, message: 'WhatsApp ক্লায়েন্ট এখনো প্রস্তুত হয়নি। ১ সেকেন্ড পর আবার চেষ্টা করুন।' }));
-          return;
+        let currentDemoSock = activeSockets.get('demo') || currentSock;
+        if (!currentDemoSock) {
+          await startWhatsAppBot(null);
+          currentDemoSock = activeSockets.get('demo') || currentSock;
         }
 
-        if (currentSock.authState?.creds?.registered) {
+        if (currentDemoSock?.authState?.creds?.registered) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: true,
             alreadyConnected: true,
-            user: currentSock.user?.id,
+            user: currentDemoSock.user?.id,
             message: 'হোয়াটসঅ্যাপ ইতিমধ্যে কানেক্টেড রয়েছে! পুনরায় পেয়ার করার প্রয়োজন নেই।'
           }));
           return;
@@ -294,10 +326,15 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
         try {
           console.log(`[Web Pairing]: Requesting pairing code for demo bot phone: ${phone}...`);
-          const code = await currentSock.requestPairingCode(phone);
+          const code = await currentDemoSock.requestPairingCode(phone);
           const formattedCode = code?.match(/.{1,4}/g)?.join('-') || code;
           botState.pairingCode = formattedCode;
           botState.status = 'pairing_ready';
+          await syncBotStateToFirestore({
+            pairingCode: formattedCode,
+            targetPhone: phone,
+            status: 'pairing_ready'
+          });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
@@ -316,13 +353,18 @@ export function startWebServer(port = process.env.PORT || 3000) {
       if (req.method === 'GET') {
         const phone = url.searchParams.get('phone');
         const org = url.searchParams.get('org');
-        return handlePair(phone, org);
+        const action = url.searchParams.get('action');
+        return handlePair(phone, org, action);
       } else if (req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', () => {
-          const parsed = JSON.parse(body || '{}');
-          handlePair(parsed.phone, parsed.org);
+          try {
+            const parsed = JSON.parse(body || '{}');
+            handlePair(parsed.phone, parsed.org, parsed.action);
+          } catch (e) {
+            handlePair('', '', '');
+          }
         });
         return;
       }

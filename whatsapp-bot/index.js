@@ -44,6 +44,27 @@ async function main() {
     console.error('❌ [WhatsApp Launch Error]:', err);
     process.exit(1);
   }
+
+  // 3b. Auto-resume existing registered tenant bots
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const items = fs.readdirSync(__dirname);
+    for (const item of items) {
+      if (item.startsWith('auth_info_tenant_')) {
+        const tenantSlug = item.replace('auth_info_tenant_', '');
+        const credsPath = path.join(__dirname, item, 'creds.json');
+        if (fs.existsSync(credsPath)) {
+          console.log(`[Auto-Resume]: Found active session for tenant [${tenantSlug}]. Booting bot...`);
+          startWhatsAppBot(tenantSlug).catch(e => console.warn(`[Auto-Resume ${tenantSlug} Error]:`, e.message));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Tenant Auto-Resume Warning]:', e.message);
+  }
 }
 
 // Graceful exit handlers
