@@ -398,6 +398,8 @@ export async function startWhatsAppBot(tenantSlug = null) {
   if (activeSockets.has(socketKey)) {
     try {
       const oldSock = activeSockets.get(socketKey);
+      oldSock._isReplaced = true;
+      if (oldSock._heartbeatTimer) clearInterval(oldSock._heartbeatTimer);
       oldSock.ev.removeAllListeners();
       oldSock.end(undefined);
     } catch (e) {}
@@ -499,22 +501,38 @@ export async function startWhatsAppBot(tenantSlug = null) {
     }
 
     if (connection === 'close') {
+      if (sock._isReplaced) return; // Discard superseded socket events
       if (sock._heartbeatTimer) clearInterval(sock._heartbeatTimer);
-      if (tenantSlug) {
-        await syncTenantBotStateToFirestore(tenantSlug, {
-          whatsappBotConnected: false,
-          whatsappBotStatus: 'disconnected'
-        });
-      } else {
-        botState.status = 'disconnected';
-        botState.user = null;
-        syncBotStateToFirestore({
-          status: 'disconnected',
-          user: null
-        });
-      }
+
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      console.log(`[WhatsApp ${tenantSlug || 'demo'}]: Connection closed (${statusCode}). Reconnecting in 3s...`);
+      const isRegistered = Boolean(sock.authState?.creds?.registered || sock.authState?.creds?.me?.id);
+
+      addLog('CONNECTION_CLOSED', {
+        target: tenantSlug || 'demo',
+        statusCode,
+        isRegistered,
+        reason: lastDisconnect?.error?.message || 'closed'
+      });
+
+      console.log(`[WhatsApp ${tenantSlug || 'demo'}]: Connection closed (${statusCode || 'unknown'}). Registered: ${isRegistered}.`);
+
+      // Only broadcast 'disconnected' to Firestore if the bot was previously logged-in/registered.
+      // If still pairing/scanning QR, leave status as 'qr_ready' so the UI doesn't flash false alarms!
+      if (isRegistered) {
+        if (tenantSlug) {
+          await syncTenantBotStateToFirestore(tenantSlug, {
+            whatsappBotConnected: false,
+            whatsappBotStatus: 'disconnected'
+          });
+        } else {
+          botState.status = 'disconnected';
+          botState.user = null;
+          syncBotStateToFirestore({
+            status: 'disconnected',
+            user: null
+          });
+        }
+      }
 
       // If logged out (401), credentials are invalid/expired; wipe cache so it doesn't loop
       if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
@@ -530,9 +548,12 @@ export async function startWhatsAppBot(tenantSlug = null) {
         }
       }
 
+      const reconnectDelay = statusCode === 515 ? 1000 : 3000;
       setTimeout(() => {
-        startWhatsAppBot(tenantSlug);
-      }, 3000);
+        if (!sock._isReplaced && (activeSockets.get(socketKey) === sock || !activeSockets.has(socketKey))) {
+          startWhatsAppBot(tenantSlug);
+        }
+      }, reconnectDelay);
     } else if (connection === 'open') {
       debouncedCloudBackup(activeAuthDir, socketKey, true);
       if (tenantSlug) {

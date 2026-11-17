@@ -3037,12 +3037,12 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
             updateBotUiElements();
           }, (err) => console.warn("Tenant bot cloud sync error:", err));
 
-          // If tenant doesn't have an active QR or session yet, auto-trigger initialization
+          // If tenant doesn't have an active QR, pairing code or session yet, auto-trigger initialization
           setTimeout(() => {
-            if (!botCloudState.qrImageUrl && botCloudState.status !== 'connected') {
+            if (!botCloudState.qrImageUrl && botCloudState.status !== 'connected' && botCloudState.status !== 'pairing_ready' && !botCloudState.pairingCode) {
               window.triggerTenantQrInit();
             }
-          }, 800);
+          }, 1500);
         } else {
           // Shared Public Demo Bot listens to settings/whatsapp_bot
           const botRef = doc(db, "settings", "whatsapp_bot");

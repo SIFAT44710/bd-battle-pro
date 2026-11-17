@@ -45,8 +45,26 @@ async function main() {
     process.exit(1);
   }
 
-  // 3b. Auto-resume existing registered tenant bots
+  // 3b. Auto-resume existing registered tenant bots from Cloud Firestore & local disk
   try {
+    const { initFirestore, clientCollection, getClientDocs } = await import('./services/firestore.js');
+    const { clientDbInstance } = initFirestore();
+    const bootedTenants = new Set();
+
+    if (clientDbInstance) {
+      const sessionsSnap = await getClientDocs(clientCollection(clientDbInstance, 'bot_sessions'));
+      sessionsSnap.forEach(docSnap => {
+        const clientId = docSnap.id;
+        // Ignore test docs or default demo bot (which was already booted in step 3)
+        if (clientId && clientId !== 'test_doc' && clientId !== 'test_bundle' && clientId !== 'default_client') {
+          bootedTenants.add(clientId);
+          console.log(`✓ [Auto-Resume]: Found cloud session for tenant [${clientId}]. Booting bot...`);
+          startWhatsAppBot(clientId).catch(e => console.warn(`[Auto-Resume ${clientId} Error]:`, e.message));
+        }
+      });
+    }
+
+    // Also check local disk for any offline/local sessions not yet in cloud
     const fs = await import('fs');
     const path = await import('path');
     const { fileURLToPath } = await import('url');
@@ -55,10 +73,12 @@ async function main() {
     for (const item of items) {
       if (item.startsWith('auth_info_tenant_')) {
         const tenantSlug = item.replace('auth_info_tenant_', '');
-        const credsPath = path.join(__dirname, item, 'creds.json');
-        if (fs.existsSync(credsPath)) {
-          console.log(`[Auto-Resume]: Found active session for tenant [${tenantSlug}]. Booting bot...`);
-          startWhatsAppBot(tenantSlug).catch(e => console.warn(`[Auto-Resume ${tenantSlug} Error]:`, e.message));
+        if (!bootedTenants.has(tenantSlug)) {
+          const credsPath = path.join(__dirname, item, 'creds.json');
+          if (fs.existsSync(credsPath)) {
+            console.log(`[Auto-Resume]: Found disk session for tenant [${tenantSlug}]. Booting bot...`);
+            startWhatsAppBot(tenantSlug).catch(e => console.warn(`[Auto-Resume ${tenantSlug} Error]:`, e.message));
+          }
         }
       }
     }

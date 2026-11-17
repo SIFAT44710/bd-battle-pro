@@ -823,6 +823,12 @@
     const IS_TENANT = !!ORG_SLUG && ORG_SLUG !== 'ff-daily-squad';
     const TOURNAMENT_ID = IS_TENANT ? ORG_SLUG : "ff-daily-squad";
 
+    // 24/7 Render Cloud Bot Backend URL
+    const BOT_SERVER_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:3000'
+      : 'https://bd-battle-pro.onrender.com';
+    window.BOT_SERVER_URL = BOT_SERVER_URL;
+
     // Cryptographic SHA-256 for Admin PIN
     async function hashPin(pin) {
       const msgBuffer = new TextEncoder().encode(pin);
@@ -3031,12 +3037,12 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
             updateBotUiElements();
           }, (err) => console.warn("Tenant bot cloud sync error:", err));
 
-          // If tenant doesn't have an active QR or session yet, auto-trigger initialization
+          // If tenant doesn't have an active QR, pairing code or session yet, auto-trigger initialization
           setTimeout(() => {
-            if (!botCloudState.qrImageUrl && botCloudState.status !== 'connected') {
+            if (!botCloudState.qrImageUrl && botCloudState.status !== 'connected' && botCloudState.status !== 'pairing_ready' && !botCloudState.pairingCode) {
               window.triggerTenantQrInit();
             }
-          }, 800);
+          }, 1500);
         } else {
           // Shared Public Demo Bot listens to settings/whatsapp_bot
           const botRef = doc(db, "settings", "whatsapp_bot");
@@ -3067,11 +3073,13 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
       } catch (e) {}
 
       try {
-        await fetch(`/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
+        await fetch(`${BOT_SERVER_URL}/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
       } catch (e) {
-        try {
-          await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
-        } catch (e2) {}
+        if (BOT_SERVER_URL !== 'http://localhost:3000') {
+          try {
+            await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(ORG_SLUG)}&phone=${encodeURIComponent(phone)}&action=init_qr`);
+          } catch (e2) {}
+        }
       }
     };
 
@@ -3402,11 +3410,13 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
         await window.triggerTenantQrInit();
       } else {
         try {
-          await fetch('/api/pair?action=init_qr');
+          await fetch(`${BOT_SERVER_URL}/api/pair?action=init_qr`);
         } catch (e) {
-          try {
-            await fetch('http://localhost:3000/api/pair?action=init_qr');
-          } catch (e2) {}
+          if (BOT_SERVER_URL !== 'http://localhost:3000') {
+            try {
+              await fetch('http://localhost:3000/api/pair?action=init_qr');
+            } catch (e2) {}
+          }
         }
       }
     };
@@ -3439,8 +3449,8 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
       let generatedCode = null;
       let errorMsg = null;
       try {
-        let res = await fetch(`/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
-        if (!res.ok) {
+        let res = await fetch(`${BOT_SERVER_URL}/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
+        if (!res.ok && BOT_SERVER_URL !== 'http://localhost:3000') {
           res = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
         }
         if (res.ok) {
@@ -3449,13 +3459,15 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
           else if (data.message) errorMsg = data.message;
         }
       } catch (e) {
-        try {
-          const localRes = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
-          if (localRes.ok) {
-            const data = await localRes.json();
-            if (data.pairingCode) generatedCode = data.pairingCode;
-          }
-        } catch (localErr) {}
+        if (BOT_SERVER_URL !== 'http://localhost:3000') {
+          try {
+            const localRes = await fetch(`http://localhost:3000/api/pair?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}&phone=${cleanDigits}`);
+            if (localRes.ok) {
+              const data = await localRes.json();
+              if (data.pairingCode) generatedCode = data.pairingCode;
+            }
+          } catch (localErr) {}
+        }
       }
 
       if (generatedCode) {
@@ -3497,11 +3509,13 @@ Return ONLY the raw JSON array. No markdown code blocks, no other text.
       }
 
       try {
-        await fetch(`/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
+        await fetch(`${BOT_SERVER_URL}/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
       } catch (e) {
-        try {
-          await fetch(`http://localhost:3000/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
-        } catch (e2) {}
+        if (BOT_SERVER_URL !== 'http://localhost:3000') {
+          try {
+            await fetch(`http://localhost:3000/api/reset-session?org=${encodeURIComponent(isTenant ? ORG_SLUG : '')}`);
+          } catch (e2) {}
+        }
       }
 
       botCloudState.status = 'starting';
