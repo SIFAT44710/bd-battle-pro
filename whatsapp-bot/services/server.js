@@ -140,10 +140,11 @@ export function startWebServer(port = process.env.PORT || 3000) {
       const orgSlug = url.searchParams.get('org')?.trim();
       const isTenant = orgSlug && orgSlug !== 'ff-daily-squad';
       try {
-        const { activeSockets, startWhatsAppBot, syncTenantBotStateToFirestore } = await import('./whatsapp.js');
+        const { activeSockets, startWhatsAppBot, syncTenantBotStateToFirestore, clearCloudAuthFromFirestore } = await import('./whatsapp.js');
         const authFolderName = isTenant ? `auth_info_tenant_${orgSlug}` : 'auth_info_baileys';
         const authDir = path.resolve(__dirname, `../${authFolderName}`);
         if (fs.existsSync(authDir)) fs.rmSync(authDir, { recursive: true, force: true });
+        await clearCloudAuthFromFirestore(isTenant ? orgSlug : 'demo');
 
         addLog('SESSION_RESET_TRIGGERED', { orgSlug, isTenant });
 
@@ -237,18 +238,25 @@ export function startWebServer(port = process.env.PORT || 3000) {
 
         // Check if this is an init_qr request (which does not require a phone number)
         const isInitQr = action === 'init_qr' || url.searchParams.get('action') === 'init_qr';
-        if (isInitQr && orgSlug && orgSlug !== 'ff-daily-squad') {
-          console.log(`[Tenant Web Action]: Initializing dedicated QR for tenant: ${orgSlug}...`);
-          let tSock = activeSockets.get(orgSlug);
-          if (!tSock || tSock.authState?.creds?.registered) {
-            await startWhatsAppBot(orgSlug);
+        if (isInitQr) {
+          console.log(`[Web Action]: Initializing QR for: ${orgSlug || 'demo'}...`);
+          if (orgSlug && orgSlug !== 'ff-daily-squad') {
+            let tSock = activeSockets.get(orgSlug);
+            if (!tSock || tSock.authState?.creds?.registered) {
+              await startWhatsAppBot(orgSlug);
+            }
+          } else {
+            let dSock = activeSockets.get('demo') || currentSock;
+            if (!dSock || dSock.authState?.creds?.registered) {
+              await startWhatsAppBot(null);
+            }
           }
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: true,
-            isTenant: true,
-            org: orgSlug,
-            message: 'Dedicated QR initialization triggered'
+            isTenant: Boolean(orgSlug && orgSlug !== 'ff-daily-squad'),
+            org: orgSlug || 'demo',
+            message: 'QR initialization triggered'
           }));
           return;
         }

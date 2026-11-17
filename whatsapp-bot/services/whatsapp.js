@@ -29,6 +29,137 @@ const logger = pino({ level: config.bot.debug ? 'debug' : 'silent' });
 // Track message IDs dispatched by this bot instance to avoid self-reply loops
 const botSentMessageIds = new Set();
 
+let backupDebounceTimers = new Map();
+
+/**
+ * Cloud-Resilient Auth Backup to Cloud Firestore
+ * Serializes local Baileys session files and pushes to collection `bot_sessions/{clientId}`.
+ * Completely immune to ephemeral disk resets on Render/Railway/Koyeb!
+ */
+export async function backupAuthDirToFirestore(dirPath, clientId) {
+  try {
+    const { initFirestore, clientDoc, clientSetDoc } = await import('./firestore.js');
+    const { driver, adminDb, clientDbInstance } = initFirestore();
+    if (!fs.existsSync(dirPath)) return;
+
+    const files = fs.readdirSync(dirPath);
+    const bundle = {};
+    for (const f of files) {
+      if (f.endsWith('.json')) {
+        try {
+          bundle[f] = fs.readFileSync(path.join(dirPath, f), 'utf8');
+        } catch (e) {}
+      }
+    }
+
+    if (Object.keys(bundle).length === 0) return;
+
+    const payload = {
+      bundleJson: JSON.stringify(bundle),
+      fileCount: Object.keys(bundle).length,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (driver === 'admin' && adminDb) {
+      await adminDb.collection('bot_sessions').doc(clientId).set(payload, { merge: true });
+    } else if (clientDbInstance) {
+      await clientSetDoc(clientDoc(clientDbInstance, 'bot_sessions', clientId), payload, { merge: true });
+    }
+    console.log(`✓ [CloudAuth]: Backed up ${Object.keys(bundle).length} auth files to Firestore (bot_sessions/${clientId}).`);
+  } catch (err) {
+    console.warn(`[CloudAuth Backup Notice for ${clientId}]:`, err.message);
+  }
+}
+
+export function debouncedCloudBackup(dirPath, clientId, immediate = false) {
+  if (backupDebounceTimers.has(clientId)) {
+    clearTimeout(backupDebounceTimers.get(clientId));
+  }
+  if (immediate) {
+    backupAuthDirToFirestore(dirPath, clientId);
+    return;
+  }
+  const timer = setTimeout(() => {
+    backupAuthDirToFirestore(dirPath, clientId);
+    backupDebounceTimers.delete(clientId);
+  }, 2500);
+  backupDebounceTimers.set(clientId, timer);
+}
+
+/**
+ * Restores Baileys session credentials from Cloud Firestore before socket creation.
+ */
+export async function restoreAuthDirFromFirestore(dirPath, clientId) {
+  try {
+    const credsPath = path.join(dirPath, 'creds.json');
+    if (fs.existsSync(credsPath)) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+        if (existing?.me?.id || existing?.registered) {
+          console.log(`✓ [CloudAuth]: Using existing local session (${clientId}).`);
+          return true;
+        }
+      } catch (e) {}
+    }
+
+    const { initFirestore, clientDoc, getClientDoc } = await import('./firestore.js');
+    const { driver, adminDb, clientDbInstance } = initFirestore();
+    let bundleJson = null;
+
+    if (driver === 'admin' && adminDb) {
+      const snap = await adminDb.collection('bot_sessions').doc(clientId).get();
+      if (snap.exists) bundleJson = snap.data()?.bundleJson;
+    } else if (clientDbInstance) {
+      const ref = clientDoc(clientDbInstance, 'bot_sessions', clientId);
+      const snap = await getClientDoc(ref);
+      if (snap.exists()) bundleJson = snap.data()?.bundleJson;
+    }
+
+    if (!bundleJson) {
+      console.log(`ℹ [CloudAuth]: No cloud session found for [${clientId}]. Ready for new pairing.`);
+      return false;
+    }
+
+    const bundle = JSON.parse(bundleJson);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    let restoredCount = 0;
+    for (const [filename, content] of Object.entries(bundle)) {
+      try {
+        fs.writeFileSync(path.join(dirPath, filename), content, 'utf8');
+        restoredCount++;
+      } catch (e) {}
+    }
+
+    console.log(`✓ [CloudAuth]: Restored ${restoredCount} session files from Firestore for [${clientId}]!`);
+    return true;
+  } catch (err) {
+    console.warn(`[CloudAuth Restore Notice for ${clientId}]:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Clears cloud session on logout / user reset
+ */
+export async function clearCloudAuthFromFirestore(clientId) {
+  try {
+    const { initFirestore, clientDoc } = await import('./firestore.js');
+    const { driver, adminDb, clientDbInstance } = initFirestore();
+    if (driver === 'admin' && adminDb) {
+      await adminDb.collection('bot_sessions').doc(clientId).delete();
+    } else if (clientDbInstance) {
+      const { deleteDoc } = await import('firebase/firestore');
+      await deleteDoc(clientDoc(clientDbInstance, 'bot_sessions', clientId));
+    }
+    console.log(`✓ [CloudAuth]: Cleared cloud session from Firestore (bot_sessions/${clientId}).`);
+  } catch (err) {
+    console.warn(`[CloudAuth Clear Notice for ${clientId}]:`, err.message);
+  }
+}
+
 export const activeSockets = new Map(); // key: 'demo' or tenantSlug
 export function getSocket(tenantSlug = null) {
   return activeSockets.get(tenantSlug || 'demo');
@@ -150,6 +281,7 @@ export async function startFirestoreBridgeListener() {
           if (fs.existsSync(authDirToClean)) {
             fs.rmSync(authDirToClean, { recursive: true, force: true });
           }
+          await clearCloudAuthFromFirestore(data.org || 'demo');
           if (isTenant) {
             if (activeSockets.has(data.org)) {
               try {
@@ -278,6 +410,9 @@ export async function startWhatsAppBot(tenantSlug = null) {
     fs.mkdirSync(activeAuthDir, { recursive: true });
   }
 
+  // Cloud Firestore Session Recovery: Restore saved keys before Baileys boots
+  await restoreAuthDirFromFirestore(activeAuthDir, socketKey);
+
   // Multi-File Auth State (Local, atomic, and rock-solid)
   const { state, saveCreds } = await useMultiFileAuthState(activeAuthDir);
   const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -311,7 +446,10 @@ export async function startWhatsAppBot(tenantSlug = null) {
   startFirestoreBridgeListener();
 
   // Save auth state changes directly to Firestore & local cache
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', async () => {
+    await saveCreds();
+    debouncedCloudBackup(activeAuthDir, socketKey);
+  });
 
   // Connection Updates
   sock.ev.on('connection.update', async (update) => {
@@ -386,6 +524,7 @@ export async function startWhatsAppBot(tenantSlug = null) {
             fs.rmSync(activeAuthDir, { recursive: true, force: true });
           }
           fs.mkdirSync(activeAuthDir, { recursive: true });
+          await clearCloudAuthFromFirestore(socketKey);
         } catch (e) {
           console.error('[WhatsApp]: Error clearing authDir:', e.message);
         }
@@ -395,6 +534,7 @@ export async function startWhatsAppBot(tenantSlug = null) {
         startWhatsAppBot(tenantSlug);
       }, 3000);
     } else if (connection === 'open') {
+      debouncedCloudBackup(activeAuthDir, socketKey, true);
       if (tenantSlug) {
         await syncTenantBotStateToFirestore(tenantSlug, {
           whatsappBotConnected: true,

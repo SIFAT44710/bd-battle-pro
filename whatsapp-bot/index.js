@@ -65,6 +65,34 @@ async function main() {
   } catch (e) {
     console.warn('[Tenant Auto-Resume Warning]:', e.message);
   }
+
+  // 3c. 24/7 Sentinel Keep-Alive (Prevents Render Free Tier from sleeping)
+  start24x7KeepAlive();
+}
+
+function start24x7KeepAlive() {
+  const targetUrl = process.env.RENDER_EXTERNAL_URL || 'https://bd-battle-pro.onrender.com';
+  console.log(`[Keep-Alive]: 24/7 Sentinel active. Pinging ${targetUrl}/health every 8 minutes...`);
+  
+  // Initial ping after 30 seconds
+  setTimeout(async () => {
+    try {
+      const res = await fetch(`${targetUrl}/health`);
+      if (res.ok) console.log(`✓ [Keep-Alive]: Initial warmup ping success to ${targetUrl}/health`);
+    } catch (e) {}
+  }, 30000);
+
+  // Recurring ping every 8 minutes (480,000 ms)
+  setInterval(async () => {
+    try {
+      const res = await fetch(`${targetUrl}/health`);
+      if (res.ok) {
+        console.log(`✓ [Keep-Alive]: Sentinel ping success at ${new Date().toLocaleTimeString()} (Status: ${res.status})`);
+      }
+    } catch (e) {
+      console.warn('[Keep-Alive Notice]: Sentinel ping error:', e.message);
+    }
+  }, 8 * 60 * 1000);
 }
 
 // Graceful exit handlers

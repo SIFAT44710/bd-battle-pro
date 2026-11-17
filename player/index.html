@@ -102,34 +102,38 @@
   <div id="toast-container" class="fixed top-3 right-3 left-3 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Top Announcement Bar -->
-  <div id="demoNoticeBanner" class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-2 text-xs font-medium shadow-sm w-full">
+  <div id="demoNoticeBanner" class="bg-gradient-to-r from-orange-600 via-[#FF5722] to-orange-600 text-white px-3 py-1.5 text-xs font-medium shadow-sm w-full">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 min-w-0">
-        <span class="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-bold uppercase tracking-wider shrink-0" id="noticeTag">🔥 LIVE SLOTS</span>
-        <span class="truncate" id="noticeText">
+      <div class="flex items-center gap-1.5 min-w-0 flex-1">
+        <span class="px-1.5 py-0.5 rounded bg-black/30 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shrink-0" id="noticeTag">🔥 LIVE SLOTS</span>
+        <span class="text-[11px] sm:text-xs font-medium truncate" id="noticeText">
           অফিসিয়াল লাইভ টুর্নামেন্ট স্লট বুকিং ও রুম আইডি পোর্টাল
         </span>
       </div>
-      <a href="/admin" id="bannerAdminLink" class="hidden inline-flex items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 transition-colors">
-        🔒 Admin Panel ↗
+      <a href="/admin" id="bannerAdminLink" class="hidden items-center gap-1 bg-white text-[#FF5722] hover:bg-orange-50 px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors ml-auto">
+        🔒 Admin
       </a>
     </div>
   </div>
 
   <!-- Main Navbar -->
   <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm w-full">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-      <a href="/" class="flex items-center gap-2 text-decoration-none">
-        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-base shadow-sm shrink-0">
+    <div class="max-w-4xl mx-auto px-3.5 sm:px-6 h-13 sm:h-14 flex items-center justify-between gap-2">
+      <a href="/" class="flex items-center gap-2 text-decoration-none min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF5722] to-orange-400 flex items-center justify-center text-white font-extrabold text-sm sm:text-base shadow-sm shrink-0">
           A
         </div>
-        <div>
-          <span class="font-extrabold text-base tracking-tight text-gray-900" id="headerBrandTitle">ARENA X</span>
+        <div class="min-w-0">
+          <span class="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 block truncate" id="headerBrandTitle">ARENA X</span>
           <span class="text-[10px] text-gray-500 font-medium block -mt-0.5" id="headerBrandSubtitle">Player Portal</span>
         </div>
       </a>
-      <div class="flex items-center gap-2">
-        <a id="navAdminLink" href="/admin" class="hidden px-3 py-1.5 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-[10px] sm:text-[11px] font-bold">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span>Online</span>
+        </span>
+        <a id="navAdminLink" href="/admin" class="hidden px-2.5 py-1 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-[11px] tracking-wide shadow-sm transition-all items-center gap-1 shrink-0">
           <i class="bi bi-shield-lock-fill"></i>
           <span>অ্যাডমিন</span>
         </a>
@@ -146,17 +150,22 @@
     <section id="viewMatchesList" class="space-y-4 sm:space-y-6">
       
       <!-- Feed Header Banner -->
-      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#FF5722] animate-pulse shrink-0"></span>
-            <h1 class="text-base sm:text-xl font-extrabold text-gray-900 truncate">আজকের টুর্নামেন্ট ও ম্যাচ তালিকা</h1>
+      <div class="bg-white rounded-2xl p-3.5 sm:p-5 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between sm:justify-start gap-2 mb-1">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FF5722] animate-pulse shrink-0"></span>
+              <h1 class="text-sm sm:text-lg font-extrabold text-gray-900 truncate">আজকের টুর্নামেন্ট ও ম্যাচ তালিকা</h1>
+            </div>
+            <span class="sm:hidden px-2 py-0.5 rounded-lg text-[10px] font-bold bg-orange-50 text-[#FF5722] border border-orange-200 shrink-0 font-mono">
+              12 SLOTS
+            </span>
           </div>
-          <p class="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
-            প্রতিটি ম্যাচের ১২টি স্কোয়াড স্লট দেখতে ও বুকিং করতে কার্ডে অথবা <strong>"View Slots & Book"</strong> বাটনে ক্লিক করুন।
+          <p class="text-[11px] sm:text-xs text-gray-500 leading-snug">
+            প্রতিটি ম্যাচের ১২টি স্কোয়াড স্লট ও রুম আইডি দেখতে কার্ডে ক্লিক করুন।
           </p>
         </div>
-        <span class="self-start sm:self-center px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold bg-orange-50 text-[#FF5722] border border-orange-200 shrink-0 font-mono">
+        <span class="hidden sm:inline-flex px-3 py-1 rounded-xl text-xs font-bold bg-orange-50 text-[#FF5722] border border-orange-200 shrink-0 font-mono">
           12 SLOTS / MATCH
         </span>
       </div>
