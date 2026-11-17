@@ -59,6 +59,10 @@
   - Render Cloud Bot Health: `https://bd-battle-pro.onrender.com/health`
 
 ## 24/7 Cloud Bot & Mobile UI Alignment Architecture (Updated 2026-11-17)
+- **Single-API Multi-Tenant Dynamic Routing:**
+  - Zero extra APIs or servers needed for individual organizers. One central Render service handles infinite organizers.
+  - Baileys socket stores `sock.tenantSlug`. When players chat, `getSystemInstruction(tenantSlug)` dynamically informs Google Gemini of the dedicated organizer's website URL (`https://ff-squad-arena-bd.web.app/player?org=${tenantSlug}`) and match links.
+  - Response sanitizer in `whatsapp.js` guarantees regex enforcement that no demo links leak into an organizer's WhatsApp chat.
 - **Zero-Local-PC Dependency:**
   - Previous issue: Website admin panel (`admin.html`) was hardcoded to fetch `http://localhost:3000/api/pair`. Pairing bound WhatsApp to local node process; shutting down PC terminated the bot.
   - Fix: Configured dynamic `BOT_SERVER_URL` in `admin.html` targeting `https://bd-battle-pro.onrender.com` (falling back to localhost only when developing locally).
