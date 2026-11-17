@@ -916,11 +916,32 @@ ${config.tournament.websiteUrl}`;
   let conversationalText = agentOutput.replyText || '';
   let separateTemplate = null;
 
+  // Tenant link isolation: If this is an organizer's bot, guarantee that all player links include ?org=tenantSlug
+  if (sock.tenantSlug && sock.tenantSlug !== 'demo' && sock.tenantSlug !== 'ff-daily-squad') {
+    const orgEnc = encodeURIComponent(sock.tenantSlug);
+    // Replace any generic player?match= with player?org=slug&match=
+    conversationalText = conversationalText.replace(
+      /https:\/\/ff-squad-arena-bd\.web\.app\/player\?(?!org=)/g,
+      `https://ff-squad-arena-bd.web.app/player?org=${orgEnc}&`
+    );
+    // Replace any bare player link without parameters
+    conversationalText = conversationalText.replace(
+      /https:\/\/ff-squad-arena-bd\.web\.app\/player(?![/?\w])/g,
+      `https://ff-squad-arena-bd.web.app/player?org=${orgEnc}`
+    );
+  }
+
   // Ensure dynamic direct match booking link is always available if link was requested or intent expressed
-  if ((isLinkInquiry || isExplicitBookingIntent) && !conversationalText.includes('ff-squad-arena-bd.web.app')) {
+  const hasTenantLink = sock.tenantSlug && sock.tenantSlug !== 'demo' && sock.tenantSlug !== 'ff-daily-squad'
+    ? conversationalText.includes(`org=${encodeURIComponent(sock.tenantSlug)}`)
+    : conversationalText.includes('ff-squad-arena-bd.web.app');
+
+  if ((isLinkInquiry || isExplicitBookingIntent) && !hasTenantLink) {
     const targetMatchNum = existingSession.preferredMatch ? (existingSession.preferredMatch.match(/\d+/) || ['4'])[0] : '4';
     const targetSlot = existingSession.preferredSlot || '';
-    const orgParam = sock.tenantSlug ? `org=${encodeURIComponent(sock.tenantSlug)}&` : '';
+    const orgParam = (sock.tenantSlug && sock.tenantSlug !== 'demo' && sock.tenantSlug !== 'ff-daily-squad')
+      ? `org=${encodeURIComponent(sock.tenantSlug)}&`
+      : '';
     const webLink = `https://ff-squad-arena-bd.web.app/player?${orgParam}match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
     conversationalText += `\n\n🔗 *১-ক্লিক ডিরেক্ট বুকিং ও ভেরিফাই লিংক:*\n${webLink}`;
   }
