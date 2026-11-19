@@ -7,6 +7,45 @@
       "trailingSlash": false,
       "headers": [
         {
+          "source": "/sitemap.xml",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/robots.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/favicon.svg",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "image/svg+xml"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
           "source": "**/*.apk",
           "headers": [
             {
@@ -27,8 +66,12 @@
           "source": "**",
           "headers": [
             {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, must-revalidate"
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains; preload"
             }
           ]
         }
@@ -77,6 +120,45 @@
       "trailingSlash": false,
       "headers": [
         {
+          "source": "/sitemap.xml",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/robots.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/favicon.svg",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "image/svg+xml"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
           "source": "**/*.apk",
           "headers": [
             {
@@ -97,8 +179,12 @@
           "source": "**",
           "headers": [
             {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, must-revalidate"
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains; preload"
             }
           ]
         }

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /player
+Allow: /login
+Allow: /signup
+
+# Private Admin & CEO Portals
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /orbit
+Disallow: /orbit/*
+Disallow: /sbs
+Disallow: /sbs/*
+Disallow: /apk/
+
+Sitemap: https://arena-x-bd.web.app/sitemap.xml
