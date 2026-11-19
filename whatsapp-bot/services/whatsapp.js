@@ -289,7 +289,7 @@ export async function startFirestoreBridgeListener() {
                 s.ev.removeAllListeners();
                 s.end(undefined);
               } catch (e) {}
-              activeSockets.delete(data.org);
+                activeSockets.delete(data.org);
             }
             await syncTenantBotStateToFirestore(data.org, {
               whatsappBotQr: null,
@@ -322,6 +322,23 @@ export async function startFirestoreBridgeListener() {
               processedAt: new Date().toISOString()
             });
           } catch (e) {}
+        }
+      });
+
+      // 3. Realtime Listener for bot_sessions updates (Auto-boots new/updated sessions in real time)
+      const { clientCollection } = await import('./firestore.js');
+      clientOnSnapshot(clientCollection(clientDbInstance, 'bot_sessions'), async (snapshot) => {
+        for (const change of snapshot.docChanges()) {
+          const clientId = change.doc.id;
+          if (!clientId || clientId === 'test_doc' || clientId === 'test_bundle' || clientId === 'default_client') continue;
+
+          if (change.type === 'added' || change.type === 'modified') {
+            const tSock = activeSockets.get(clientId);
+            if (!tSock || !tSock.authState?.creds?.me?.id) {
+              console.log(`✓ [Firestore Bridge]: Detected active cloud session for tenant [${clientId}]. Auto-booting...`);
+              startWhatsAppBot(clientId).catch(e => console.warn(`[Auto-Resume ${clientId} Error]:`, e.message));
+            }
+          }
         }
       });
 
@@ -417,6 +434,13 @@ export async function startWhatsAppBot(tenantSlug = null) {
 
   // Multi-File Auth State (Local, atomic, and rock-solid)
   const { state, saveCreds } = await useMultiFileAuthState(activeAuthDir);
+
+  // CRITICAL FIX: Intercept keys.set so all Signal Protocol ratchet updates sync to Cloud Firestore!
+  const origKeysSet = state.keys.set;
+  state.keys.set = async (data) => {
+    await origKeysSet(data);
+    debouncedCloudBackup(activeAuthDir, socketKey);
+  };
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
   console.log(`[WhatsApp]: Starting Baileys Client (v${version.join('.')}, isLatest: ${isLatest}, Target: ${tenantSlug ? `Tenant [${tenantSlug}]` : 'Central Demo'})...`);
@@ -718,7 +742,7 @@ export function generateCopyableBookingTemplate({
 } = {}) {
   const matchNum = (matchQuery.toString().match(/\d+/) || ['4'])[0];
   const orgParam = tenantSlug ? `org=${encodeURIComponent(tenantSlug)}&` : '';
-  const directLink = `https://ff-squad-arena-bd.web.app/player?${orgParam}match=${matchNum}${slotNumber ? `&slot=${slotNumber}` : ''}`;
+  const directLink = `https://arena-x-bd.web.app/player?${orgParam}match=${matchNum}${slotNumber ? `&slot=${slotNumber}` : ''}`;
 
   return `[ARENA-BOOKING]
 Match: ${matchQuery || 'Match 4'}
@@ -942,20 +966,20 @@ ${config.tournament.websiteUrl}`;
     const orgEnc = encodeURIComponent(sock.tenantSlug);
     // Replace any generic player?match= with player?org=slug&match=
     conversationalText = conversationalText.replace(
-      /https:\/\/ff-squad-arena-bd\.web\.app\/player\?(?!org=)/g,
-      `https://ff-squad-arena-bd.web.app/player?org=${orgEnc}&`
+      /https:\/\/(?:arena-x-bd|ff-squad-arena-bd)\.web\.app\/player\?(?!org=)/g,
+      `https://arena-x-bd.web.app/player?org=${orgEnc}&`
     );
     // Replace any bare player link without parameters
     conversationalText = conversationalText.replace(
-      /https:\/\/ff-squad-arena-bd\.web\.app\/player(?![/?\w])/g,
-      `https://ff-squad-arena-bd.web.app/player?org=${orgEnc}`
+      /https:\/\/(?:arena-x-bd|ff-squad-arena-bd)\.web\.app\/player(?![/?\w])/g,
+      `https://arena-x-bd.web.app/player?org=${orgEnc}`
     );
   }
 
   // Ensure dynamic direct match booking link is always available if link was requested or intent expressed
   const hasTenantLink = sock.tenantSlug && sock.tenantSlug !== 'demo' && sock.tenantSlug !== 'ff-daily-squad'
     ? conversationalText.includes(`org=${encodeURIComponent(sock.tenantSlug)}`)
-    : conversationalText.includes('ff-squad-arena-bd.web.app');
+    : (conversationalText.includes('arena-x-bd.web.app') || conversationalText.includes('ff-squad-arena-bd.web.app'));
 
   if ((isLinkInquiry || isExplicitBookingIntent) && !hasTenantLink) {
     const targetMatchNum = existingSession.preferredMatch ? (existingSession.preferredMatch.match(/\d+/) || ['4'])[0] : '4';
@@ -963,7 +987,7 @@ ${config.tournament.websiteUrl}`;
     const orgParam = (sock.tenantSlug && sock.tenantSlug !== 'demo' && sock.tenantSlug !== 'ff-daily-squad')
       ? `org=${encodeURIComponent(sock.tenantSlug)}&`
       : '';
-    const webLink = `https://ff-squad-arena-bd.web.app/player?${orgParam}match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
+    const webLink = `https://arena-x-bd.web.app/player?${orgParam}match=${targetMatchNum}${targetSlot ? `&slot=${targetSlot}` : ''}`;
     conversationalText += `\n\n🔗 *১-ক্লিক ডিরেক্ট বুকিং ও ভেরিফাই লিংক:*\n${webLink}`;
   }
 

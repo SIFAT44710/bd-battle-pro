@@ -70,8 +70,8 @@ export function getSystemInstruction(tenantSlug = null) {
   const isTenant = !!tenantSlug && tenantSlug !== 'ff-daily-squad' && tenantSlug !== 'demo';
   const orgParam = isTenant ? `org=${encodeURIComponent(tenantSlug)}&` : '';
   const tenantBaseUrl = isTenant
-    ? `https://ff-squad-arena-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}`
-    : `https://ff-squad-arena-bd.web.app/player`;
+    ? `https://arena-x-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}`
+    : `https://arena-x-bd.web.app/player`;
 
   return `
 You are the official ${isTenant ? `[${tenantSlug}]` : 'ARENA X'} Tournament Host & Scrims Manager on WhatsApp for Bangladesh Free Fire Esports.
@@ -111,8 +111,8 @@ YOUR CORE BEHAVIOR & RULES:
 6. DYNAMIC MATCH & SLOT DIRECT LINKS (CRITICAL):
    - Whenever you present a match, recommend a match, or when a player asks to book or wants a link:
      ALWAYS include the direct 1-click web registration & payment link for that match using THIS exact link format:
-     Direct Match Link: https://ff-squad-arena-bd.web.app/player?${orgParam}match=<matchNumber>
-     If they asked for a specific slot (e.g. Slot 5), append it: https://ff-squad-arena-bd.web.app/player?${orgParam}match=<matchNumber>&slot=<slotNumber>
+     Direct Match Link: https://arena-x-bd.web.app/player?${orgParam}match=<matchNumber>
+     If they asked for a specific slot (e.g. Slot 5), append it: https://arena-x-bd.web.app/player?${orgParam}match=<matchNumber>&slot=<slotNumber>
    - Dedicated Organizer Website Link: ${tenantBaseUrl}
    ${isTenant ? `- MANDATORY: ALWAYS retain '?org=${encodeURIComponent(tenantSlug)}' in all website and match links. NEVER omit this or send the demo link!` : ''}
    - Explain warmly: "আপনি সরাসরি উপরের লিংকে গিয়ে আপনার স্কোয়াড নাম ও TrxID দিয়ে ১-ক্লিকে ইনস্ট্যান্ট ভেরিফাই করে নিতে পারেন, অথবা চাইলে এই হোয়াটসঅ্যাপ চ্যাটেও বিস্তারিত পাঠিয়ে বুক করে নিতে পারেন!"
@@ -155,8 +155,8 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             bookedSquads,
             totalBooked: bookedSquads.length,
             directBookingUrl: isTenant 
-              ? `https://ff-squad-arena-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${target.matchNumber || 1}`
-              : `https://ff-squad-arena-bd.web.app/player?match=${target.matchNumber || 1}`,
+              ? `https://arena-x-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${target.matchNumber || 1}`
+              : `https://arena-x-bd.web.app/player?match=${target.matchNumber || 1}`,
             paymentNumbers: {
               bkash: paymentSettings.bkashNumber || '01872733642',
               nagad: paymentSettings.nagadNumber || '01872733642'
@@ -181,8 +181,8 @@ export async function executeToolCall(toolName, args, playerSession = {}) {
             totalFree: free.length,
             totalBooked: 12 - free.length,
             directBookingUrl: isTenant 
-              ? `https://ff-squad-arena-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${m.matchNumber || 1}`
-              : `https://ff-squad-arena-bd.web.app/player?match=${m.matchNumber || 1}`
+              ? `https://arena-x-bd.web.app/player?org=${encodeURIComponent(tenantSlug)}&match=${m.matchNumber || 1}`
+              : `https://arena-x-bd.web.app/player?match=${m.matchNumber || 1}`
           };
         }),
         paymentNumbers: {

@@ -1,73 +1,146 @@
 {
-  "hosting": {
-    "public": ".",
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "headers": [
-      {
-        "source": "**/*.apk",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/vnd.android.package-archive"
-          },
-          {
-            "key": "Content-Disposition",
-            "value": "attachment; filename=\"sifr-pay.apk\""
-          },
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          }
-        ]
-      }
-    ],
-    "rewrites": [
-      { "source": "/login", "destination": "/login.html" },
-      { "source": "/login/**", "destination": "/login.html" },
-      { "source": "/signup", "destination": "/signup.html" },
-      { "source": "/signup/**", "destination": "/signup.html" },
-      { "source": "/sbs", "destination": "/sbs.html" },
-      { "source": "/sbs/**", "destination": "/sbs.html" },
-      { "source": "/orbit", "destination": "/orbit.html" },
-      { "source": "/orbit/**", "destination": "/orbit.html" },
-      { "source": "/player", "destination": "/player.html" },
-      { "source": "/player/**", "destination": "/player.html" },
-      { "source": "/admin", "destination": "/admin.html" },
-      { "source": "/admin/**", "destination": "/admin.html" },
-      { "source": "**", "destination": "/index.html" }
-    ],
-    "ignore": [
-      "firebase.json",
-      ".firebaserc",
-      "**/.*",
-      "**/*.apk",
-      "apk/**",
-      "**/*.exe",
-      "**/*.cmd",
-      "**/*.bat",
-      "**/node_modules/**",
-      "node_modules/**",
-      "whatsapp-bot/**",
-      "client-template/**",
-      "ARENA X ____Saas/**",
-      "*.md",
-      "package*.json",
-      "protect-build.js",
-      "render.yaml",
-      "Dockerfile",
-      "src_backup/**"
-    ]
-  },
+  "hosting": [
+    {
+      "site": "arena-x-bd",
+      "public": ".",
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "headers": [
+        {
+          "source": "**/*.apk",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/vnd.android.package-archive"
+            },
+            {
+              "key": "Content-Disposition",
+              "value": "attachment; filename=\"sifr-pay.apk\""
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        { "source": "/login", "destination": "/login.html" },
+        { "source": "/login/**", "destination": "/login.html" },
+        { "source": "/signup", "destination": "/signup.html" },
+        { "source": "/signup/**", "destination": "/signup.html" },
+        { "source": "/sbs", "destination": "/sbs.html" },
+        { "source": "/sbs/**", "destination": "/sbs.html" },
+        { "source": "/orbit", "destination": "/orbit.html" },
+        { "source": "/orbit/**", "destination": "/orbit.html" },
+        { "source": "/player", "destination": "/player.html" },
+        { "source": "/player/**", "destination": "/player.html" },
+        { "source": "/admin", "destination": "/admin.html" },
+        { "source": "/admin/**", "destination": "/admin.html" },
+        { "source": "**", "destination": "/index.html" }
+      ],
+      "ignore": [
+        "firebase.json",
+        ".firebaserc",
+        "**/.*",
+        "**/*.apk",
+        "apk/**",
+        "**/*.exe",
+        "**/*.cmd",
+        "**/*.bat",
+        "**/node_modules/**",
+        "node_modules/**",
+        "whatsapp-bot/**",
+        "client-template/**",
+        "ARENA X ____Saas/**",
+        "*.md",
+        "package*.json",
+        "protect-build.js",
+        "render.yaml",
+        "Dockerfile",
+        "src_backup/**"
+      ]
+    },
+    {
+      "site": "ff-squad-arena-bd",
+      "public": ".",
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "headers": [
+        {
+          "source": "**/*.apk",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/vnd.android.package-archive"
+            },
+            {
+              "key": "Content-Disposition",
+              "value": "attachment; filename=\"sifr-pay.apk\""
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        { "source": "/login", "destination": "/login.html" },
+        { "source": "/login/**", "destination": "/login.html" },
+        { "source": "/signup", "destination": "/signup.html" },
+        { "source": "/signup/**", "destination": "/signup.html" },
+        { "source": "/sbs", "destination": "/sbs.html" },
+        { "source": "/sbs/**", "destination": "/sbs.html" },
+        { "source": "/orbit", "destination": "/orbit.html" },
+        { "source": "/orbit/**", "destination": "/orbit.html" },
+        { "source": "/player", "destination": "/player.html" },
+        { "source": "/player/**", "destination": "/player.html" },
+        { "source": "/admin", "destination": "/admin.html" },
+        { "source": "/admin/**", "destination": "/admin.html" },
+        { "source": "**", "destination": "/index.html" }
+      ],
+      "ignore": [
+        "firebase.json",
+        ".firebaserc",
+        "**/.*",
+        "**/*.apk",
+        "apk/**",
+        "**/*.exe",
+        "**/*.cmd",
+        "**/*.bat",
+        "**/node_modules/**",
+        "node_modules/**",
+        "whatsapp-bot/**",
+        "client-template/**",
+        "ARENA X ____Saas/**",
+        "*.md",
+        "package*.json",
+        "protect-build.js",
+        "render.yaml",
+        "Dockerfile",
+        "src_backup/**"
+      ]
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   },

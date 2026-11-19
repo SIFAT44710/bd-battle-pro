@@ -382,11 +382,16 @@ export function startWebServer(port = process.env.PORT || 3000) {
     if (url.pathname === '/api/status') {
       const orgSlug = url.searchParams.get('org')?.trim();
       if (orgSlug && orgSlug !== 'ff-daily-squad') {
+        const { activeSockets } = await import('./whatsapp.js');
+        const tSock = activeSockets.get(orgSlug);
+        const isConn = Boolean(tSock?.authState?.creds?.me?.id || tSock?.user?.id);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
-          status: 'ready',
+          status: isConn ? 'connected' : (tSock ? 'pairing_ready' : 'ready'),
+          connected: isConn,
           isTenant: true,
           org: orgSlug,
+          user: tSock?.user?.id || null,
           session: `tenant_${orgSlug}`,
           timestamp: new Date().toISOString()
         }));
@@ -543,7 +548,7 @@ export function startWebServer(port = process.env.PORT || 3000) {
         <button type="button" class="btn" onclick="resetSession()" style="background:#dc2626; color:#fff; border:none; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">
           🔄 সেশন রিসেট ও নতুন পেয়ারিং কোড নিন (Reset Session)
         </button>
-        <a href="https://ff-squad-arena-bd.web.app/admin" style="text-decoration:none;">
+        <a href="https://arena-x-bd.web.app/admin" style="text-decoration:none;">
           <button class="btn btn-primary" style="width:100%;">অ্যাডমিন ড্যাশবোর্ডে যান ➔</button>
         </a>
       </div>

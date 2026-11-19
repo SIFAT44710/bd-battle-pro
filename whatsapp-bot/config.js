@@ -31,7 +31,7 @@ export const config = {
   },
   tournament: {
     defaultEntryFee: Number(process.env.DEFAULT_ENTRY_FEE || 100),
-    websiteUrl: process.env.WEBSITE_URL || 'https://ff-squad-arena-bd.web.app/player'
+    websiteUrl: process.env.WEBSITE_URL || 'https://arena-x-bd.web.app/player'
   },
   contact: {
     email: process.env.CONTACT_EMAIL || 'sifrarchitect@gmail.com',
