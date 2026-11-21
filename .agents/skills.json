@@ -1,6 +1,9 @@
-{
-  "skills": [
+﻿{
+  "version": "1.0",
+  "includes": [
     "C:/Users/User/.gemini/config/plugins/sifat-core/skills",
-    "D:/skill/ECC-main/skills"
+    "C:/Users/User/.gemini/config/plugins/ecc/skills",
+    "D:/skill/ECC-main/skills",
+    "D:/skill/.agents/skills"
   ]
 }
