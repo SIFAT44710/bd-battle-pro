@@ -111,6 +111,29 @@
     ::-webkit-scrollbar-track { background: #F8F9FA; }
     ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #FF5722; }
+
+    /* Light Pulse Breathing Glow Effect */
+    @keyframes lightGlowPulse {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.35), 0 0 20px rgba(255, 87, 34, 0.25);
+        transform: scale(0.99);
+        filter: brightness(0.95);
+      }
+      50% {
+        box-shadow: 0 0 26px rgba(52, 211, 153, 0.9), 0 0 48px rgba(255, 87, 34, 0.75), 0 0 65px rgba(132, 204, 22, 0.6);
+        transform: scale(1.025);
+        filter: brightness(1.22);
+      }
+    }
+    .btn-light-pulse {
+      background: linear-gradient(135deg, #059669 0%, #10B981 22%, #84CC16 62%, #FF5722 100%);
+      animation: lightGlowPulse 1.7s ease-in-out infinite;
+    }
+    .btn-light-pulse:hover {
+      animation-play-state: paused;
+      transform: scale(1.035);
+      filter: brightness(1.28);
+    }
   </style>
 </head>
 <body class="bg-[#F8F9FA] text-[#212529] font-sans antialiased min-h-screen flex flex-col select-none overflow-x-hidden">
@@ -189,7 +212,7 @@
 
       <!-- CTA Buttons -->
       <div class="flex items-center justify-center pt-2 w-full max-w-md mx-auto">
-        <a href="/signup" class="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-orange-500 to-[#FF5722] hover:from-orange-600 hover:to-[#E64A19] text-white font-extrabold text-sm sm:text-base tracking-wide shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2.5">
+        <a href="/signup" class="btn-light-pulse w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl text-white font-extrabold text-sm sm:text-base tracking-wide transition-all flex items-center justify-center gap-2.5 border border-white/20">
           <i class="bi bi-rocket-takeoff-fill text-lg"></i>
           <span>১ মাসের ফ্রি সাইনআপ করুন (Sign Up)</span>
           <span class="text-lg">→</span>
