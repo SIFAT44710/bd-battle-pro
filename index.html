@@ -157,31 +157,15 @@
         <a href="#pricing" class="hover:text-[#FF5722] transition-colors">প্যাকেজসমূহ</a>
       </nav>
 
-      <!-- Action Buttons: Player View, Admin Panel & Gateway APK Download -->
+      <!-- Action Buttons: Login & Free Tier Sign Up -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
-          <i class="bi bi-download"></i>
-          <span class="hidden xs:inline">ডাউনলোড</span> <span>গেটওয়ে APK</span>
-        </a>
-        <a href="/signup" class="px-3 sm:px-4 py-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center gap-1.5 shrink-0 animate-pulse">
-          <i class="bi bi-rocket-takeoff-fill"></i>
-          <span>ফ্রি ট্রায়াল (Sign Up)</span>
-        </a>
-        <a href="/login" class="px-3 sm:px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs sm:text-sm tracking-wide border border-gray-300 transition-all flex items-center gap-1.5 shrink-0">
+        <a href="/login" class="px-3.5 sm:px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs sm:text-sm tracking-wide border border-gray-300 transition-all flex items-center gap-1.5 shrink-0">
           <i class="bi bi-box-arrow-in-right text-base text-[#FF5722]"></i>
           <span>লগইন</span>
         </a>
-        <a href="/player" class="px-3 sm:px-4 py-2 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-900 font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
-          <i class="bi bi-controller"></i>
-          <span>প্লেয়ার ড্যাশবোর্ড</span>
-        </a>
-        <a href="/admin" class="px-3 sm:px-4 py-2 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs sm:text-sm tracking-wide shadow-sm transition-all flex items-center gap-1.5 shrink-0">
-          <i class="bi bi-shield-lock-fill"></i>
-          <span>অ্যাডমিন প্যানেল</span>
-        </a>
-        <a href="/sbs" target="_blank" class="px-2.5 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900 text-cyan-400 border border-cyan-500/30 font-bold text-xs tracking-wide shadow-sm transition-all flex items-center gap-1 shrink-0" title="Orbit CEO Master Admin">
-          <i class="bi bi-shield-shaded"></i>
-          <span class="hidden md:inline">Orbit</span>
+        <a href="/signup" class="px-3.5 sm:px-5 py-2 rounded-xl bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center gap-1.5 shrink-0 animate-pulse">
+          <i class="bi bi-rocket-takeoff-fill"></i>
+          <span>ফ্রি টায়ার সাইনআপ (Sign Up)</span>
         </a>
       </div>
 
@@ -208,31 +192,11 @@
       </p>
 
       <!-- CTA Buttons -->
-      <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-2 w-full max-w-4xl mx-auto">
-        <a href="/signup" class="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-[#FF5722] hover:from-orange-600 hover:to-[#E64A19] text-white font-extrabold text-xs sm:text-sm tracking-wide shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-rocket-takeoff-fill text-base"></i>
-          <span>১ মাসের ফ্রি ট্রায়াল শুরু করুন (Sign Up)</span>
-          <span>→</span>
-        </a>
-        <a href="/login" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 font-extrabold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-box-arrow-in-right text-base text-[#FF5722]"></i>
-          <span>আয়োজক লগইন (Login)</span>
-        </a>
-        <a href="/player" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-950 font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-controller text-base"></i>
-          <span>লাইভ প্লেয়ার প্যানেল দেখুন</span>
-        </a>
-        <a href="/admin" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-[#212529] hover:bg-black text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-shield-lock-fill text-base"></i>
-          <span>লাইভ অ্যাডমিন কন্ট্রোল</span>
-        </a>
-        <a href="javascript:void(0)" onclick="window.showApkLockModal('apk')" class="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
-          <i class="bi bi-download text-base"></i>
-          <span>ডাউনলোড অটো-পেমেন্ট গেটওয়ে APK</span>
-        </a>
-        <a href="https://wa.me/8801791357521?text=Hi,%20I%20want%20to%20get%20ARENA%20X%20Platform" target="_blank" class="w-full sm:w-auto px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-whatsapp text-base"></i>
-          <span>হোয়াটসঅ্যাপ অর্ডার</span>
+      <div class="flex items-center justify-center pt-2 w-full max-w-md mx-auto">
+        <a href="/signup" class="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-orange-500 to-[#FF5722] hover:from-orange-600 hover:to-[#E64A19] text-white font-extrabold text-sm sm:text-base tracking-wide shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2.5">
+          <i class="bi bi-rocket-takeoff-fill text-lg"></i>
+          <span>১ মাসের ফ্রি সাইনআপ করুন (Sign Up)</span>
+          <span class="text-lg">→</span>
         </a>
       </div>
 
